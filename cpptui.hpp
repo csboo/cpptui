@@ -64,6 +64,8 @@ namespace tui {
         inline std::string clear() { return "\033[2J"; }
         inline std::string clearLine() { return "\033[2K"; }
         inline std::string clearLineRight() { return "\033[K"; }
+        inline std::string saveScreen() { return "\033[?47l" ; }
+        inline std::string loadSavedScreen() { return "\033[?47h";}
         inline std::string alternativeBuffer(bool enable) { return enable ? "\033[?1049h" : "\033[?1049l"; }
         inline std::string scrollUp(int n = 1) { 
             std::ostringstream oss; 
