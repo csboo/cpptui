@@ -14,27 +14,27 @@ namespace tui {
     constexpr const char* const ESC = "\x1B[";
     namespace cursor {
         // moves cursor up `n` rows
-        inline void up(int n = 1) { std::cout << ESC << n << "#A"; }
+        inline void up(unsigned n = 1) { std::cout << ESC << n << "#A"; }
         // moves cursor down `n` rows
-        inline void down(int n = 1) { std::cout << ESC << n << "#B"; }
+        inline void down(unsigned n = 1) { std::cout << ESC << n << "#B"; }
         // moves cursor right `n` columns
-        inline void right(int n = 1) { std::cout << ESC << n << "#C"; }
+        inline void right(unsigned n = 1) { std::cout << ESC << n << "#C"; }
         // moves cursor left `n` columns
-        inline void left(int n = 1) { std::cout << ESC << n << "#D"; }
+        inline void left(unsigned n = 1) { std::cout << ESC << n << "#D"; }
 
         // moves cursor one row up, scrolling if needed
         inline void up_n_scroll() { std::cout << PURE_ESC << 'M'; }
         // moves cursor to beginning of next line, `n` rows down
-        inline void next_line(int n = 1) { std::cout << ESC << n << "#E"; }
+        inline void next_line(unsigned n = 1) { std::cout << ESC << n << "#E"; }
         // moves cursor to beginning of previous line, `n` rows up
-        inline void prev_line(int n = 1) { std::cout << ESC << n << "#F"; }
+        inline void prev_line(unsigned n = 1) { std::cout << ESC << n << "#F"; }
 
         // moves cursor to home position (0;0)
         inline void home() { std::cout << ESC << 'H'; }
         // moves cursor to (`row`;`col`)
-        inline void move_to(int row, int col) { std::cout << ESC << row << ';' << col << 'H'; }
+        inline void move_to(unsigned row, unsigned col) { std::cout << ESC << row << ';' << col << 'H'; }
         // moves cursor to column `n`
-        inline void to_column(int n) { std::cout << ESC << n << "#G"; }
+        inline void to_column(unsigned n) { std::cout << ESC << n << "#G"; }
 
         // save cursor position
         inline void save() { std::cout << PURE_ESC << '7'; }
@@ -55,8 +55,8 @@ namespace tui {
         inline void clear_line_right() { std::cout << ESC << "K"; }
 
         // erases
-        inline void erase_in_line(int n = 0) { std::cout << ESC << n << 'K'; }
-        inline void erase_in_display(int n = 0) { std::cout << ESC << n << 'J'; }
+        inline void erase_in_line(unsigned n = 0) { std::cout << ESC << n << 'K'; }
+        inline void erase_in_display(unsigned n = 0) { std::cout << ESC << n << 'J'; }
         inline void erase_saved_lines() { std::cout << ESC << "3J"; }
 
         inline void save_screen() { std::cout << ESC << "?47h"; }
@@ -64,8 +64,8 @@ namespace tui {
 
         inline void alternative_buffer(bool enable) { std::cout << ESC << "?1049" << (enable ? 'h' : 'l'); }
 
-        inline void scroll_up(int n = 1) { std::cout << ESC << n << 'S'; }
-        inline void scroll_down(int n = 1) { std::cout << ESC << n << 'T'; }
+        inline void scroll_up(unsigned n = 1) { std::cout << ESC << n << 'S'; }
+        inline void scroll_down(unsigned n = 1) { std::cout << ESC << n << 'T'; }
     } // namespace screen
 
     namespace text {
@@ -158,12 +158,13 @@ namespace tui {
             make_colorizer(white);
             make_colorizer(basic);
 
-            inline std::string rgb(int r, int g, int b, bool fg) {
+            inline std::string rgb(unsigned short r, unsigned short g, unsigned short b, bool fg) {
                 std::ostringstream oss;
                 oss << ESC << (fg ? '3' : '4') << "8;2;" << r << ";" << g << ";" << b << "m";
                 return oss.str();
             }
-            inline std::string rgb(int r, int g, int b, bool fg, const std::string& text) {
+            inline std::string rgb(unsigned short r, unsigned short g, unsigned short b, bool fg,
+                                   const std::string& text) {
                 std::ostringstream oss;
                 oss << ESC << (fg ? '3' : '4') << "8;2;" << r << ";" << g << ";" << b << "m" << text
                     << style::reset_style();
@@ -207,8 +208,12 @@ namespace tui {
         make_color(white);
         make_color(basic);
 
-        inline std::string rgb_fg(int r, int g, int b) const { return text::color::rgb(r, g, b, true, *this); }
-        inline std::string rgb_bg(int r, int g, int b) const { return text::color::rgb(r, g, b, false, *this); }
+        inline std::string rgb_fg(unsigned short r, unsigned short g, unsigned short b) const {
+            return text::color::rgb(r, g, b, true, *this);
+        }
+        inline std::string rgb_bg(unsigned short r, unsigned short g, unsigned short b) const {
+            return text::color::rgb(r, g, b, false, *this);
+        }
     };
 } // namespace tui
 
