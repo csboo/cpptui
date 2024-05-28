@@ -196,7 +196,7 @@ namespace tui {
 // generate this.COLOR(): eg this.red()
 #define make_color(COLOR)                                                                                              \
     inline tui_string COLOR() const { return text::color::COLOR##_fg(*this); }                                         \
-    inline tui_string COLOR##_bg() const { return text::color::COLOR##_bg(*this); }
+    inline tui_string on_##COLOR() const { return text::color::COLOR##_bg(*this); }
 
         make_color(black);
         make_color(red);
