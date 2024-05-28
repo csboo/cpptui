@@ -78,8 +78,8 @@ namespace tui {
                 underline = 4,
                 blink = 5,
                 inverted = 7,
-                strikethrough = 8,
-                invisible = 9,
+                invisible = 8,
+                strikethrough = 9,
             };
 
             inline std::string style(const Style& style) {
