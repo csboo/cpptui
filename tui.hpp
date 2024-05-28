@@ -208,10 +208,10 @@ namespace tui {
         make_color(white);
         make_color(basic);
 
-        inline std::string rgb_fg(unsigned short r, unsigned short g, unsigned short b) const {
+        inline tui_string rgb(unsigned short r, unsigned short g, unsigned short b) const {
             return text::color::rgb(r, g, b, true, *this);
         }
-        inline std::string rgb_bg(unsigned short r, unsigned short g, unsigned short b) const {
+        inline tui_string on_rgb(unsigned short r, unsigned short g, unsigned short b) const {
             return text::color::rgb(r, g, b, false, *this);
         }
     };
