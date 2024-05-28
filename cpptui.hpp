@@ -35,9 +35,7 @@ namespace tui {
         }
         inline constexpr const char* save() { return "\033[s"; }
         inline constexpr const char* restore() { return "\033[u"; }
-        inline constexpr const char* visible(bool visible) {
-            return visible ? "\033[?25h" : "\033[?25l";
-        }
+        inline constexpr const char* visible(bool visible) { return visible ? "\033[?25h" : "\033[?25l"; }
         inline constexpr const char* home() { return "\033[H"; }
         inline std::string column(int n) {
             std::ostringstream oss;
@@ -66,9 +64,7 @@ namespace tui {
         inline constexpr const char* clear_line_right() { return "\033[K"; }
         inline constexpr const char* save_screen() { return "\033[?47h"; }
         inline constexpr const char* load_saved_screen() { return "\033[?47l"; }
-        inline constexpr const char* alternative_buffer(bool enable) {
-            return enable ? "\033[?1049h" : "\033[?1049l";
-        }
+        inline constexpr const char* alternative_buffer(bool enable) { return enable ? "\033[?1049h" : "\033[?1049l"; }
         inline std::string scroll_up(int n = 1) {
             std::ostringstream oss;
             oss << "\033[" << n << "S";
@@ -198,8 +194,7 @@ namespace tui {
         }
         inline std::string rgb(int r, int g, int b, const std::string& text) {
             std::ostringstream oss;
-            oss << "\033[38;2;" << r << ";" << g << ";" << b << "m" << text
-                << "\033[0m";
+            oss << "\033[38;2;" << r << ";" << g << ";" << b << "m" << text << "\033[0m";
             return oss.str();
         }
 
@@ -257,11 +252,9 @@ namespace tui {
                 oss << "\033[48;2;" << r << ";" << g << ";" << b << "m";
                 return oss.str();
             }
-            inline std::string rgb(int r, int g, int b,
-                                   const std::string& text) {
+            inline std::string rgb(int r, int g, int b, const std::string& text) {
                 std::ostringstream oss;
-                oss << "\033[48;2;" << r << ";" << g << ";" << b << "m" << text
-                    << "\033[0m";
+                oss << "\033[48;2;" << r << ";" << g << ";" << b << "m" << text << "\033[0m";
                 return oss.str();
             }
         } // namespace bg
@@ -287,9 +280,7 @@ namespace tui {
 
         inline tui_string invisible() const { return text::invisible(*this); }
 
-        inline tui_string strikethrough() const {
-            return text::strikethrough(*this);
-        }
+        inline tui_string strikethrough() const { return text::strikethrough(*this); }
 
         inline tui_string black() const { return text::black(*this); }
 
@@ -306,9 +297,7 @@ namespace tui {
         inline tui_string cyan() const { return text::cyan(*this); }
 
         inline tui_string white() const { return text::white(*this); }
-        inline std::string rgb(int r, int g, int b) const {
-            return text::rgb(r, g, b, *this);
-        }
+        inline std::string rgb(int r, int g, int b) const { return text::rgb(r, g, b, *this); }
 
         inline tui_string bg_black() const {
             std::ostringstream oss;
@@ -357,8 +346,7 @@ namespace tui {
         }
         inline std::string rgb(int r, int g, int b, const std::string& text) {
             std::ostringstream oss;
-            oss << "\033[48;2;" << r << ";" << g << ";" << b << "m" << text
-                << "\033[0m";
+            oss << "\033[48;2;" << r << ";" << g << ";" << b << "m" << text << "\033[0m";
             return oss.str();
         }
     };
