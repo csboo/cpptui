@@ -1,4 +1,4 @@
-// tui.h
+// tui.hpp
 #pragma once
 #ifndef TUI_H
 #define TUI_H
@@ -86,11 +86,14 @@ namespace tui {
                 return std::string(ESC) + std::to_string(static_cast<unsigned>(style)) + "m";
             }
 
+// generate for cout << STYLE_style(); eg.: cout << bold_style();
 #define stylize(STYLE)                                                                                                 \
     inline std::string STYLE##_style() { return style(STYLE); }
+// generate for cout << STYLE_style(text); eg.: cout << bold_style(text);
 #define stylize_text(STYLE)                                                                                            \
     inline std::string STYLE##_style(const std::string& text) { return style(STYLE) + text + reset_style(); }          \
     inline std::string STYLE##_style(const char* text) { return style(STYLE) + text + reset_style(); }
+// generate all
 #define make_stylizer(STYLE) stylize(STYLE) stylize_text(STYLE)
 
             stylize(reset);
@@ -126,9 +129,12 @@ namespace tui {
                 return std::string(ESC) + (fg ? '3' : '4') + std::to_string(static_cast<unsigned>(c)) + "m";
             }
 
+// generate for cout << COLOR_{fg, bg}();
 #define colorize(COLOR)                                                                                                \
     inline std::string COLOR##_fg() { return colorizer(COLOR, true); }                                                 \
     inline std::string COLOR##_bg() { return colorizer(COLOR, false); }
+
+// generate for cout << COLOR_{fg, bg}(text);
 #define colorize_text(COLOR)                                                                                           \
     inline std::string COLOR##_fg(const std::string& text) {                                                           \
         return colorizer(COLOR, true) + text + style::reset_style();                                                   \
@@ -138,6 +144,8 @@ namespace tui {
         return colorizer(COLOR, false) + text + style::reset_style();                                                  \
     }                                                                                                                  \
     inline std::string COLOR##_bg(const char* text) { return colorizer(COLOR, false) + text + style::reset_style(); }
+
+// generate all
 #define make_colorizer(COLOR) colorize(COLOR) colorize_text(COLOR)
 
             make_colorizer(black);
@@ -171,6 +179,7 @@ namespace tui {
         tui_string(const char* s) : std::string(s) {}
         tui_string(const std::string& s) : std::string(s) {}
 
+// generate this.STYLE(): eg this.italic()
 #define make_style(STYLE)                                                                                              \
     inline tui_string STYLE() const { return text::style::STYLE##_style(*this); }
 
@@ -183,6 +192,7 @@ namespace tui {
         make_style(invisible);
         make_style(strikethrough);
 
+// generate this.COLOR(): eg this.red()
 #define make_color(COLOR)                                                                                              \
     inline tui_string COLOR() const { return text::color::COLOR##_fg(*this); }                                         \
     inline tui_string COLOR##_bg() const { return text::color::COLOR##_bg(*this); }
