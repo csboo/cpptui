@@ -72,14 +72,14 @@ namespace tui {
         namespace style {
             enum Style {
                 reset = 0,
-                bold,
-                dim,
-                italic,
-                underline,
-                blink,
-                inverted,
-                invisible,
-                strikethrough,
+                bold = 1,
+                dim = 2,
+                italic = 3,
+                underline = 4,
+                blink = 5,
+                inverted = 7,
+                strikethrough = 8,
+                invisible = 9,
             };
 
             inline std::string style(const Style& style) {
