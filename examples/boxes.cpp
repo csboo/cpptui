@@ -201,7 +201,7 @@ void run() {
         std::cout << msg.bold().italic().inverted().blue();
 
         tui::cursor::set_position(38, 140);
-        std::cout << tui::tui_string("tui.hpp").bold().blue().on_magenta();
+        std::cout << tui::tui_string("tui.hpp").bold().blue().link("https://github.com/csboo/cpptui").on_magenta();
         // tui::cursor::set_position(39, 140);
         // std::cout << "\\──────┘";
         // std::cout << "████████";
