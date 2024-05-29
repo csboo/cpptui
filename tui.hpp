@@ -3,7 +3,7 @@
 #ifndef TUI_H
 #define TUI_H
 
-#ifdef _WIN32 // windows
+#ifdef _WIN32 // Windows
 #include <conio.h>
 #include <windows.h>
 #endif
