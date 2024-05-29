@@ -225,32 +225,6 @@ namespace tui {
             return text::color::rgb(r, g, b, false, *this);
         }
     };
-
-    // void handle_resize(int /*sig*/) { screen::clear(); }
-    using fn_ptr = void (*)(int);
-    inline void set_up_resize(fn_ptr handle_resize) {
-        // Register the signal handler for SIGWINCH
-        struct sigaction sa {};
-        sa.sa_handler = handle_resize;
-        sa.sa_flags = SA_RESTART; // Restart functions if interrupted by handler
-        sigaction(SIGWINCH, &sa, nullptr);
-    }
-
-    inline void init_term(bool enable_cursor) {
-        tui::enable_raw_mode();
-        tui::cursor::visible(enable_cursor);
-        tui::screen::save_screen();
-        tui::screen::alternative_buffer(true);
-        tui::screen::clear();
-        tui::cursor::home();
-    }
-    inline void reset_term() {
-        tui::disable_raw_mode();
-        tui::cursor::visible(true);
-        tui::screen::restore_screen();
-        tui::screen::alternative_buffer(false);
-    }
-
 } // namespace tui
 
 #endif // TUI_H
