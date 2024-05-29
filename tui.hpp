@@ -122,7 +122,7 @@ namespace tui {
 
         // moves cursor to home position (0;0)
         inline void home() { std::cout << ESC << 'H'; }
-        // moves cursor to (`row`;`col`)
+        // moves cursor to (`row`;`col`), both start at 1
         inline void set_position(unsigned row, unsigned col) { std::cout << ESC << row << ';' << col << 'H'; }
         // moves cursor to column `n`
         inline void to_column(unsigned n) { std::cout << ESC << n << "#G"; }
@@ -350,6 +350,22 @@ namespace tui {
             return text::color::rgb(r, g, b, false, *this);
         }
     };
+
+    inline void init_term(bool enable_cursor) {
+        tui::enable_raw_mode();
+        tui::cursor::visible(enable_cursor);
+        tui::screen::save_screen();
+        tui::screen::alternative_buffer(true);
+        tui::screen::clear();
+        tui::cursor::home();
+    }
+    inline void reset_term() {
+        tui::disable_raw_mode();
+        tui::cursor::visible(true);
+        tui::screen::restore_screen();
+        tui::screen::alternative_buffer(false);
+    }
+
 } // namespace tui
 
 #endif // TUI_H
