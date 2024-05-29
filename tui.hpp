@@ -123,8 +123,8 @@ namespace tui {
 
         // moves cursor to home position (0;0)
         inline void home() { std::cout << ESC << 'H'; }
-        // moves cursor to (`row`;`col`), both start at 1
-        inline void set_position(unsigned row, unsigned col) { std::cout << ESC << row << ';' << col << 'H'; }
+        // moves cursor to (`row`;`col`)
+        inline void move_to(unsigned row, unsigned col) { std::cout << ESC << row << ';' << col << 'H'; }
         // moves cursor to column `n`
         inline void to_column(unsigned n) { std::cout << ESC << n << "#G"; }
 
@@ -136,27 +136,8 @@ namespace tui {
         // set visibility
         inline void visible(bool visible) { std::cout << ESC << "?25" << (visible ? 'h' : 'l'); }
 
-        // tell the terminal to check where the cursor is
-        inline void query_position() { std::cout << ESC << "6n"; }
-
-        // (rows;cols)
-        inline std::pair<unsigned, unsigned> get_position() {
-            query_position();
-            std::flush(std::cout);
-            // Read the response: ESC [ rows ; cols R
-            char ch = 0;
-            unsigned rows = 0;
-            unsigned cols = 0;
-            if (std::cin.get(ch) && ch == PURE_ESC && std::cin.get(ch) && ch == '[') {
-                std::cin >> rows;
-                std::cin.get(ch); // skip the ';'
-                std::cin >> cols;
-                std::cin.ignore(); // skip the 'R'
-            }
-
-            return {rows, cols};
-        }
-
+        // check where the cursor is
+        inline void request_position() { std::cout << ESC << "6n"; }
     } // namespace cursor
 
     namespace screen {
@@ -178,11 +159,6 @@ namespace tui {
         inline void scroll_up(unsigned n = 1) { std::cout << ESC << n << 'S'; }
         inline void scroll_down(unsigned n = 1) { std::cout << ESC << n << 'T'; }
 
-        // get the size of the terminal: (rows;cols)
-        inline std::pair<unsigned, unsigned> size() {
-            cursor::set_position(9999, 9999); // very huge position, that won't be reached, moves to biggest
-            return cursor::get_position();
-        }
     } // namespace screen
 
     namespace text {
