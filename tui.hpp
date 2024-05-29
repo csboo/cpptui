@@ -158,7 +158,6 @@ namespace tui {
 
         inline void scroll_up(unsigned n = 1) { std::cout << ESC << n << 'S'; }
         inline void scroll_down(unsigned n = 1) { std::cout << ESC << n << 'T'; }
-
     } // namespace screen
 
     namespace text {
