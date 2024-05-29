@@ -165,10 +165,7 @@ namespace tui {
             }
             inline std::string rgb(unsigned short r, unsigned short g, unsigned short b, bool fg,
                                    const std::string& text) {
-                std::ostringstream oss;
-                oss << ESC << (fg ? '3' : '4') << "8;2;" << r << ";" << g << ";" << b << "m" << text
-                    << style::reset_style();
-                return oss.str();
+                return rgb(r, g, b, fg) + text + style::reset_style();
             }
 
         } // namespace color
