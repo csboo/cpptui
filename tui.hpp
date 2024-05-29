@@ -3,6 +3,7 @@
 #ifndef TUI_H
 #define TUI_H
 
+#include <cassert>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -69,6 +70,16 @@ namespace tui {
     } // namespace screen
 
     namespace text {
+        // Helper function to stream a single argument
+        template <typename T> void stream_arg(std::ostringstream& oss, T&& arg) { oss << std::forward<T>(arg); }
+        // Variadic template function to concatenate any number of arguments
+        template <typename... Args> std::string concat(Args&&... args) {
+            std::ostringstream oss;
+            (void)std::initializer_list<int>{
+                (stream_arg(oss, std::forward<Args>(args)), 0)...}; // Using initializer_list for fold-like behavior
+            return oss.str();
+        }
+
         namespace style {
             enum Style {
                 reset = 0,
@@ -82,23 +93,21 @@ namespace tui {
                 strikethrough = 9,
             };
 
-            inline std::string style(const Style& style) {
-                return std::string(ESC) + std::to_string(static_cast<unsigned>(style)) + "m";
-            }
+            inline std::string style(const Style& style) { return concat(ESC, static_cast<unsigned>(style), 'm'); }
 
 // generate for cout << STYLE_style(); eg.: cout << bold_style();
 #define stylize(STYLE)                                                                                                 \
     inline std::string STYLE##_style() { return style(STYLE); }
 // generate for cout << STYLE_style(text); eg.: cout << bold_style(text);
 #define stylize_text(STYLE)                                                                                            \
-    inline std::string STYLE##_style(const std::string& text) { return style(STYLE) + text + reset_style(); }          \
-    inline std::string STYLE##_style(const char* text) { return style(STYLE) + text + reset_style(); }
+    inline std::string STYLE##_style(const std::string& text) { return concat(style(STYLE), text, reset_style()); }    \
+    inline std::string STYLE##_style(const char* text) { return concat(style(STYLE), text, reset_style()); }
 // generate all
 #define make_stylizer(STYLE) stylize(STYLE) stylize_text(STYLE)
 
             stylize(reset);
             inline std::string style_and_reset(const Style& st, const std::string& s) {
-                return style(st) + s + reset_style();
+                return concat(style(st), s, reset_style());
             }
 
             make_stylizer(bold);
@@ -126,7 +135,7 @@ namespace tui {
 
             // fg or bg
             inline std::string colorizer(const Color& c, bool fg) {
-                return std::string(ESC) + (fg ? '3' : '4') + std::to_string(static_cast<unsigned>(c)) + "m";
+                return concat(ESC, (fg ? '3' : '4'), static_cast<unsigned>(c), 'm');
             }
 
 // generate for cout << COLOR_{fg, bg}();
@@ -137,13 +146,17 @@ namespace tui {
 // generate for cout << COLOR_{fg, bg}(text);
 #define colorize_text(COLOR)                                                                                           \
     inline std::string COLOR##_fg(const std::string& text) {                                                           \
-        return colorizer(COLOR, true) + text + style::reset_style();                                                   \
+        return concat(colorizer(COLOR, true), text, style::reset_style());                                             \
     }                                                                                                                  \
-    inline std::string COLOR##_fg(const char* text) { return colorizer(COLOR, true) + text + style::reset_style(); }   \
+    inline std::string COLOR##_fg(const char* text) {                                                                  \
+        return concat(colorizer(COLOR, true), text, style::reset_style());                                             \
+    }                                                                                                                  \
     inline std::string COLOR##_bg(const std::string& text) {                                                           \
-        return colorizer(COLOR, false) + text + style::reset_style();                                                  \
+        return concat(colorizer(COLOR, false), text, style::reset_style());                                            \
     }                                                                                                                  \
-    inline std::string COLOR##_bg(const char* text) { return colorizer(COLOR, false) + text + style::reset_style(); }
+    inline std::string COLOR##_bg(const char* text) {                                                                  \
+        return concat(colorizer(COLOR, false), text, style::reset_style());                                            \
+    }
 
 // generate all
 #define make_colorizer(COLOR) colorize(COLOR) colorize_text(COLOR)
@@ -158,14 +171,13 @@ namespace tui {
             make_colorizer(white);
             make_colorizer(basic);
 
-            inline std::string rgb(unsigned short r, unsigned short g, unsigned short b, bool fg) {
-                std::ostringstream oss;
-                oss << ESC << (fg ? '3' : '4') << "8;2;" << r << ";" << g << ";" << b << "m";
-                return oss.str();
+            // r, g, b values have to be valid:  [0;255]
+            inline std::string rgb(unsigned r, unsigned g, unsigned b, bool fg) {
+                assert(r >= 0 && r <= 255 && g >= 0 && g <= 255 && b >= 0 && b <= 255);
+                return concat(ESC, (fg ? '3' : '4'), "8;2;", r, ';', g, ';', b, 'm');
             }
-            inline std::string rgb(unsigned short r, unsigned short g, unsigned short b, bool fg,
-                                   const std::string& text) {
-                return rgb(r, g, b, fg) + text + style::reset_style();
+            inline std::string rgb(unsigned r, unsigned g, unsigned b, bool fg, const std::string& text) {
+                return concat(rgb(r, g, b, fg), text, style::reset_style());
             }
 
         } // namespace color
@@ -205,10 +217,10 @@ namespace tui {
         make_color(white);
         make_color(basic);
 
-        inline tui_string rgb(unsigned short r, unsigned short g, unsigned short b) const {
+        inline tui_string rgb(unsigned r, unsigned g, unsigned b) const {
             return text::color::rgb(r, g, b, true, *this);
         }
-        inline tui_string on_rgb(unsigned short r, unsigned short g, unsigned short b) const {
+        inline tui_string on_rgb(unsigned r, unsigned g, unsigned b) const {
             return text::color::rgb(r, g, b, false, *this);
         }
     };
