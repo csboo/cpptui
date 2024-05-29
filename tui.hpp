@@ -222,8 +222,8 @@ namespace tui {
 #define make_stylizer(STYLE) stylize(STYLE) stylize_text(STYLE)
 
             stylize(reset);
-            inline std::string style_and_reset(const Style& st, const std::string& text) {
-                return concat(style(st), text, reset_style());
+            inline std::string style_and_reset(const Style& st, const std::string& s) {
+                return concat(style(st), s, reset_style());
             }
 
             make_stylizer(bold);
@@ -234,16 +234,6 @@ namespace tui {
             make_stylizer(inverted);
             make_stylizer(invisible);
             make_stylizer(strikethrough);
-
-            // printf '\e]8;;http://example.com\e\\This is a link\e]8;;\e\\\n'
-            // printf 'ESC]8;;{link}ESC\\{text}ESC]8;;ESC\\'
-            inline std::string link(const std::string& link, const std::string& text) {
-                return concat(PURE_ESC, "]8;;", link, PURE_ESC, "\\", text, PURE_ESC, "]8;;", PURE_ESC, "\\");
-            }
-            inline std::string link(const char* link, const char* text) {
-                return concat(PURE_ESC, "]8;;", link, PURE_ESC, "\\", text, PURE_ESC, "]8;;", PURE_ESC, "\\");
-            }
-
         } // namespace style
 
         namespace color {
@@ -343,7 +333,6 @@ namespace tui {
         make_color(white);
         make_color(basic);
 
-        inline tui_string link(const char* link) { return text::style::link(link, *this); }
         inline tui_string rgb(unsigned r, unsigned g, unsigned b) const {
             return text::color::rgb(r, g, b, true, *this);
         }
