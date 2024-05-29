@@ -3,10 +3,6 @@
 #ifndef TUI_H
 #define TUI_H
 
-#ifdef _WIN32 // windows
-#include <conio.h>
-#include <windows.h>
-#endif
 #include <cassert>
 #include <csignal>
 #include <iostream>
@@ -18,92 +14,6 @@ namespace tui {
     constexpr const char PURE_ESC = '\x1B';
     // actually == "ESC[" almost everything starts with this
     constexpr const char* const ESC = "\x1B[";
-
-    inline void enable_raw_mode() {
-#ifdef _WIN32
-        // Windows-specific code
-        HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
-        if (hStdin == INVALID_HANDLE_VALUE) {
-            std::cerr << "Error getting the standard input handle." << std::endl;
-            exit(1);
-        }
-
-        DWORD mode;
-        if (!GetConsoleMode(hStdin, &mode)) {
-            std::cerr << "Error getting the console mode." << std::endl;
-            exit(1);
-        }
-
-        DWORD newMode = mode;
-        newMode &= ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
-
-        if (!SetConsoleMode(hStdin, newMode)) {
-            std::cerr << "Error setting the console to raw mode." << std::endl;
-            exit(1);
-        }
-#else
-        // Unix-like systems specific code
-        // struct termios term {};
-        // if (tcgetattr(STDIN_FILENO, &term) == -1) {
-        //     std::cerr << "Error getting terminal attributes." << std::endl;
-        //     exit(1);
-        // }
-
-        // struct termios raw = term;
-        // raw.c_lflag &= ~(ICANON | ECHO);
-
-        // if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) {
-        //     std::cerr << "Error setting terminal to raw mode." << std::endl;
-        //     exit(1);
-        // }
-
-        system("stty raw");
-        system("stty -echo");
-#endif
-    }
-
-    inline void disable_raw_mode() {
-#ifdef _WIN32
-        // Windows-specific code
-        HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
-        if (hStdin == INVALID_HANDLE_VALUE) {
-            std::cerr << "Error getting the standard input handle." << std::endl;
-            exit(1);
-        }
-
-        DWORD mode;
-        if (!GetConsoleMode(hStdin, &mode)) {
-            std::cerr << "Error getting the console mode." << std::endl;
-            exit(1);
-        }
-
-        // Restore original mode
-        mode |= (ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
-        if (!SetConsoleMode(hStdin, mode)) {
-            std::cerr << "Error restoring the console mode." << std::endl;
-            exit(1);
-        }
-#else
-        // Unix-like systems specific code
-        system("stty -raw");
-        system("stty echo");
-
-        // struct termios term {};
-        // if (tcgetattr(STDIN_FILENO, &term) == -1) {
-        //     std::cerr << "Error getting terminal attributes." << std::endl;
-        //     exit(1);
-        // }
-
-        // // Restore original attributes
-        // term.c_lflag |= (ICANON | ECHO);
-
-        // if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &term) == -1) {
-        //     std::cerr << "Error restoring terminal mode." << std::endl;
-        //     exit(1);
-        // }
-#endif
-    }
-
     namespace cursor {
         // moves cursor up `n` rows
         inline void up(unsigned n = 1) { std::cout << ESC << n << "#A"; }
