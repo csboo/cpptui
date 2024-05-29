@@ -4,7 +4,6 @@
 #define TUI_H
 
 #include <cassert>
-#include <csignal>
 #include <iostream>
 #include <sstream>
 #include <string>
