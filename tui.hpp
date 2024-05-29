@@ -33,7 +33,7 @@ namespace tui {
         // moves cursor to home position (0;0)
         inline void home() { std::cout << ESC << 'H'; }
         // moves cursor to (`row`;`col`)
-        inline void move_to(unsigned row, unsigned col) { std::cout << ESC << row << ';' << col << 'H'; }
+        inline void set_position(unsigned row, unsigned col) { std::cout << ESC << row << ';' << col << 'H'; }
         // moves cursor to column `n`
         inline void to_column(unsigned n) { std::cout << ESC << n << "#G"; }
 
@@ -45,8 +45,27 @@ namespace tui {
         // set visibility
         inline void visible(bool visible) { std::cout << ESC << "?25" << (visible ? 'h' : 'l'); }
 
-        // check where the cursor is
+        // tell the terminal to check where the cursor is
         inline void request_position() { std::cout << ESC << "6n"; }
+
+        // rows, cols
+        inline std::pair<unsigned, unsigned> get_position() {
+            request_position();
+            std::flush(std::cout);
+            // Read the response: ESC [ rows ; cols R
+            char ch = 0;
+            unsigned rows = 0;
+            unsigned cols = 0;
+            if (std::cin.get(ch) && ch == PURE_ESC && std::cin.get(ch) && ch == '[') {
+                std::cin >> rows;
+                std::cin.get(ch); // skip the ';'
+                std::cin >> cols;
+                std::cin.ignore(); // skip the 'R'
+            }
+
+            return {rows, cols};
+        }
+
     } // namespace cursor
 
     namespace screen {
