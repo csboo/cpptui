@@ -3,7 +3,12 @@
 #ifndef TUI_H
 #define TUI_H
 
+#ifdef _WIN32 // windows
+#include <conio.h>
+#include <windows.h>
+#endif
 #include <cassert>
+#include <csignal>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -13,6 +18,92 @@ namespace tui {
     constexpr const char PURE_ESC = '\x1B';
     // actually == "ESC[" almost everything starts with this
     constexpr const char* const ESC = "\x1B[";
+
+    inline void enable_raw_mode() {
+#ifdef _WIN32
+        // Windows-specific code
+        HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+        if (hStdin == INVALID_HANDLE_VALUE) {
+            std::cerr << "Error getting the standard input handle." << std::endl;
+            exit(1);
+        }
+
+        DWORD mode;
+        if (!GetConsoleMode(hStdin, &mode)) {
+            std::cerr << "Error getting the console mode." << std::endl;
+            exit(1);
+        }
+
+        DWORD newMode = mode;
+        newMode &= ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
+
+        if (!SetConsoleMode(hStdin, newMode)) {
+            std::cerr << "Error setting the console to raw mode." << std::endl;
+            exit(1);
+        }
+#else
+        // Unix-like systems specific code
+        // struct termios term {};
+        // if (tcgetattr(STDIN_FILENO, &term) == -1) {
+        //     std::cerr << "Error getting terminal attributes." << std::endl;
+        //     exit(1);
+        // }
+
+        // struct termios raw = term;
+        // raw.c_lflag &= ~(ICANON | ECHO);
+
+        // if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) {
+        //     std::cerr << "Error setting terminal to raw mode." << std::endl;
+        //     exit(1);
+        // }
+
+        system("stty raw");
+        system("stty -echo");
+#endif
+    }
+
+    inline void disable_raw_mode() {
+#ifdef _WIN32
+        // Windows-specific code
+        HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+        if (hStdin == INVALID_HANDLE_VALUE) {
+            std::cerr << "Error getting the standard input handle." << std::endl;
+            exit(1);
+        }
+
+        DWORD mode;
+        if (!GetConsoleMode(hStdin, &mode)) {
+            std::cerr << "Error getting the console mode." << std::endl;
+            exit(1);
+        }
+
+        // Restore original mode
+        mode |= (ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
+        if (!SetConsoleMode(hStdin, mode)) {
+            std::cerr << "Error restoring the console mode." << std::endl;
+            exit(1);
+        }
+#else
+        // Unix-like systems specific code
+        system("stty -raw");
+        system("stty echo");
+
+        // struct termios term {};
+        // if (tcgetattr(STDIN_FILENO, &term) == -1) {
+        //     std::cerr << "Error getting terminal attributes." << std::endl;
+        //     exit(1);
+        // }
+
+        // // Restore original attributes
+        // term.c_lflag |= (ICANON | ECHO);
+
+        // if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &term) == -1) {
+        //     std::cerr << "Error restoring terminal mode." << std::endl;
+        //     exit(1);
+        // }
+#endif
+    }
+
     namespace cursor {
         // moves cursor up `n` rows
         inline void up(unsigned n = 1) { std::cout << ESC << n << "#A"; }
@@ -32,8 +123,8 @@ namespace tui {
 
         // moves cursor to home position (0;0)
         inline void home() { std::cout << ESC << 'H'; }
-        // moves cursor to (`row`;`col`)
-        inline void move_to(unsigned row, unsigned col) { std::cout << ESC << row << ';' << col << 'H'; }
+        // moves cursor to (`row`;`col`), both start at 1
+        inline void set_position(unsigned row, unsigned col) { std::cout << ESC << row << ';' << col << 'H'; }
         // moves cursor to column `n`
         inline void to_column(unsigned n) { std::cout << ESC << n << "#G"; }
 
@@ -45,8 +136,27 @@ namespace tui {
         // set visibility
         inline void visible(bool visible) { std::cout << ESC << "?25" << (visible ? 'h' : 'l'); }
 
-        // check where the cursor is
-        inline void request_position() { std::cout << ESC << "6n"; }
+        // tell the terminal to check where the cursor is
+        inline void query_position() { std::cout << ESC << "6n"; }
+
+        // (rows;cols)
+        inline std::pair<unsigned, unsigned> get_position() {
+            query_position();
+            std::flush(std::cout);
+            // Read the response: ESC [ rows ; cols R
+            char ch = 0;
+            unsigned rows = 0;
+            unsigned cols = 0;
+            if (std::cin.get(ch) && ch == PURE_ESC && std::cin.get(ch) && ch == '[') {
+                std::cin >> rows;
+                std::cin.get(ch); // skip the ';'
+                std::cin >> cols;
+                std::cin.ignore(); // skip the 'R'
+            }
+
+            return {rows, cols};
+        }
+
     } // namespace cursor
 
     namespace screen {
@@ -67,6 +177,12 @@ namespace tui {
 
         inline void scroll_up(unsigned n = 1) { std::cout << ESC << n << 'S'; }
         inline void scroll_down(unsigned n = 1) { std::cout << ESC << n << 'T'; }
+
+        // get the size of the terminal: (rows;cols)
+        inline std::pair<unsigned, unsigned> size() {
+            cursor::set_position(9999, 9999); // very huge position, that won't be reached, moves to biggest
+            return cursor::get_position();
+        }
     } // namespace screen
 
     namespace text {
@@ -106,8 +222,8 @@ namespace tui {
 #define make_stylizer(STYLE) stylize(STYLE) stylize_text(STYLE)
 
             stylize(reset);
-            inline std::string style_and_reset(const Style& st, const std::string& text) {
-                return concat(style(st), text, reset_style());
+            inline std::string style_and_reset(const Style& st, const std::string& s) {
+                return concat(style(st), s, reset_style());
             }
 
             make_stylizer(bold);
@@ -118,16 +234,6 @@ namespace tui {
             make_stylizer(inverted);
             make_stylizer(invisible);
             make_stylizer(strikethrough);
-
-            // printf '\e]8;;http://example.com\e\\This is a link\e]8;;\e\\\n'
-            // printf 'ESC]8;;{link}ESC\\{text}ESC]8;;ESC\\'
-            inline std::string link(const std::string& link, const std::string& text) {
-                return concat(PURE_ESC, "]8;;", link, PURE_ESC, "\\", text, PURE_ESC, "]8;;", PURE_ESC, "\\");
-            }
-            inline std::string link(const char* link, const char* text) {
-                return concat(PURE_ESC, "]8;;", link, PURE_ESC, "\\", text, PURE_ESC, "]8;;", PURE_ESC, "\\");
-            }
-
         } // namespace style
 
         namespace color {
@@ -227,7 +333,6 @@ namespace tui {
         make_color(white);
         make_color(basic);
 
-        inline tui_string link(const char* link) { return text::style::link(link, *this); }
         inline tui_string rgb(unsigned r, unsigned g, unsigned b) const {
             return text::color::rgb(r, g, b, true, *this);
         }
@@ -235,6 +340,32 @@ namespace tui {
             return text::color::rgb(r, g, b, false, *this);
         }
     };
+
+    // void handle_resize(int /*sig*/) { screen::clear(); }
+    using fn_ptr = void (*)(int);
+    inline void set_up_resize(fn_ptr handle_resize) {
+        // Register the signal handler for SIGWINCH
+        struct sigaction sa {};
+        sa.sa_handler = handle_resize;
+        sa.sa_flags = SA_RESTART; // Restart functions if interrupted by handler
+        sigaction(SIGWINCH, &sa, nullptr);
+    }
+
+    inline void init_term(bool enable_cursor) {
+        tui::enable_raw_mode();
+        tui::cursor::visible(enable_cursor);
+        tui::screen::save_screen();
+        tui::screen::alternative_buffer(true);
+        tui::screen::clear();
+        tui::cursor::home();
+    }
+    inline void reset_term() {
+        tui::disable_raw_mode();
+        tui::cursor::visible(true);
+        tui::screen::restore_screen();
+        tui::screen::alternative_buffer(false);
+    }
+
 } // namespace tui
 
 #endif // TUI_H
