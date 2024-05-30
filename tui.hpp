@@ -312,6 +312,7 @@ namespace tui {
     class tui_string : public std::string {
       public:
         tui_string() = default;
+        template <typename T> tui_string(T s) : std::string(tui::text::concat(s)) {}
         tui_string(const char* s) : std::string(s) {}
         tui_string(const std::string& s) : std::string(s) {}
 
