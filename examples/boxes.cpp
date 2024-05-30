@@ -75,43 +75,46 @@ std::unordered_map<kind, std::vector<std::string>> kinds() {
             {rounded, {"╭", "╮", "╰", "╯", "│", "─"}}};
 }
 
-// start.first ------------ start.second
-// |                                   |
-// |                                   |
-// |                                   |
-// |                                   |
-// |                                   |
-// |                                   |
-// |                                   |
-// end.first ---------------- end.second
+// start.row ------------ start.col
+// |                              |
+// |                              |
+// |                              |
+// |                              |
+// |                              |
+// |                              |
+// |                              |
+// end.row ---------------- end.col
 void box(coord start, coord end, kind with) {
     assert(start.row <= end.row && start.col <= end.col);
 
     auto draw = kinds()[with];
 
-    tui::cursor::set_position(start.row, start.col);
-    std::cout << draw[0];
-
     // do rows
     for (auto row = start.row + 1; row < end.row; ++row) {
+        // left row
         tui::cursor::set_position(row, start.col);
         std::cout << draw[4];
+        // right row
         tui::cursor::set_position(row, end.col);
         std::cout << draw[4];
     }
-    tui::cursor::set_position(start.row, end.col);
-    std::cout << draw[1];
 
-    tui::cursor::set_position(end.row, start.col);
-    std::cout << draw[2];
     // do columns
-    for (auto col = start.col + 1; col < end.col; ++col) {
-        tui::cursor::set_position(start.row, col);
-        std::cout << draw[5];
-        tui::cursor::set_position(end.row, col);
+    // top left
+    tui::cursor::set_position(start.row, start.col);
+    std::cout << draw[0];
+    for (auto i = start.col + 1; i < end.col; ++i) {
         std::cout << draw[5];
     }
-    tui::cursor::set_position(end.row, end.col);
+    // top right
+    std::cout << draw[1];
+    // bottom left
+    tui::cursor::set_position(end.row, start.col);
+    std::cout << draw[2];
+    for (auto i = start.col + 1; i < end.col; ++i) {
+        std::cout << draw[5];
+    }
+    // bottom right
     std::cout << draw[3];
 }
 
