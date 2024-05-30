@@ -373,9 +373,9 @@ namespace tui {
     }
     inline void reset_term() {
         tui::disable_raw_mode();
-        tui::cursor::visible(true);
-        tui::screen::restore_screen();
         tui::screen::alternative_buffer(false);
+        tui::screen::restore_screen();
+        tui::cursor::visible(true);
     }
 
 } // namespace tui
