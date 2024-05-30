@@ -137,6 +137,33 @@ void run() {
 
     char x = 0;
     while (x != 'q') {
+        if (x == 27 && std::cin.peek() == 91) {
+            tui::cursor::set_position(40, 140 - 2);
+            std::cin.ignore();
+            auto sus = std::cin.get();
+            std::cout << "oh! an arrow? ";
+            switch (sus) {
+            case 65:
+                std::cout << "up   ";
+                break;
+            case 66:
+                std::cout << "down ";
+                break;
+            case 67:
+                std::cout << "right";
+                break;
+            case 68:
+                std::cout << "left ";
+                break;
+            default:
+                std::cout << "NO!  ";
+                std::cin.get();
+                std::cin.get();
+                std::cin.ignore();
+                break;
+            }
+        }
+
         screen_size = tui::screen::size();
         screen = coord{screen_size.first, screen_size.second};
         msg_start = coord{screen.row / 2, static_cast<unsigned int>((screen.col / 2) - msg_len / 2)};
@@ -213,6 +240,10 @@ void run() {
         // 120fps
         std::this_thread::sleep_for(std::chrono::milliseconds(8));
         std::cin.get(x);
+        if (x < 0) {
+            std::cin.ignore();
+            x = 0;
+        }
     }
 }
 
