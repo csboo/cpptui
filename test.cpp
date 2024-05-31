@@ -18,11 +18,6 @@ namespace tui {
         enum class Align { TopLeft, TopRight, BottomLeft, BottomRight, Center, Custom };
         Box(int width, int height, Style style = Style::Empty, std::string title = "")
             : width(width), height(height), title(std::move(title)), style(style) {
-            this->content.resize((width+1)*(height+1));
-            std::cerr << content.size()<< "resize done\n";
-            // for (auto & i : content) {
-            //     i = "X";
-            // }
             init_box();
         }
 
@@ -34,68 +29,20 @@ namespace tui {
             const Box_chars& chars = styles.at(style);
 
             // Top border
-            content.at(getij(0, 0)) = chars.corners[0]; 
-            std::cerr << "topleft done\n";
-            // std::cerr << getij(0,0) << "\n";
-
-            for(int j = 1; j < width; j++){
-               content.at(getij(0, j)) = chars.horizontal;
-            }
-            std::cerr << "topdone\n";
-
-            content.at(getij(0, width)) = chars.corners[1];
-            std::cerr << "topright done\n";
             
             // Side borders
-            for (int i = 1; i < height; i++) {
-                content.at(getij(i, 0)) = chars.vertical;
-            }
-            for (int i = 1; i < height; i++) {
-                content.at(getij(i, width)) = chars.vertical;
-            }
-            std::cerr << "side done\n";
+
             // Bottom border
-            content.at(getij(height, 0)) = chars.corners[3];
-            std::cerr << "bottom left done\n";
-            for (int j = 1; j < width; j++ ) {
-                content.at(getij(height, j)) = chars.horizontal; 
-            }
-            std::cerr << "bottom done\n";
-            content.at(getij(height, width)) = chars.corners[2];
-            std::cerr << "last done\n";
         };
         void print(){
-            // for (int i = 0; i < width; i++) {
-            //     for (int j = 0; j < height; j++) {
-            //         std::cout << getij(i, j);
-            //     }
-            //     std::cout << "\n";
-            // }
-            int c =0;
-            for (int i = 0; i < height+1; i++) {
-                for (int j = 0; j < width+1; j++ ) {
-                    if (j==0) {
-                        if (c==10) {
-                            std::cout << 1;
-                            c++;
-                        } else {
-                            std::cout << c++;
-                        }
-                        if (c==11){
-                            c = 1;
-                        }
-                    }
-                    std::cout << content.at(getij(i,j));
-                }
-                std::cout << "\n";
-            }
+            
         }
 
         inline int get_width() const {return this->width;}
+        inline void set_width(unsigned width) {this->width = width;}
+        inline int get_height() const {return this->width;}
+        inline void set_height(unsigned height) {this->height = height;}
 
-        inline int getij(int i, int j) const {
-            return j + i * get_width();
-        };
       private:
         struct Box_chars {
             std::string corners[4];
@@ -109,13 +56,14 @@ namespace tui {
             int x;
             int y;
         };
+
         struct Coord{
             int x;
             int y;
         };
 
-        const int width;
-        const int height;
+        int width;
+        int height;
 
         Coord astart;
         Coord aend;
@@ -134,9 +82,6 @@ namespace tui {
             {Style::Empty, {{" ", " ", " ", " "}, " ", " "}},
             {Style::Rounded, {{"╭", "╮", "╯", "╰"}, "─", "│"}},
         };
-        
-        std::vector<std::string> content;
-        
 
         // int get_align(Align alignment) const {
         //     switch (alignment) {
@@ -174,10 +119,18 @@ namespace tui {
 } // namespace tui
 
 int main() {
+    tui::init_term(true);
+    
     int width = 20;
     int height = 10;
     tui::Box alma(width, height, tui::Box::Style::Rounded);
     std::cerr << "main box init done\n";
     alma.print();
+    
+    char car = '\0';
+    // tui::cursor::set_position();
+    std::cout << "q to quit";
+    while(car != 'q'){ std::cin.get(car); }
+    tui::reset_term();
     return 0;
 }
