@@ -35,6 +35,7 @@ see [examples](./examples), but basically just
 ## non-goals
 
 -   mouse support
+-   huge number of widgets
 -   high level functions
 -   thousands of more features: just what's necessary
 
