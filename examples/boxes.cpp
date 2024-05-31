@@ -75,43 +75,46 @@ std::unordered_map<kind, std::vector<std::string>> kinds() {
             {rounded, {"╭", "╮", "╰", "╯", "│", "─"}}};
 }
 
-// start.first ------------ start.second
-// |                                   |
-// |                                   |
-// |                                   |
-// |                                   |
-// |                                   |
-// |                                   |
-// |                                   |
-// end.first ---------------- end.second
+// start.row ------------ start.col
+// |                              |
+// |                              |
+// |                              |
+// |                              |
+// |                              |
+// |                              |
+// |                              |
+// end.row ---------------- end.col
 void box(coord start, coord end, kind with) {
     assert(start.row <= end.row && start.col <= end.col);
 
     auto draw = kinds()[with];
 
-    tui::cursor::set_position(start.row, start.col);
-    std::cout << draw[0];
-
     // do rows
     for (auto row = start.row + 1; row < end.row; ++row) {
+        // left row
         tui::cursor::set_position(row, start.col);
         std::cout << draw[4];
+        // right row
         tui::cursor::set_position(row, end.col);
         std::cout << draw[4];
     }
-    tui::cursor::set_position(start.row, end.col);
-    std::cout << draw[1];
 
-    tui::cursor::set_position(end.row, start.col);
-    std::cout << draw[2];
     // do columns
-    for (auto col = start.col + 1; col < end.col; ++col) {
-        tui::cursor::set_position(start.row, col);
-        std::cout << draw[5];
-        tui::cursor::set_position(end.row, col);
+    // top left
+    tui::cursor::set_position(start.row, start.col);
+    std::cout << draw[0];
+    for (auto i = start.col + 1; i < end.col; ++i) {
         std::cout << draw[5];
     }
-    tui::cursor::set_position(end.row, end.col);
+    // top right
+    std::cout << draw[1];
+    // bottom left
+    tui::cursor::set_position(end.row, start.col);
+    std::cout << draw[2];
+    for (auto i = start.col + 1; i < end.col; ++i) {
+        std::cout << draw[5];
+    }
+    // bottom right
     std::cout << draw[3];
 }
 
@@ -137,6 +140,33 @@ void run() {
 
     char x = 0;
     while (x != 'q') {
+        if (x == 27 && std::cin.peek() == 91) {
+            tui::cursor::set_position(40, 140 - 2);
+            std::cin.ignore();
+            auto sus = std::cin.get();
+            std::cout << "oh! an arrow? ";
+            switch (sus) {
+            case 65:
+                std::cout << "up   ";
+                break;
+            case 66:
+                std::cout << "down ";
+                break;
+            case 67:
+                std::cout << "right";
+                break;
+            case 68:
+                std::cout << "left ";
+                break;
+            default:
+                std::cout << "NO!  ";
+                std::cin.get();
+                std::cin.get();
+                std::cin.ignore();
+                break;
+            }
+        }
+
         screen_size = tui::screen::size();
         screen = coord{screen_size.first, screen_size.second};
         msg_start = coord{screen.row / 2, static_cast<unsigned int>((screen.col / 2) - msg_len / 2)};
@@ -213,6 +243,10 @@ void run() {
         // 120fps
         std::this_thread::sleep_for(std::chrono::milliseconds(8));
         std::cin.get(x);
+        if (x < 0) {
+            std::cin.ignore();
+            x = 0;
+        }
     }
 }
 
