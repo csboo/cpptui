@@ -86,7 +86,7 @@ std::unordered_map<kind, std::vector<std::string>> kinds() {
 // |                              |
 // |                              |
 // end.row ---------------- end.col
-void box(coord start, coord end, kind with) {
+void draw_box(coord start, coord end, kind with) {
     assert(start.row <= end.row && start.col <= end.col);
 
     auto draw = kinds()[with];
@@ -189,27 +189,27 @@ void run() {
             }
         } else if (x == 'j') {
             auto* cb = &boxes[current_box];
-            box(cb->first, cb->second, empty);
+            draw_box(cb->first, cb->second, empty);
             cb->first.row++;
             cb->second.row++;
         } else if (x == 'k') {
             auto* cb = &boxes[current_box];
-            box(cb->first, cb->second, empty);
+            draw_box(cb->first, cb->second, empty);
             cb->first.row--;
             cb->second.row--;
         } else if (x == 'h') {
             auto* cb = &boxes[current_box];
-            box(cb->first, cb->second, empty);
+            draw_box(cb->first, cb->second, empty);
             cb->first.col--;
             cb->second.col--;
         } else if (x == 'l') {
             auto* cb = &boxes[current_box];
-            box(cb->first, cb->second, empty);
+            draw_box(cb->first, cb->second, empty);
             cb->first.col++;
             cb->second.col++;
         } else if (x == '-') {
             auto* cb = &boxes[current_box];
-            box(cb->first, cb->second, empty);
+            draw_box(cb->first, cb->second, empty);
             cb->first.row++;
             cb->first.col++;
 
@@ -217,7 +217,7 @@ void run() {
             cb->second.col--;
         } else if (x == '+') {
             auto* cb = &boxes[current_box];
-            box(cb->first, cb->second, empty);
+            draw_box(cb->first, cb->second, empty);
             cb->first.row--;
             cb->first.col--;
 
@@ -228,10 +228,10 @@ void run() {
         for (auto item : boxes) {
             if (item == boxes[current_box]) {
                 std::cout << tui::text::color::cyan_fg();
-                box(item.first, item.second, rounded);
+                draw_box(item.first, item.second, rounded);
                 std::cout << tui::text::style::reset_style();
             } else {
-                box(item.first, item.second, basic);
+                draw_box(item.first, item.second, basic);
             }
         }
 
