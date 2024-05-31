@@ -120,6 +120,38 @@ void box(coord start, coord end, kind with) {
     std::cout << draw[3];
 }
 
+// catch special characters, that might mess up things
+void filter_chars(char ch) {
+    if (ch < 0) {
+        std::cin.ignore();
+        ch = 0;
+    } else if (ch == 27 && std::cin.peek() == 91) {
+        tui::cursor::set_position(40, 140 - 2);
+        std::cin.ignore();
+        auto sus = std::cin.get();
+        std::cout << "oh! an arrow? ";
+        switch (sus) {
+        case 65:
+            std::cout << "up   ";
+            break;
+        case 66:
+            std::cout << "down ";
+            break;
+        case 67:
+            std::cout << "right";
+            break;
+        case 68:
+            std::cout << "left ";
+            break;
+        default:
+            std::cout << "NO!  ";
+            std::cin.get();
+            std::cin.get();
+            std::cin.ignore();
+            break;
+        }
+    }
+}
 void run() {
     auto screen_size = tui::screen::size();
     auto screen = coord{screen_size.first, screen_size.second};
@@ -142,32 +174,6 @@ void run() {
 
     char x = 0;
     while (x != 'q') {
-        if (x == 27 && std::cin.peek() == 91) {
-            tui::cursor::set_position(40, 140 - 2);
-            std::cin.ignore();
-            auto sus = std::cin.get();
-            std::cout << "oh! an arrow? ";
-            switch (sus) {
-            case 65:
-                std::cout << "up   ";
-                break;
-            case 66:
-                std::cout << "down ";
-                break;
-            case 67:
-                std::cout << "right";
-                break;
-            case 68:
-                std::cout << "left ";
-                break;
-            default:
-                std::cout << "NO!  ";
-                std::cin.get();
-                std::cin.get();
-                std::cin.ignore();
-                break;
-            }
-        }
 
         screen_size = tui::screen::size();
         screen = coord{screen_size.first, screen_size.second};
@@ -245,10 +251,7 @@ void run() {
         // 120fps
         std::this_thread::sleep_for(std::chrono::milliseconds(8));
         std::cin.get(x);
-        if (x < 0) {
-            std::cin.ignore();
-            x = 0;
-        }
+        filter_chars(x);
     }
 }
 
