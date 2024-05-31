@@ -24,40 +24,42 @@ struct coord {
     bool operator==(const coord& other) const { return (this->row == other.row && this->col == other.col); }
 };
 
+// make `x` be good for `counter_box`
+void count(const unsigned long long& x) {
+    unsigned r = 0;
+    if (x % 100 == 0) {
+        std::cout << tui::tui_string(x / 100).on_red().black();
+    } else if (x % 10 == 0) {
+        std::cout << tui::tui_string(x / 10 % 10).on_blue().black();
+    } else {
+        std::cout << x % 10;
+    }
+}
+
 void counter_box(coord start, coord end) {
     assert(start.row <= end.row && start.col <= end.col);
 
-    tui::cursor::set_position(start.row, start.col);
-
     // do rows
-    for (auto row = start.row; row <= end.row; ++row) {
+    // from top to down
+    for (auto row = start.row + 1; row < end.row; ++row) {
+        // left row
         tui::cursor::set_position(row, start.col);
-        if (row % 10 == 0) {
-            std::cout << tui::tui_string(tui::text::concat(row / 10)).on_magenta();
-        } else {
-            std::cout << row % 10;
-        }
+        count(row);
+        // right row
         tui::cursor::set_position(row, end.col);
-        if (row % 10 == 0) {
-            std::cout << tui::tui_string(tui::text::concat(row / 10)).on_magenta();
-        } else {
-            std::cout << row % 10;
-        }
+        count(row);
     }
+
     // do columns
-    for (auto col = start.col + 1; col < end.col; ++col) {
-        tui::cursor::set_position(start.row, col);
-        if (col % 10 == 0) {
-            std::cout << tui::tui_string(tui::text::concat(col / 10)).on_magenta();
-        } else {
-            std::cout << col % 10;
-        }
-        tui::cursor::set_position(end.row, col);
-        if (col % 10 == 0) {
-            std::cout << tui::tui_string(tui::text::concat(col / 10)).on_magenta();
-        } else {
-            std::cout << col % 10;
-        }
+    // top left
+    tui::cursor::set_position(start.row, start.col);
+    for (auto col = start.col; col <= end.col; ++col) {
+        count(col);
+    }
+    // bottom left
+    tui::cursor::set_position(end.row, start.col);
+    for (auto col = start.col; col <= end.col; ++col) {
+        count(col);
     }
 }
 
@@ -230,7 +232,7 @@ void run() {
         tui::cursor::set_position(msg_start.row, msg_start.col);
         std::cout << msg.bold().italic().inverted().blue();
 
-        tui::cursor::set_position(38, 140);
+        tui::cursor::set_position(screen.row / 3 * 2, screen.col / 3 * 2);
         std::cout << tui::tui_string("tui.hpp").bold().blue().link("https://github.com/csboo/cpptui").on_magenta();
         // tui::cursor::set_position(39, 140);
         // std::cout << "\\──────┘";
