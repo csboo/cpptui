@@ -355,13 +355,17 @@ namespace tui {
 
     // void handle_resize(int /*sig*/) { screen::clear(); }
     using fn_ptr = void (*)(int);
-    // needs a void function
+    // needs a void function, that takes an int, doesn't yet do anything on windows
     inline void set_up_resize(fn_ptr handle_resize) {
+#ifdef _WIN32
+        // should implement logic for windows here
+#else
         // Register the signal handler for SIGWINCH
         struct sigaction sa {};
         sa.sa_handler = handle_resize;
         sa.sa_flags = SA_RESTART; // Restart functions if interrupted by handler
         sigaction(SIGWINCH, &sa, nullptr);
+#endif
     }
 
     inline void init_term(bool enable_cursor) {
