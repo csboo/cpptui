@@ -111,7 +111,7 @@ Checks:
     cert-dcl54-cpp
     cert-dcl58-cpp
     cert-dcl59-cpp
-    cert-env33-c
+    -cert-env33-c
     cert-err09-cpp
     cert-err33-c
     cert-err34-c
@@ -248,7 +248,7 @@ Checks:
     clang-analyzer-webkit.NoUncountedMemberChecker
     clang-analyzer-webkit.RefCntblBaseVirtualDtor
     clang-analyzer-webkit.UncountedLambdaCapturesChecker
-    concurrency-mt-unsafe
+    -concurrency-mt-unsafe
     concurrency-thread-canceltype-asynchronous
     -cppcoreguidelines-avoid-c-arrays
     cppcoreguidelines-avoid-goto
