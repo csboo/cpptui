@@ -12,7 +12,6 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <thread>
 
 namespace tui {
     // only the Esc character
