@@ -98,7 +98,10 @@ void run() {
             std::cout.put('x');
         } else {
             tui::cursor::set_position(30, 0);
-            std::cout << "--     --\r\n" << snake.front().display() << "\r\n" << apple.display();
+            std::cout << "--     --\r\n"
+                      << snake.front().display() << "\r\n"
+                      << snake.back().display() << "\r\n"
+                      << apple.display();
         }
 
         for (const Coord& item : snake) {
