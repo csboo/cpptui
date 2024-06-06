@@ -28,9 +28,9 @@ struct Coord {
     std::string display() const { return "(" + std::to_string(this->row) + ";" + std::to_string(this->col) + ")"; }
 };
 
-void print_at(const char& ch, const Coord& coord) {
+template <typename T> void print_at(const T& print, const Coord& coord) {
     tui::cursor::set_position(coord.row, coord.col);
-    std::cout.put(ch);
+    std::cout << print;
 }
 
 enum Direction {
@@ -112,7 +112,6 @@ void move(Snake& snake, const Direction& dir) {
     for (auto i = 1; i < snake.size(); ++i) {
         snake.at(i) = old_snake.at(i - 1);
     }
-    LOGF << "\n";
 
     handle_movement(dir, head);
 }
@@ -123,9 +122,11 @@ void run() {
     auto screen_size_pair = tui::screen::size();
     auto screen_size = Coord{screen_size_pair.first, screen_size_pair.second};
 
+    auto apple_text = tui::tui_string('@').red().bold();
+
     char ch = 'l';
     auto apple = Coord::random();
-    print_at('@', apple);
+    print_at(apple_text, apple);
     auto dir = Direction::Right;
     Snake snake = {Coord{1, 1}};
 
@@ -133,11 +134,11 @@ void run() {
         dir = from_char(ch);
         move(snake, dir);
         // snake ate apple, we need a new one!
-        if (snake.back() == apple) {
+        if (snake.front() == apple) {
             snake.push_back(Coord{snake.back().row - 1, snake.back().col - 1});
-            LOGF << "\nAPPLE\n";
+            // LOGF << "\nAPPLE\n";
             apple = Coord::random();
-            print_at('@', apple);
+            print_at(apple_text, apple);
         }
         for (auto i = 0; i < snake.size(); ++i) {
             auto item = snake[i];
@@ -154,9 +155,8 @@ void run() {
             std::cout << x;
         }
 
-        std::thread(get_ch, ch).detach();
-        // std::cin.get(ch);
-        LOGF << "\'" << ch << "\'\n";
+        std::cin.get(ch);
+        // LOGF << "\'" << ch << "\'\n";
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
 }
