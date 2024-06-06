@@ -1,5 +1,6 @@
 #include "../tui.hpp"
 #include <chrono>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <random>
@@ -14,6 +15,13 @@ struct Coord {
     unsigned col;
 
     bool operator==(const Coord& other) const { return (this->row == other.row && this->col == other.col); }
+    // See what I did there?
+    Coord operator-(const Coord& other) const {
+        return Coord{
+            this->row + static_cast<unsigned>(abs(static_cast<int>(this->row - static_cast<int>(other.row)))),
+            this->col + static_cast<unsigned>(abs(static_cast<int>(this->col - static_cast<int>(other.col)))),
+        };
+    }
     static Coord random() {
         auto ss = tui::screen::size();
         std::mt19937 mt{std::random_device{}()};
@@ -27,6 +35,7 @@ struct Coord {
     std::pair<unsigned, unsigned> to_pair() const { return {this->row, this->col}; }
     std::string display() const { return "(" + std::to_string(this->row) + ";" + std::to_string(this->col) + ")"; }
 };
+using Snake = std::vector<Coord>;
 
 template <typename T> void print_at(const T& print, const Coord& coord) {
     tui::cursor::set_position(coord.row, coord.col);
@@ -82,9 +91,7 @@ std::string to_string(const Direction& dir) {
     }
 }
 
-using Snake = std::vector<Coord>;
-
-void handle_movement(const Direction& dir, Coord*& coord) {
+void handle_movement(const Direction& dir, Coord* coord) {
     switch (dir) {
     case Up:
         coord->row--;
@@ -116,7 +123,18 @@ void move(Snake& snake, const Direction& dir) {
     handle_movement(dir, head);
 }
 
-void get_ch(char& ch) { std::cin.get(ch); }
+void new_tail(Snake& snake, const Direction& dir = Direction::Right) {
+    if (snake.size() == 1) {
+        auto snake_clone = snake;
+        handle_movement(opposite(dir), &snake_clone.front());
+        snake.push_back(snake_clone.front());
+        return;
+    }
+    auto last = snake.at(snake.size() - 1);
+    auto before_last = snake.at(snake.size() - 2);
+    auto pos = before_last - last;
+    snake.push_back(pos);
+}
 
 void run() {
     auto screen_size_pair = tui::screen::size();
@@ -135,8 +153,9 @@ void run() {
         move(snake, dir);
         // snake ate apple, we need a new one!
         if (snake.front() == apple) {
-            snake.push_back(Coord{snake.back().row - 1, snake.back().col - 1});
-            // LOGF << "\nAPPLE\n";
+            // snake.push_back(Coord{snake.back().row - 1, snake.back().col - 1});
+            new_tail(snake, dir);
+
             apple = Coord::random();
             print_at(apple_text, apple);
         }
@@ -150,7 +169,7 @@ void run() {
             } else if (item == snake.back()) {
                 x = "&";
             } else {
-                x = "#";
+                x = "~";
             }
             std::cout << x;
         }
