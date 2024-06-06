@@ -187,7 +187,7 @@ void run() {
     char ch = 'l';
     auto dir = Direction::Right;
 
-    Snake snake = {Coord{1, 1}};
+    Snake snake = {Coord{0, 0}};
 
     while (ch != 'q' && ch != 'Q' && ch != 3 /* C-c */ && ch != 4 /* C-d */ && ch != 26 /* C-z */) {
         // get which direction the snake shall move to, if character is invalid, don't change: use `dir`
@@ -201,7 +201,6 @@ void run() {
 
             apple = Coord::random(screen_size);
         }
-
         print_at(snake.front(), tui::tui_string(to_string(dir)).cyan().bold());
 
         std::for_each(std::begin(snake) + 1, snake.end(), [&](const Coord& item) {
