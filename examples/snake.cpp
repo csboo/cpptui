@@ -149,16 +149,19 @@ void run() {
     Snake snake = {Coord{1, 1}};
 
     while (ch != 'q') {
+        // get which direction the snake shall move to
         dir = from_char(ch);
+        // and move it correspondly
         move(snake, dir);
+
         // snake ate apple, we need a new one!
         if (snake.front() == apple) {
-            // snake.push_back(Coord{snake.back().row - 1, snake.back().col - 1});
             new_tail(snake, dir);
 
             apple = Coord::random();
             print_at(apple_text, apple);
         }
+
         for (auto i = 0; i < snake.size(); ++i) {
             auto item = snake[i];
             tui::cursor::set_position(item.row, item.col);
@@ -166,15 +169,15 @@ void run() {
             if (item == snake.front()) {
                 x += to_string(dir);
                 x = x.cyan();
-            } else if (item == snake.back()) {
-                x = "&";
             } else {
-                x = "~";
+                x = "#";
             }
             std::cout << x;
         }
 
+        // TODO: other thread with mutex and stuff
         std::cin.get(ch);
+        // TODO: handle all kinds of strange chars: ő, ->, ...
         // LOGF << "\'" << ch << "\'\n";
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
