@@ -1,4 +1,5 @@
 #include "../tui.hpp"
+#include <algorithm>
 #include <chrono>
 #include <cstdlib>
 #include <fstream>
@@ -43,7 +44,7 @@ struct Coord {
 };
 using Snake = std::vector<Coord>;
 
-template <typename T> void print_at(const T& print, const Coord& coord) {
+template <typename T> void print_at(const Coord& coord, const T& print) {
     tui::cursor::set_position(coord.row, coord.col);
     std::cout << print;
 }
@@ -154,7 +155,7 @@ void move(Snake& snake, const Direction& dir, const Coord& ss) {
     Coord* head = &snake.front();
 
     // delete the last one off the screen by overwriting it with a space
-    print_at(' ', *tail);
+    print_at(*tail, ' ');
     auto old_snake = snake;
     for (auto i = 1; i < snake.size(); ++i) {
         snake.at(i) = old_snake.at(i - 1);
@@ -181,7 +182,7 @@ void run() {
 
     auto apple_text = tui::tui_string('@').red().bold();
     auto apple = Coord::random(screen_size);
-    print_at(apple_text, apple);
+    print_at(apple, apple_text);
 
     char ch = 'l';
     auto dir = Direction::Right;
@@ -201,19 +202,13 @@ void run() {
             apple = Coord::random(screen_size);
         }
 
-        for (auto i = 0; i < snake.size(); ++i) {
-            auto item = snake[i];
+        print_at(snake.front(), tui::tui_string(to_string(dir)).cyan().bold());
+
+        std::for_each(std::begin(snake) + 1, snake.end(), [&](const Coord& item) {
             tui::cursor::set_position(item.row, item.col);
-            tui::tui_string x;
-            if (item == snake.front()) {
-                x += to_string(dir);
-                x = x.cyan().bold();
-            } else {
-                x = "#";
-            }
-            std::cout << x;
-        }
-        print_at(apple_text, apple);
+            print_at(item, '#');
+        });
+        print_at(apple, apple_text);
 
         // TODO: other thread with mutex and stuff
         std::cin.get(ch);
