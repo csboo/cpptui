@@ -15,6 +15,7 @@ struct Coord {
     unsigned col;
 
     bool operator==(const Coord& other) const { return (this->row == other.row && this->col == other.col); }
+    bool operator<=(const Coord& other) const { return (this->row <= other.row && this->col <= other.col); }
     // See what I did there?
     Coord operator-(const Coord& other) const {
         return Coord{
@@ -26,12 +27,13 @@ struct Coord {
         auto ss = tui::screen::size();
         return Coord{ss.first, ss.second};
     }
-    static Coord random() {
-        auto ss = Coord::screen_size();
+    static Coord random(const Coord& ss) {
         std::mt19937 mt{std::random_device{}()};
-        std::uniform_int_distribution<unsigned> gen_y(1, ss.row);
+
+        std::uniform_int_distribution<unsigned> gen_y(1, ss.row - 1);
         unsigned y = gen_y(mt);
-        std::uniform_int_distribution<unsigned> gen_x(1, ss.col);
+
+        std::uniform_int_distribution<unsigned> gen_x(1, ss.col - 1);
         unsigned x = gen_x(mt);
 
         return Coord{y, x};
@@ -91,23 +93,43 @@ std::string to_string(const Direction& dir) {
     }
 }
 
-void handle_movement(const Direction& dir, Coord* coord) {
+void handle_movement(const Direction& dir, Coord* coord, const Coord& ss) {
     switch (dir) {
     case Direction::Up:
+        // move to the `Down` side of the screen if would go too far `Up`
+        if (coord->row - 1 == 0) {
+            coord->row = ss.row;
+            break;
+        }
         coord->row--;
         break;
     case Direction::Down:
+        // move to the `Up`per side the screen if would go too far `Down`
+        if (coord->row + 1 > ss.row) {
+            coord->row = 1;
+            break;
+        }
         coord->row++;
         break;
     case Direction::Left:
+        // move to the `Right` side the screen if would go too far `Left`
+        if (coord->col - 1 == 0) {
+            coord->col = ss.col;
+            break;
+        }
         coord->col--;
         break;
     case Direction::Right:
+        // move to the `Left` side the screen if would go too far `Right`
+        if (coord->col + 1 > ss.col) {
+            coord->col = 1;
+            break;
+        }
         coord->col++;
         break;
     }
 }
-void move(Snake& snake, const Direction& dir) {
+void move(Snake& snake, const Direction& dir, const Coord& ss) {
     Coord* tail = &snake.back();
     Coord* head = &snake.front();
 
@@ -118,13 +140,13 @@ void move(Snake& snake, const Direction& dir) {
         snake.at(i) = old_snake.at(i - 1);
     }
 
-    handle_movement(dir, head);
+    handle_movement(dir, head, ss);
 }
 
-void new_tail(Snake& snake, const Direction& dir = Direction::Right) {
+void new_tail(Snake& snake, const Coord& ss, const Direction& dir = Direction::Right) {
     if (snake.size() == 1) {
         auto snake_clone = snake;
-        handle_movement(opposite(dir), &snake_clone.front());
+        handle_movement(opposite(dir), &snake_clone.front(), ss);
         snake.push_back(snake_clone.front());
         return;
     }
@@ -138,27 +160,27 @@ void run() {
     auto screen_size = Coord::screen_size();
 
     auto apple_text = tui::tui_string('@').red().bold();
+    auto apple = Coord::random(screen_size);
+    print_at(apple_text, apple);
 
     char ch = 'l';
-    auto apple = Coord::random();
-    print_at(apple_text, apple);
     auto dir = Direction::Right;
+
     Snake snake = {Coord{1, 1}};
 
     while (ch != 'q') {
         // get which direction the snake shall move to, if character is invalid, don't change: use `dir`
         dir = from_char(ch, dir);
         // and move it correspondly
-        move(snake, dir);
+        move(snake, dir, screen_size);
 
         // snake ate apple, we need a new one!
         if (snake.front() == apple) {
-            new_tail(snake, dir);
+            new_tail(snake, screen_size, dir);
 
-            apple = Coord::random();
-            LOGF << apple.display() << "\n";
-            print_at(apple_text, apple);
+            apple = Coord::random(screen_size);
         }
+        print_at(apple_text, apple);
 
         for (auto i = 0; i < snake.size(); ++i) {
             auto item = snake[i];
@@ -177,7 +199,7 @@ void run() {
         std::cin.get(ch);
         // TODO: handle all kinds of strange chars: ő, ->, ...
         // LOGF << "\'" << ch << "\'\n";
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        std::this_thread::sleep_for(std::chrono::milliseconds(40));
     }
 }
 
