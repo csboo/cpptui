@@ -136,17 +136,7 @@ void run() {
             LOGF << "\nAPPLE\n";
             apple = Coord::random();
             print_at('@', apple);
-        } else {
-            tui::cursor::set_position(30, 0);
-            std::cout << "--     --\r\n";
-            auto i = 0;
-            for (auto item : snake) {
-                std::cout << i << ": " << item.display() << "           \r\n";
-                i++;
-            }
-            std::cout << "\r\napple: " << apple.display() << "          \r\nlen: " << snake.size();
         }
-
         for (auto i = 0; i < snake.size(); ++i) {
             auto item = snake[i];
             tui::cursor::set_position(item.row, item.col);
