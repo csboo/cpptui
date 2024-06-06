@@ -199,12 +199,12 @@ void run() {
 
             apple = Coord::random(screen_size);
         }
-        print_at(snake.front(), tui::tui_string(to_string(dir)).cyan().bold());
 
         std::for_each(std::begin(snake) + 1, snake.end(), [&](const Coord& item) {
             tui::cursor::set_position(item.row, item.col);
             print_at(item, '#');
         });
+        print_at(snake.front(), tui::tui_string(to_string(dir)).cyan().bold());
         print_at(apple, apple_text);
 
         // TODO: other thread with mutex and stuff
