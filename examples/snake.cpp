@@ -7,7 +7,7 @@
 #include <thread>
 #include <vector>
 
-std::ofstream logfile("log.log");
+std::ofstream LOGF("log.log");
 
 struct Coord {
     unsigned row;
@@ -27,6 +27,11 @@ struct Coord {
     std::pair<unsigned, unsigned> to_pair() const { return {this->row, this->col}; }
     std::string display() const { return "(" + std::to_string(this->row) + ";" + std::to_string(this->col) + ")"; }
 };
+
+void print_at(const char& ch, const Coord& coord) {
+    tui::cursor::set_position(coord.row, coord.col);
+    std::cout.put(ch);
+}
 
 enum Direction {
     Up = 0,
@@ -102,19 +107,12 @@ void move(Snake& snake, const Direction& dir) {
     Coord* head = &snake.front();
 
     // delete the last one off the screen by overwriting it with a space
-    tui::cursor::set_position(tail->row, tail->col);
-    std::cout.put(' ');
-    // std::cout << "tail change!";
-    // snake.pop_back();
-    // snake.push_back(snake.back());
-    // tail = &snake.at(snake.size() - 2);
+    print_at(' ', *tail);
+    auto old_snake = snake;
     for (auto i = 1; i < snake.size(); ++i) {
-        logfile << "previous: " << snake.at(i - 1).display() << "\n";
-        logfile << "current: " << snake.at(i).display() << "\n";
-
-        snake.at(i) = snake.at(i - 1);
+        snake.at(i) = old_snake.at(i - 1);
     }
-    logfile << "\n";
+    LOGF << "\n";
 
     handle_movement(dir, head);
 }
@@ -125,6 +123,7 @@ void run() {
 
     char ch = 'l';
     auto apple = Coord::random();
+    print_at('@', apple);
     auto dir = Direction::Right;
     Snake snake = {Coord{1, 1}};
 
@@ -132,14 +131,11 @@ void run() {
         dir = from_char(ch);
         move(snake, dir);
         // snake ate apple, we need a new one!
-        if (snake.front() == apple) {
-            snake.push_back(Coord{snake.back().row - 1, apple.col - 1});
-            tui::cursor::set_position(30, 0);
-            std::cout << "--apple--";
-            logfile << "\nAPPLE\n";
+        if (snake.back() == apple) {
+            snake.push_back(Coord{snake.back().row - 1, snake.back().col - 1});
+            LOGF << "\nAPPLE\n";
             apple = Coord::random();
-            tui::cursor::set_position(apple.row, apple.col);
-            std::cout << tui::tui_string('@').red().bold();
+            print_at('@', apple);
         } else {
             tui::cursor::set_position(30, 0);
             std::cout << "--     --\r\n";
@@ -151,22 +147,23 @@ void run() {
             std::cout << "\r\napple: " << apple.display() << "          \r\nlen: " << snake.size();
         }
 
-        for (const Coord& item : snake) {
+        for (auto i = 0; i < snake.size(); ++i) {
+            auto item = snake[i];
             tui::cursor::set_position(item.row, item.col);
             tui::tui_string x;
-            if (item == snake.front()) {
-                x += to_string(dir);
-                x = x.cyan();
-            } else if (item == snake.back()) {
-                x = "&";
-            } else {
-                x = "-";
-            }
-            std::cout << x;
+            // if (item == snake.front()) {
+            //     x += to_string(dir);
+            //     x = x.cyan();
+            // } else if (item == snake.back()) {
+            // x = "&";
+            // } else {
+            // x = "-";
+            // }
+            std::cout << i;
         }
 
         std::cin.get(ch);
-        logfile << "\'" << ch << "\'\n";
+        LOGF << "\'" << ch << "\'\n";
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
 }
@@ -176,6 +173,7 @@ int main() {
 
     run();
 
+    LOGF.close();
     tui::reset_term();
     return 0;
 }
