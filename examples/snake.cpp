@@ -2,14 +2,11 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
-#include <fstream>
 #include <iostream>
 #include <random>
 #include <string>
 #include <thread>
 #include <vector>
-
-std::ofstream LOGF("log.log");
 
 struct Coord {
     unsigned row;
@@ -18,6 +15,7 @@ struct Coord {
     bool operator==(const Coord& other) const { return (this->row == other.row && this->col == other.col); }
     bool operator<=(const Coord& other) const { return (this->row <= other.row && this->col <= other.col); }
     // See what I did there?
+    // TODO: make it work!
     Coord operator-(const Coord& other) const {
         return Coord{
             this->row + static_cast<unsigned>(abs(static_cast<int>(this->row - static_cast<int>(other.row)))),
@@ -221,7 +219,6 @@ int main() {
 
     run();
 
-    LOGF.close();
     tui::reset_term();
     return 0;
 }
