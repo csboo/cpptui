@@ -22,12 +22,16 @@ struct Coord {
             this->col + static_cast<unsigned>(abs(static_cast<int>(this->col - static_cast<int>(other.col)))),
         };
     }
-    static Coord random() {
+    static Coord screen_size() {
         auto ss = tui::screen::size();
+        return Coord{ss.first, ss.second};
+    }
+    static Coord random() {
+        auto ss = Coord::screen_size();
         std::mt19937 mt{std::random_device{}()};
-        std::uniform_int_distribution<unsigned> gen_y(1, ss.first);
+        std::uniform_int_distribution<unsigned> gen_y(1, ss.row);
         unsigned y = gen_y(mt);
-        std::uniform_int_distribution<unsigned> gen_x(1, ss.second);
+        std::uniform_int_distribution<unsigned> gen_x(1, ss.col);
         unsigned x = gen_x(mt);
 
         return Coord{y, x};
@@ -48,7 +52,7 @@ enum Direction {
     Left,
     Right,
 };
-Direction from_char(const char& ch) {
+Direction from_char(const char& ch, const Direction& dir = Direction::Right) {
     switch (ch) {
     case 'k':
         return Direction::Up;
@@ -59,10 +63,8 @@ Direction from_char(const char& ch) {
     case 'h':
         return Direction::Left;
     default:
-        // unreachable
-        break;
+        return dir;
     }
-    // unreachable
 }
 Direction opposite(const Direction& dir) {
     switch (dir) {
@@ -74,8 +76,6 @@ Direction opposite(const Direction& dir) {
         return Direction::Right;
     case Direction::Right:
         return Direction::Left;
-    default:
-        break;
     }
 }
 std::string to_string(const Direction& dir) {
@@ -93,19 +93,17 @@ std::string to_string(const Direction& dir) {
 
 void handle_movement(const Direction& dir, Coord* coord) {
     switch (dir) {
-    case Up:
+    case Direction::Up:
         coord->row--;
         break;
-    case Down:
+    case Direction::Down:
         coord->row++;
         break;
-    case Left:
+    case Direction::Left:
         coord->col--;
         break;
-    case Right:
+    case Direction::Right:
         coord->col++;
-        break;
-    default:
         break;
     }
 }
@@ -137,8 +135,7 @@ void new_tail(Snake& snake, const Direction& dir = Direction::Right) {
 }
 
 void run() {
-    auto screen_size_pair = tui::screen::size();
-    auto screen_size = Coord{screen_size_pair.first, screen_size_pair.second};
+    auto screen_size = Coord::screen_size();
 
     auto apple_text = tui::tui_string('@').red().bold();
 
@@ -149,8 +146,8 @@ void run() {
     Snake snake = {Coord{1, 1}};
 
     while (ch != 'q') {
-        // get which direction the snake shall move to
-        dir = from_char(ch);
+        // get which direction the snake shall move to, if character is invalid, don't change: use `dir`
+        dir = from_char(ch, dir);
         // and move it correspondly
         move(snake, dir);
 
@@ -159,6 +156,7 @@ void run() {
             new_tail(snake, dir);
 
             apple = Coord::random();
+            LOGF << apple.display() << "\n";
             print_at(apple_text, apple);
         }
 
@@ -168,7 +166,7 @@ void run() {
             tui::tui_string x;
             if (item == snake.front()) {
                 x += to_string(dir);
-                x = x.cyan();
+                x = x.cyan().bold();
             } else {
                 x = "#";
             }
