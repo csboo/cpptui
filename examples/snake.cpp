@@ -188,7 +188,7 @@ void run() {
 
     Snake snake = {Coord{1, 1}};
 
-    while (ch != 'q') {
+    while (ch != 'q' && ch != 'Q' && ch != 3 /* C-c */ && ch != 4 /* C-d */ && ch != 26 /* C-z */) {
         // get which direction the snake shall move to, if character is invalid, don't change: use `dir`
         dir = from_char(ch, dir);
         // and move it correspondly
@@ -217,7 +217,6 @@ void run() {
 
         // TODO: other thread with mutex and stuff
         std::cin.get(ch);
-        // TODO: handle all kinds of strange chars: ő, ->, ...
         // LOGF << "\'" << ch << "\'\n";
         std::this_thread::sleep_for(std::chrono::milliseconds(40));
     }
