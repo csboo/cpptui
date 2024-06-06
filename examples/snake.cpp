@@ -67,7 +67,33 @@ Direction from_char(const char& ch, const Direction& dir = Direction::Right) {
     default:
         if (ch < 0) {
             std::cin.ignore();
+        } else if (ch == 27 && std::cin.peek() == 91) {
+            tui::cursor::set_position(40, 140 - 2);
+            std::cin.ignore();
+            auto sus = std::cin.get();
+            std::cout << "oh! an arrow? ";
+            switch (sus) {
+            case 65:
+                std::cout << "up   ";
+                break;
+            case 66:
+                std::cout << "down ";
+                break;
+            case 67:
+                std::cout << "right";
+                break;
+            case 68:
+                std::cout << "left ";
+                break;
+            default:
+                std::cout << "NO!  ";
+                std::cin.get();
+                std::cin.get();
+                std::cin.ignore();
+                break;
+            }
         }
+
         return dir;
     }
 }
