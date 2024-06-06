@@ -65,6 +65,9 @@ Direction from_char(const char& ch, const Direction& dir = Direction::Right) {
     case 'h':
         return Direction::Left;
     default:
+        if (ch < 0) {
+            std::cin.ignore();
+        }
         return dir;
     }
 }
@@ -180,7 +183,6 @@ void run() {
 
             apple = Coord::random(screen_size);
         }
-        print_at(apple_text, apple);
 
         for (auto i = 0; i < snake.size(); ++i) {
             auto item = snake[i];
@@ -194,6 +196,7 @@ void run() {
             }
             std::cout << x;
         }
+        print_at(apple_text, apple);
 
         // TODO: other thread with mutex and stuff
         std::cin.get(ch);
