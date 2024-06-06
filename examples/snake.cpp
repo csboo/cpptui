@@ -117,6 +117,8 @@ void move(Snake& snake, const Direction& dir) {
     handle_movement(dir, head);
 }
 
+void get_ch(char& ch) { std::cin.get(ch); }
+
 void run() {
     auto screen_size_pair = tui::screen::size();
     auto screen_size = Coord{screen_size_pair.first, screen_size_pair.second};
@@ -141,18 +143,19 @@ void run() {
             auto item = snake[i];
             tui::cursor::set_position(item.row, item.col);
             tui::tui_string x;
-            // if (item == snake.front()) {
-            //     x += to_string(dir);
-            //     x = x.cyan();
-            // } else if (item == snake.back()) {
-            // x = "&";
-            // } else {
-            // x = "-";
-            // }
-            std::cout << i;
+            if (item == snake.front()) {
+                x += to_string(dir);
+                x = x.cyan();
+            } else if (item == snake.back()) {
+                x = "&";
+            } else {
+                x = "#";
+            }
+            std::cout << x;
         }
 
-        std::cin.get(ch);
+        std::thread(get_ch, ch).detach();
+        // std::cin.get(ch);
         LOGF << "\'" << ch << "\'\n";
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
