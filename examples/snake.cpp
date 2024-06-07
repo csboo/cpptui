@@ -46,23 +46,24 @@ template <typename T> void print_at(const Coord& coord, const T& print) {
     std::cout << print;
 }
 
-enum Direction {
+// direction
+enum Dir {
     Up = 0,
     Down,
     Left,
     Right,
     None,
 };
-Direction from_char(const char& ch, const Direction& dir = Direction::Right) {
+Dir from_char(const char& ch, const Dir& dir = Dir::Right) {
     switch (ch) {
     case 'k':
-        return Direction::Up;
+        return Dir::Up;
     case 'j':
-        return Direction::Down;
+        return Dir::Down;
     case 'l':
-        return Direction::Right;
+        return Dir::Right;
     case 'h':
-        return Direction::Left;
+        return Dir::Left;
     default:
         if (ch < 0) {
             std::cin.ignore();
@@ -71,13 +72,13 @@ Direction from_char(const char& ch, const Direction& dir = Direction::Right) {
             auto sus = std::cin.get();
             switch (sus) {
             case 65:
-                return Direction::Up;
+                return Dir::Up;
             case 66:
-                return Direction::Down;
+                return Dir::Down;
             case 67:
-                return Direction::Right;
+                return Dir::Right;
             case 68:
-                return Direction::Left;
+                return Dir::Left;
             default:
                 std::cin.ignore(3);
                 break;
@@ -86,42 +87,53 @@ Direction from_char(const char& ch, const Direction& dir = Direction::Right) {
 
         return dir;
     }
-    return Direction::None;
+    return Dir::None;
 }
-Direction opposite(const Direction& dir) {
+Dir opposite(const Dir& dir) {
     switch (dir) {
-    case Direction::Up:
-        return Direction::Down;
-    case Direction::Down:
-        return Direction::Up;
-    case Direction::Left:
-        return Direction::Right;
-    case Direction::Right:
-        return Direction::Left;
-    case Direction::None:
+    case Dir::Up:
+        return Dir::Down;
+    case Dir::Down:
+        return Dir::Up;
+    case Dir::Left:
+        return Dir::Right;
+    case Dir::Right:
+        return Dir::Left;
+    case Dir::None:
         break;
     }
-    return Direction::None;
+    return Dir::None;
 }
-std::string to_string(const Direction& dir) {
+std::string to_string(const Dir& dir) {
     switch (dir) {
-    case Direction::Up:
+    case Dir::Up:
         return "A";
-    case Direction::Down:
+    case Dir::Down:
         return "V";
-    case Direction::Left:
+    case Dir::Left:
         return "<";
-    case Direction::Right:
+    case Dir::Right:
         return ">";
-    case Direction::None:
+    case Dir::None:
         break;
     }
     return "X";
 }
+std::pair<Dir, Dir> neighbours(const Snake& snake, const unsigned& idx) {
+    auto coord = snake[idx];
+    auto row_diff = 0;
+    // TODO
+}
+std::string draw(const std::pair<Dir, Dir>& nb) {
+    // this is where in Rust we'd use match and be happy
+    if ((nb.first == Dir::Up || nb.first == Dir::Down) && (nb.second == Dir::Down || nb.second == Dir::Up)) {
+        return "|";
+    }
+}
 
-void handle_movement(const Direction& dir, Coord* coord, const Coord& ss) {
+void handle_movement(const Dir& dir, Coord* coord, const Coord& ss) {
     switch (dir) {
-    case Direction::Up:
+    case Dir::Up:
         // move to the `Down` side of the screen if would go too far `Up`
         if (coord->row - 1 == 0) {
             coord->row = ss.row;
@@ -129,7 +141,7 @@ void handle_movement(const Direction& dir, Coord* coord, const Coord& ss) {
         }
         coord->row--;
         break;
-    case Direction::Down:
+    case Dir::Down:
         // move to the `Up`per side the screen if would go too far `Down`
         if (coord->row + 1 > ss.row) {
             coord->row = 1;
@@ -137,7 +149,7 @@ void handle_movement(const Direction& dir, Coord* coord, const Coord& ss) {
         }
         coord->row++;
         break;
-    case Direction::Left:
+    case Dir::Left:
         // move to the `Right` side the screen if would go too far `Left`
         if (coord->col - 1 == 0) {
             coord->col = ss.col;
@@ -145,7 +157,7 @@ void handle_movement(const Direction& dir, Coord* coord, const Coord& ss) {
         }
         coord->col--;
         break;
-    case Direction::Right:
+    case Dir::Right:
         // move to the `Left` side the screen if would go too far `Right`
         if (coord->col + 1 > ss.col) {
             coord->col = 1;
@@ -153,11 +165,11 @@ void handle_movement(const Direction& dir, Coord* coord, const Coord& ss) {
         }
         coord->col++;
         break;
-    case Direction::None:
+    case Dir::None:
         break;
     }
 }
-void move(Snake& snake, const Direction& dir, const Coord& ss) {
+void move(Snake& snake, const Dir& dir, const Coord& ss) {
     Coord* tail = &snake.back();
     Coord* head = &snake.front();
 
@@ -171,7 +183,7 @@ void move(Snake& snake, const Direction& dir, const Coord& ss) {
     handle_movement(dir, head, ss);
 }
 
-void new_tail(Snake& snake, const Coord& ss, const Direction& dir = Direction::Right) {
+void new_tail(Snake& snake, const Coord& ss, const Dir& dir = Dir::Right) {
     if (snake.size() == 1) {
         auto snake_clone = snake;
         handle_movement(opposite(dir), &snake_clone.front(), ss);
@@ -192,7 +204,7 @@ unsigned run() {
     print_at(apple, apple_text);
 
     char ch = 'l';
-    auto dir = Direction::Right;
+    auto dir = Dir::Right;
 
     Snake snake = {Coord{1, 0}};
 
