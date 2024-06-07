@@ -15,11 +15,11 @@ struct Coord {
     bool operator==(const Coord& other) const { return (this->row == other.row && this->col == other.col); }
     bool operator<=(const Coord& other) const { return (this->row <= other.row && this->col <= other.col); }
     // See what I did there?
-    // TODO: make it work!
+    // we subtract the difference of the two coordinates
     Coord operator-(const Coord& other) const {
         return Coord{
-            this->row + static_cast<unsigned>(abs(static_cast<int>(this->row - static_cast<int>(other.row)))),
-            this->col + static_cast<unsigned>(abs(static_cast<int>(this->col - static_cast<int>(other.col)))),
+            this->row - static_cast<int>(static_cast<int>(this->row) - static_cast<int>(other.row)),
+            this->col - static_cast<int>(static_cast<int>(this->col) - static_cast<int>(other.col)),
         };
     }
     static Coord screen_size() {
