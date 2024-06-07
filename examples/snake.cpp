@@ -142,32 +142,31 @@ std::string to_string(const Dir& dir) {
 }
 
 std::pair<Dir, Dir> neighbours(const Snake& snake, const unsigned& idx) {
-    std::ofstream fout("babkelme.log", std::ios::app);
+    // std::ofstream fout("babkelme.log", std::ios::app);
     auto coord = snake[idx];
 
     Coord prev{};
-    if (!snake.empty()) {
-        prev = snake[idx - 1];
+    if (snake.size() > 1) {
+        prev = snake.at(idx - 1);
+        if (prev == coord && snake.size() > 2) {
+            prev = snake.at(idx - 2);
+        }
     }
     Coord next{};
     if (idx < snake.size() - 1) {
-        next = snake[idx + 1];
+        next = snake.at(idx + 1);
     }
-    fout << "prev: " << prev.display() << "\ncoord: " << coord.display() << "\nnext: " << next.display() << "\n";
 
     Dir first = coord.meets_at(prev);
-    fout << "prev is to the " << to_string(first) << "\n";
     Dir second = coord.meets_at(next);
-    fout << "next is to the " << to_string(second) << "\n";
 
-    fout.close();
     return {first, second};
 }
 
 std::string draw(const std::pair<Dir, Dir>& nb) {
     // rounded:  {"╭", "╮", "╰", "╯", "│", "─"}
 
-    // this is where in Rust we'd use match and be happy
+    // this is where in Rust we'd use `match` and be happy
     if (((nb.first == Dir::Up || nb.first == Dir::Down) && (nb.second == Dir::Down || nb.second == Dir::Up)) ||
         ((nb.first == Dir::None && (nb.second == Dir::Down || nb.second == Dir::Up))) ||
         ((nb.second == Dir::None && (nb.first == Dir::Down || nb.first == Dir::Up)))) {
@@ -252,7 +251,7 @@ void new_tail(Snake& snake, const Coord& ss, const Dir& dir = Dir::Right) {
         snake.push_back(snake_clone.front());
         return;
     }
-    auto last = snake.at(snake.size() - 1);
+    auto last = snake.back();
     auto before_last = snake.at(snake.size() - 2);
     auto pos = before_last - last;
     snake.push_back(pos);
@@ -286,9 +285,9 @@ unsigned run() {
 
         // snake ate apple, we need a new one!
         if (snake.front() == apple) {
-            new_tail(snake, screen_size, dir);
-
             apple = Coord::random(screen_size);
+            // new_tail(snake, screen_size, dir);
+            snake.push_back(snake.back());
         }
 
         for (auto i = 1; i < snake.size(); ++i) {
@@ -306,7 +305,7 @@ unsigned run() {
         // LOGF << "\'" << ch << "\'\n";
         std::this_thread::sleep_for(std::chrono::milliseconds(40));
     }
-    return 0;
+    return snake.size();
 }
 
 int main() {
@@ -315,6 +314,6 @@ int main() {
     auto len = run();
 
     tui::reset_term();
-    std::cout << "You died at " << len << std::endl;
+    std::cout << "You died/quit at " << len << std::endl;
     return 0;
 }
