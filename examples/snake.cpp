@@ -175,7 +175,7 @@ void new_tail(Snake& snake, const Coord& ss, const Direction& dir = Direction::R
     snake.push_back(pos);
 }
 
-void run() {
+unsigned run() {
     auto screen_size = Coord::screen_size();
 
     auto apple_text = tui::tui_string('@').red().bold();
@@ -185,7 +185,7 @@ void run() {
     char ch = 'l';
     auto dir = Direction::Right;
 
-    Snake snake = {Coord{0, 0}};
+    Snake snake = {Coord{1, 0}};
 
     while (ch != 'q' && ch != 'Q' && ch != 3 /* C-c */ && ch != 4 /* C-d */ && ch != 26 /* C-z */) {
         // get which direction the snake shall move to, if character is invalid, don't change: use `dir`
@@ -197,7 +197,7 @@ void run() {
         auto x =
             std::find_if(std::begin(snake) + 1, snake.end(), [&](const Coord& item) { return item == snake.front(); });
         if (x != snake.end()) {
-            return;
+            return snake.size();
         }
 
         // snake ate apple, we need a new one!
@@ -224,8 +224,9 @@ void run() {
 int main() {
     tui::init_term(false);
 
-    run();
+    auto len = run();
 
     tui::reset_term();
+    std::cout << "You died at " << len << std::endl;
     return 0;
 }
