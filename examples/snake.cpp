@@ -1,11 +1,21 @@
 #include "../tui.hpp"
 #include <algorithm>
 #include <chrono>
+#include <fstream>
 #include <iostream>
 #include <random>
 #include <string>
 #include <thread>
 #include <vector>
+
+// direction
+enum Dir {
+    Up = 0,
+    Down,
+    Left,
+    Right,
+    None,
+};
 
 struct Coord {
     unsigned row;
@@ -38,6 +48,25 @@ struct Coord {
     }
     std::pair<unsigned, unsigned> to_pair() const { return {this->row, this->col}; }
     std::string display() const { return "(" + std::to_string(this->row) + ";" + std::to_string(this->col) + ")"; }
+
+    Dir meets_at(const Coord& other) const {
+        int row_diff = this->row - other.row;
+        int col_diff = this->col - other.col;
+
+        if (row_diff == 1) {
+            return Dir::Up;
+        }
+        if (row_diff == -1) {
+            return Dir::Down;
+        }
+        if (col_diff == 1) {
+            return Dir::Left;
+        }
+        if (col_diff == -1) {
+            return Dir::Right;
+        }
+        return Dir::None;
+    }
 };
 using Snake = std::vector<Coord>;
 
@@ -46,14 +75,6 @@ template <typename T> void print_at(const Coord& coord, const T& print) {
     std::cout << print;
 }
 
-// direction
-enum Dir {
-    Up = 0,
-    Down,
-    Left,
-    Right,
-    None,
-};
 Dir from_char(const char& ch, const Dir& dir = Dir::Right) {
     switch (ch) {
     case 'k':
@@ -119,22 +140,27 @@ std::string to_string(const Dir& dir) {
     }
     return "X";
 }
-std::pair<Dir, Dir> neighbours(const Snake& snake, const unsigned& idx) {
-    auto coord = snake[idx];
-    auto row_diff = 0;
-    // TODO
-    Dir first = Dir::None;
-    Dir second = Dir::None;
 
-    Coord next{};
-    if (idx < snake.size() - 1) {
-        next = snake[idx - 1];
-    }
+std::pair<Dir, Dir> neighbours(const Snake& snake, const unsigned& idx) {
+    std::ofstream fout("babkelme.log", std::ios::app);
+    auto coord = snake[idx];
+
     Coord prev{};
     if (!snake.empty()) {
         prev = snake[idx - 1];
     }
+    Coord next{};
+    if (idx < snake.size() - 1) {
+        next = snake[idx + 1];
+    }
+    fout << "prev: " << prev.display() << "\ncoord: " << coord.display() << "\nnext: " << next.display() << "\n";
 
+    Dir first = coord.meets_at(prev);
+    fout << "prev is to the " << to_string(first) << "\n";
+    Dir second = coord.meets_at(next);
+    fout << "next is to the " << to_string(second) << "\n";
+
+    fout.close();
     return {first, second};
 }
 
@@ -149,13 +175,13 @@ std::string draw(const std::pair<Dir, Dir>& nb) {
     }
     if (((nb.first == Dir::Left || nb.first == Dir::Right) && (nb.second == Dir::Right || nb.second == Dir::Left)) ||
         (nb.first == Dir::None && (nb.second == Dir::Left || nb.second == Dir::Right)) ||
-        (nb.second == Dir::None && (nb.second == Dir::Left || nb.second == Dir::Right))) {
+        (nb.second == Dir::None && (nb.first == Dir::Left || nb.first == Dir::Right))) {
         return "─";
     }
     if ((nb.first == Dir::Left && nb.second == Dir::Down) || (nb.second == Dir::Left && nb.first == Dir::Down)) {
         return "╮";
     }
-    if ((nb.first == Dir::Right && nb.second == Dir::Down) || (nb.second == Dir::Down && nb.first == Dir::Right)) {
+    if ((nb.first == Dir::Right && nb.second == Dir::Down) || (nb.first == Dir::Down && nb.second == Dir::Right)) {
         return "╭";
     }
     if ((nb.first == Dir::Left && nb.second == Dir::Up) || (nb.second == Dir::Left && nb.first == Dir::Up)) {
