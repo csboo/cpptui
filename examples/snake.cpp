@@ -1,7 +1,6 @@
 #include "../tui.hpp"
 #include <algorithm>
 #include <chrono>
-#include <cstdlib>
 #include <iostream>
 #include <random>
 #include <string>
@@ -52,6 +51,7 @@ enum Direction {
     Down,
     Left,
     Right,
+    None,
 };
 Direction from_char(const char& ch, const Direction& dir = Direction::Right) {
     switch (ch) {
@@ -86,6 +86,7 @@ Direction from_char(const char& ch, const Direction& dir = Direction::Right) {
 
         return dir;
     }
+    return Direction::None;
 }
 Direction opposite(const Direction& dir) {
     switch (dir) {
@@ -97,7 +98,10 @@ Direction opposite(const Direction& dir) {
         return Direction::Right;
     case Direction::Right:
         return Direction::Left;
+    case Direction::None:
+        break;
     }
+    return Direction::None;
 }
 std::string to_string(const Direction& dir) {
     switch (dir) {
@@ -109,7 +113,10 @@ std::string to_string(const Direction& dir) {
         return "<";
     case Direction::Right:
         return ">";
+    case Direction::None:
+        break;
     }
+    return "X";
 }
 
 void handle_movement(const Direction& dir, Coord* coord, const Coord& ss) {
@@ -145,6 +152,8 @@ void handle_movement(const Direction& dir, Coord* coord, const Coord& ss) {
             break;
         }
         coord->col++;
+        break;
+    case Direction::None:
         break;
     }
 }
@@ -219,6 +228,7 @@ unsigned run() {
         // LOGF << "\'" << ch << "\'\n";
         std::this_thread::sleep_for(std::chrono::milliseconds(40));
     }
+    return 0;
 }
 
 int main() {
