@@ -1,7 +1,7 @@
 #include "../tui.hpp"
 #include <algorithm>
 #include <chrono>
-#include <fstream>
+#include <cstdio>
 #include <iostream>
 #include <random>
 #include <string>
@@ -244,6 +244,11 @@ void move(Snake& snake, const Dir& dir, const Coord& ss) {
     handle_movement(dir, head, ss);
 }
 
+bool snake_contains(const Snake& snake, const Coord& coord, const unsigned& skip = 0) {
+    return std::find_if(std::begin(snake) + skip, snake.end(), [&](const Coord& item) { return item == coord; }) !=
+           snake.end();
+}
+
 unsigned run() {
     auto screen_size = Coord::screen_size();
 
@@ -264,15 +269,19 @@ unsigned run() {
         move(snake, dir, screen_size);
 
         // die if on itself
-        auto x =
-            std::find_if(std::begin(snake) + 1, snake.end(), [&](const Coord& item) { return item == snake.front(); });
-        if (x != snake.end()) {
+        if (snake_contains(snake, snake.front(), 1)) {
             return snake.size();
         }
 
         // snake ate apple, we need a new one!
         if (snake.front() == apple) {
-            apple = Coord::random(screen_size);
+            // generate, till it's not on the `snake` itself
+            do {
+                apple = Coord::random(screen_size);
+            } while (snake_contains(snake, apple));
+            print_at(apple, apple_text);
+            // duplicate the last element of the `snake`, next round it'll be smoothed out.
+            // assert(snake.size() + 1 == snake.previous_size())
             snake.push_back(snake.back());
         }
 
@@ -284,7 +293,6 @@ unsigned run() {
             print_at(item, x);
         }
         print_at(snake.front(), to_string(dir));
-        print_at(apple, apple_text);
 
         // TODO: other thread with mutex and stuff
         std::cin.get(ch);
