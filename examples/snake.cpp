@@ -128,13 +128,13 @@ Dir opposite(const Dir& dir) {
 std::string to_string(const Dir& dir) {
     switch (dir) {
     case Dir::Up:
-        return "A";
+        return "↑"; // alt: ^
     case Dir::Down:
-        return "V";
+        return "↓"; // alt: ˇ
     case Dir::Left:
-        return "<";
+        return "←"; // alt: <
     case Dir::Right:
-        return ">";
+        return "→"; // alt: >
     case Dir::None:
         break;
     }
@@ -297,7 +297,7 @@ unsigned run() {
             auto x = draw(y);
             print_at(item, x);
         }
-        print_at(snake.front(), tui::tui_string(to_string(dir)).cyan().bold());
+        print_at(snake.front(), to_string(dir));
         print_at(apple, apple_text);
 
         // TODO: other thread with mutex and stuff
