@@ -124,11 +124,34 @@ std::pair<Dir, Dir> neighbours(const Snake& snake, const unsigned& idx) {
     auto row_diff = 0;
     // TODO
 }
+
 std::string draw(const std::pair<Dir, Dir>& nb) {
+    // rounded:  {"╭", "╮", "╰", "╯", "│", "─"}
+
     // this is where in Rust we'd use match and be happy
-    if ((nb.first == Dir::Up || nb.first == Dir::Down) && (nb.second == Dir::Down || nb.second == Dir::Up)) {
-        return "|";
+    if (((nb.first == Dir::Up || nb.first == Dir::Down) && (nb.second == Dir::Down || nb.second == Dir::Up)) ||
+        ((nb.first == Dir::None && (nb.second == Dir::Down || nb.second == Dir::Up))) ||
+        ((nb.second == Dir::None && (nb.first == Dir::Down || nb.first == Dir::Up)))) {
+        return "│";
     }
+    if (((nb.first == Dir::Left || nb.first == Dir::Right) && (nb.second == Dir::Right || nb.second == Dir::Left)) ||
+        (nb.first == Dir::None && (nb.second == Dir::Left || nb.second == Dir::Right)) ||
+        (nb.second == Dir::None && (nb.second == Dir::Left || nb.second == Dir::Right))) {
+        return "─";
+    }
+    if ((nb.first == Dir::Left && nb.second == Dir::Down) || (nb.second == Dir::Left && nb.first == Dir::Down)) {
+        return "╮";
+    }
+    if ((nb.first == Dir::Right && nb.second == Dir::Down) || (nb.second == Dir::Down && nb.first == Dir::Right)) {
+        return "╭";
+    }
+    if ((nb.first == Dir::Left && nb.second == Dir::Up) || (nb.second == Dir::Left && nb.first == Dir::Up)) {
+        return "╯";
+    }
+    if ((nb.first == Dir::Right && nb.second == Dir::Up) || (nb.second == Dir::Right && nb.first == Dir::Up)) {
+        return "╰";
+    }
+    return "X";
 }
 
 void handle_movement(const Dir& dir, Coord* coord, const Coord& ss) {
