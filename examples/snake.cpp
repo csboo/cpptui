@@ -123,6 +123,19 @@ std::pair<Dir, Dir> neighbours(const Snake& snake, const unsigned& idx) {
     auto coord = snake[idx];
     auto row_diff = 0;
     // TODO
+    Dir first = Dir::None;
+    Dir second = Dir::None;
+
+    Coord next{};
+    if (idx < snake.size() - 1) {
+        next = snake[idx - 1];
+    }
+    Coord prev{};
+    if (!snake.empty()) {
+        prev = snake[idx - 1];
+    }
+
+    return {first, second};
 }
 
 std::string draw(const std::pair<Dir, Dir>& nb) {
@@ -251,10 +264,13 @@ unsigned run() {
             apple = Coord::random(screen_size);
         }
 
-        std::for_each(std::begin(snake) + 1, snake.end(), [&](const Coord& item) {
+        for (auto i = 1; i < snake.size(); ++i) {
+            auto item = snake[i];
             tui::cursor::set_position(item.row, item.col);
-            print_at(item, '#');
-        });
+            auto y = neighbours(snake, i);
+            auto x = draw(y);
+            print_at(item, x);
+        }
         print_at(snake.front(), tui::tui_string(to_string(dir)).cyan().bold());
         print_at(apple, apple_text);
 
