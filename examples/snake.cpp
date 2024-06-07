@@ -274,18 +274,6 @@ unsigned run() {
         // get which direction the snake shall move to, if character is invalid, don't change: use `dir`
         dir = from_char(ch, dir);
 
-        // // automata
-        // if (i % screen_size.row == 0) {
-        //     dir = Dir::Right;
-        //     saba = !saba;
-        // } else {
-        //     if (saba) {
-        //         dir = Dir::Down;
-        //     } else {
-        //         dir = Dir::Up;
-        //     }
-        // }
-
         // and move it correspondly
         move(snake, dir, screen_size);
 
