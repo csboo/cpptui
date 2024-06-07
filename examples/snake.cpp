@@ -193,6 +193,13 @@ void run() {
         // and move it correspondly
         move(snake, dir, screen_size);
 
+        // die if on itself
+        auto x =
+            std::find_if(std::begin(snake) + 1, snake.end(), [&](const Coord& item) { return item == snake.front(); });
+        if (x != snake.end()) {
+            return;
+        }
+
         // snake ate apple, we need a new one!
         if (snake.front() == apple) {
             new_tail(snake, screen_size, dir);
