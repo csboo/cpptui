@@ -50,8 +50,8 @@ struct Coord {
     std::string display() const { return "(" + std::to_string(this->row) + ";" + std::to_string(this->col) + ")"; }
 
     Dir meets_at(const Coord& other) const {
-        int row_diff = this->row - other.row;
-        int col_diff = this->col - other.col;
+        int row_diff = static_cast<int>(this->row) - static_cast<int>(other.row);
+        int col_diff = static_cast<int>(this->col) - static_cast<int>(other.col);
 
         if (row_diff == 1) {
             return Dir::Up;
@@ -244,19 +244,6 @@ void move(Snake& snake, const Dir& dir, const Coord& ss) {
     handle_movement(dir, head, ss);
 }
 
-void new_tail(Snake& snake, const Coord& ss, const Dir& dir = Dir::Right) {
-    if (snake.size() == 1) {
-        auto snake_clone = snake;
-        handle_movement(opposite(dir), &snake_clone.front(), ss);
-        snake.push_back(snake_clone.front());
-        return;
-    }
-    auto last = snake.back();
-    auto before_last = snake.at(snake.size() - 2);
-    auto pos = before_last - last;
-    snake.push_back(pos);
-}
-
 unsigned run() {
     auto screen_size = Coord::screen_size();
 
@@ -286,7 +273,6 @@ unsigned run() {
         // snake ate apple, we need a new one!
         if (snake.front() == apple) {
             apple = Coord::random(screen_size);
-            // new_tail(snake, screen_size, dir);
             snake.push_back(snake.back());
         }
 
