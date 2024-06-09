@@ -284,7 +284,7 @@ unsigned run() {
             snake.push_back(snake.back());
         }
 
-        for (auto i = 1; i < snake.size(); ++i) {
+        for (auto i = 1; i < snake.size() - (i > 1 ? 1 : 0); ++i) {
             auto item = snake[i];
             tui::cursor::set_position(item.row, item.col);
             auto y = neighbours(snake, i);
