@@ -284,6 +284,7 @@ unsigned run() {
             snake.push_back(snake.back());
         }
 
+        snake.front().print(to_string(dir));
         for (auto i = 1; i < snake.size() - (i > 1 ? 1 : 0); ++i) {
             auto item = snake[i];
             tui::cursor::set_position(item.row, item.col);
@@ -291,7 +292,6 @@ unsigned run() {
             auto x = draw(y);
             item.print(x);
         }
-        snake.front().print(to_string(dir));
 
         // TODO: other thread with mutex and stuff
         std::cin.get(ch);
