@@ -48,20 +48,23 @@ struct Coord {
     std::pair<unsigned, unsigned> to_pair() const { return {this->row, this->col}; }
     std::string display() const { return "(" + std::to_string(this->row) + ";" + std::to_string(this->col) + ")"; }
 
-    Dir meets_at(const Coord& other) const {
+    Dir meets_at(const Coord& other, const Coord& ss) const {
         int row_diff = static_cast<int>(this->row) - static_cast<int>(other.row);
         int col_diff = static_cast<int>(this->col) - static_cast<int>(other.col);
 
-        if (row_diff == 1) {
+        // we set both row and col to x-1 as it's needed :D
+        auto teleport = Coord{ss.row - 1, ss.col - 1};
+
+        if (row_diff == 1 || teleport.row == -row_diff) {
             return Dir::Up;
         }
-        if (row_diff == -1) {
+        if (row_diff == -1 || teleport.row == row_diff) {
             return Dir::Down;
         }
-        if (col_diff == 1) {
+        if (col_diff == 1 || teleport.col == -col_diff) {
             return Dir::Left;
         }
-        if (col_diff == -1) {
+        if (col_diff == -1 || teleport.col == col_diff) {
             return Dir::Right;
         }
         return Dir::None;
@@ -140,7 +143,7 @@ std::string to_string(const Dir& dir) {
     return "X";
 }
 
-std::pair<Dir, Dir> neighbours(const Snake& snake, const unsigned& idx) {
+std::pair<Dir, Dir> neighbours(const Snake& snake, const unsigned& idx, const Coord& ss) {
     // std::ofstream fout("babkelme.log", std::ios::app);
     auto coord = snake[idx];
 
@@ -156,8 +159,8 @@ std::pair<Dir, Dir> neighbours(const Snake& snake, const unsigned& idx) {
         next = snake.at(idx + 1);
     }
 
-    Dir first = coord.meets_at(prev);
-    Dir second = coord.meets_at(next);
+    Dir first = coord.meets_at(prev, ss);
+    Dir second = coord.meets_at(next, ss);
 
     return {first, second};
 }
@@ -284,7 +287,7 @@ unsigned run() {
         for (auto i = 1; i < ((snake.size() == 1) ? 1 : 2); ++i) {
             auto item = snake[i];
             tui::cursor::set_position(item.row, item.col);
-            auto y = neighbours(snake, i);
+            auto y = neighbours(snake, i, screen_size);
             auto x = draw(y);
             item.print(x);
         }
