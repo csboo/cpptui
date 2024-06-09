@@ -1,7 +1,6 @@
 #include "../tui.hpp"
 #include <algorithm>
 #include <chrono>
-#include <cstdio>
 #include <iostream>
 #include <random>
 #include <string>
@@ -67,13 +66,13 @@ struct Coord {
         }
         return Dir::None;
     }
+
+    template <typename T> void print(const T& print) {
+        tui::cursor::set_position(this->row, this->col);
+        std::cout << print;
+    }
 };
 using Snake = std::vector<Coord>;
-
-template <typename T> void print_at(const Coord& coord, const T& print) {
-    tui::cursor::set_position(coord.row, coord.col);
-    std::cout << print;
-}
 
 Dir from_char(const char& ch, const Dir& dir = Dir::Right) {
     switch (ch) {
@@ -235,7 +234,7 @@ void move(Snake& snake, const Dir& dir, const Coord& ss) {
     Coord* head = &snake.front();
 
     // delete the last one off the screen by overwriting it with a space
-    print_at(*tail, ' ');
+    tail->print(' ');
     auto old_snake = snake;
     for (auto i = 1; i < snake.size(); ++i) {
         snake.at(i) = old_snake.at(i - 1);
@@ -254,7 +253,7 @@ unsigned run() {
 
     auto apple_text = tui::tui_string('@').red().bold();
     auto apple = Coord::random(screen_size);
-    print_at(apple, apple_text);
+    apple.print(apple_text);
 
     char ch = 'l';
     auto dir = Dir::Right;
@@ -279,7 +278,7 @@ unsigned run() {
             do {
                 apple = Coord::random(screen_size);
             } while (snake_contains(snake, apple));
-            print_at(apple, apple_text);
+            apple.print(apple_text);
             // duplicate the last element of the `snake`, next round it'll be smoothed out.
             // assert(snake.size() + 1 == snake.previous_size())
             snake.push_back(snake.back());
@@ -290,9 +289,9 @@ unsigned run() {
             tui::cursor::set_position(item.row, item.col);
             auto y = neighbours(snake, i);
             auto x = draw(y);
-            print_at(item, x);
+            item.print(x);
         }
-        print_at(snake.front(), to_string(dir));
+        snake.front().print(to_string(dir));
 
         // TODO: other thread with mutex and stuff
         std::cin.get(ch);
