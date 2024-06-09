@@ -70,6 +70,7 @@ struct Coord {
         return Dir::None;
     }
 
+    // print starting from this Coord
     template <typename T> void print(const T& print) {
         tui::cursor::set_position(this->row, this->col);
         std::cout << print;
@@ -109,21 +110,6 @@ Dir from_char(const char& ch, const Dir& dir = Dir::Right) {
         }
 
         return dir;
-    }
-    return Dir::None;
-}
-Dir opposite(const Dir& dir) {
-    switch (dir) {
-    case Dir::Up:
-        return Dir::Down;
-    case Dir::Down:
-        return Dir::Up;
-    case Dir::Left:
-        return Dir::Right;
-    case Dir::Right:
-        return Dir::Left;
-    case Dir::None:
-        break;
     }
     return Dir::None;
 }
@@ -292,7 +278,7 @@ unsigned run() {
 
         // TODO: other thread with mutex and stuff
         std::cin.get(ch);
-        // LOGF << "\'" << ch << "\'\n";
+
         std::this_thread::sleep_for(std::chrono::milliseconds(40));
     }
     return snake.size();
