@@ -191,56 +191,53 @@ std::string draw(const std::pair<Dir, Dir>& nb) {
     return "X";
 }
 
-void handle_movement(const Dir& dir, Coord* coord, const Coord& ss) {
+void handle_movement(const Dir& dir, Coord& coord, const Coord& ss) {
     switch (dir) {
     case Dir::Up:
         // move to the `Down` side of the screen if would go too far `Up`
-        if (coord->row - 1 == 0) {
-            coord->row = ss.row;
+        if (coord.row - 1 == 0) {
+            coord.row = ss.row;
             break;
         }
-        coord->row--;
+        coord.row--;
         break;
     case Dir::Down:
         // move to the `Up`per side the screen if would go too far `Down`
-        if (coord->row + 1 > ss.row) {
-            coord->row = 1;
+        if (coord.row + 1 > ss.row) {
+            coord.row = 1;
             break;
         }
-        coord->row++;
+        coord.row++;
         break;
     case Dir::Left:
         // move to the `Right` side the screen if would go too far `Left`
-        if (coord->col - 1 == 0) {
-            coord->col = ss.col;
+        if (coord.col - 1 == 0) {
+            coord.col = ss.col;
             break;
         }
-        coord->col--;
+        coord.col--;
         break;
     case Dir::Right:
         // move to the `Left` side the screen if would go too far `Right`
-        if (coord->col + 1 > ss.col) {
-            coord->col = 1;
+        if (coord.col + 1 > ss.col) {
+            coord.col = 1;
             break;
         }
-        coord->col++;
+        coord.col++;
         break;
     case Dir::None:
         break;
     }
 }
 void move(Snake& snake, const Dir& dir, const Coord& ss) {
-    Coord* tail = &snake.back();
-    Coord* head = &snake.front();
-
     // delete the last one off the screen by overwriting it with a space
-    tail->print(' ');
+    snake.back().print(' ');
     auto old_snake = snake;
     for (auto i = 1; i < snake.size(); ++i) {
         snake.at(i) = old_snake.at(i - 1);
     }
 
-    handle_movement(dir, head, ss);
+    handle_movement(dir, snake.front(), ss);
 }
 
 bool snake_contains(const Snake& snake, const Coord& coord, const unsigned& skip = 0) {
