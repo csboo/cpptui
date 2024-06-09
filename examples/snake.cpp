@@ -285,11 +285,8 @@ unsigned run() {
         }
 
         for (auto i = 1; i < ((snake.size() == 1) ? 1 : 2); ++i) {
-            auto item = snake[i];
-            tui::cursor::set_position(item.row, item.col);
-            auto y = neighbours(snake, i, screen_size);
-            auto x = draw(y);
-            item.print(x);
+            auto nb = neighbours(snake, i, screen_size);
+            snake[i].print(draw(nb));
         }
         snake.front().print(to_string(dir));
 
