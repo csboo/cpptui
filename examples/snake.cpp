@@ -299,7 +299,7 @@ unsigned run(const Coord& screen_size) {
         snake.front().print(to_string(dir));
 
         std::cout.flush();
-        std::this_thread::sleep_for(std::chrono::milliseconds(80));
+        std::this_thread::sleep_for(std::chrono::milliseconds(((dir == Dir::Left || dir == Dir::Right) ? 80 : 120)));
     }
     return snake.size();
 }
