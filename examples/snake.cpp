@@ -234,16 +234,19 @@ bool snake_contains(const Snake& snake, const Coord& coord, const unsigned& skip
            snake.end();
 }
 
-unsigned run() {
-    auto screen_size = Coord::screen_size();
+char ch = 'l';
+void read_character() {
+    while (ch != 'q' && ch != 'Q' && ch != 3 /* C-c */ && ch != 4 /* C-d */ && ch != 26 /* C-z */) {
+        std::cin.get(ch);
+    }
+}
 
+unsigned run(const Coord& screen_size) {
     auto apple_text = tui::tui_string('@').red().bold();
     auto apple = Coord::random(screen_size);
     apple.print(apple_text);
 
-    char ch = 'l';
     auto dir = Dir::Right;
-
     Snake snake = {Coord{1, 0}};
 
     while (ch != 'q' && ch != 'Q' && ch != 3 /* C-c */ && ch != 4 /* C-d */ && ch != 26 /* C-z */) {
@@ -276,18 +279,21 @@ unsigned run() {
         }
         snake.front().print(to_string(dir));
 
-        // TODO: other thread with mutex and stuff
-        std::cin.get(ch);
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(40));
+        std::cout.flush();
+        std::this_thread::sleep_for(std::chrono::milliseconds(80));
     }
     return snake.size();
 }
 
 int main() {
     tui::init_term(false);
+    // we get screen size here, not to mess up cin, cout
+    auto screen_size = Coord::screen_size();
+    std::thread reader_thread(read_character);
 
-    auto len = run();
+    auto len = run(screen_size);
+
+    reader_thread.join();
 
     tui::reset_term();
     std::cout << "You died/quit at " << len << std::endl;
