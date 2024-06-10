@@ -41,6 +41,7 @@ Dir from_char(const char& ch, const Dir& dir = Dir::Right) {
     case 'h':
         return Dir::Left;
     default:
+        // TODO: make arrows usable again
         if (ch < 0) {
             std::cin.ignore();
         } else if (ch == 27 && std::cin.peek() == 91) {
@@ -267,6 +268,7 @@ unsigned run(const Coord& screen_size) {
         auto prev_dir = dir;
         // get which direction the snake shall move to, if character is invalid, don't change: use `dir`
         dir = from_char(ch, dir);
+        // don't try to break your neck if you may!
         if (prev_dir == opposite(dir)) {
             dir = prev_dir;
         }
@@ -274,14 +276,14 @@ unsigned run(const Coord& screen_size) {
         // and move it correspondly
         move(snake, dir, screen_size);
 
-        // die if on itself
+        // die if wanna eat itself
         if (snake_contains(snake, snake.front(), 1)) {
             return snake.size();
         }
 
         // snake ate apple, we need a new one!
         if (snake.front() == apple) {
-            // generate, till it's not on the `snake` itself
+            // generate, till it's not on the `snake`
             do {
                 apple = Coord::random(screen_size);
             } while (snake_contains(snake, apple));
@@ -291,13 +293,17 @@ unsigned run(const Coord& screen_size) {
             snake.push_back(snake.back());
         }
 
+        // print non-head parts of snake, but only first 2
         for (auto i = 1; i < ((snake.size() == 1) ? 1 : 2); ++i) {
             auto nb = neighbours(snake, i, screen_size);
             snake[i].print(draw(nb));
         }
+        // print head
         snake.front().print(to_string(dir));
 
+        // w/out this is mad
         std::cout.flush();
+        // sleep, if moving vertically: more
         std::this_thread::sleep_for(std::chrono::milliseconds(((dir == Dir::Left || dir == Dir::Right) ? 80 : 120)));
     }
     return snake.size();
