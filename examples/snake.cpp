@@ -15,6 +15,21 @@ enum Dir {
     Right,
     None,
 };
+Dir opposite(const Dir& dir) {
+    switch (dir) {
+    case Dir::Up:
+        return Dir::Down;
+    case Dir::Down:
+        return Dir::Up;
+    case Dir::Left:
+        return Dir::Right;
+    case Dir::Right:
+        return Dir::Left;
+    case Dir::None:
+        break;
+    }
+    return Dir::None;
+}
 
 struct Coord {
     unsigned row;
@@ -250,8 +265,12 @@ unsigned run(const Coord& screen_size) {
     Snake snake = {Coord{1, 0}};
 
     while (ch != 'q' && ch != 'Q' && ch != 3 /* C-c */ && ch != 4 /* C-d */ && ch != 26 /* C-z */) {
+        auto prev_dir = dir;
         // get which direction the snake shall move to, if character is invalid, don't change: use `dir`
         dir = from_char(ch, dir);
+        if (prev_dir == opposite(dir)) {
+            dir = prev_dir;
+        }
 
         // and move it correspondly
         move(snake, dir, screen_size);
