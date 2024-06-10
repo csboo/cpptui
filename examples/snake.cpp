@@ -30,6 +30,56 @@ Dir opposite(const Dir& dir) {
     }
     return Dir::None;
 }
+Dir from_char(const char& ch, const Dir& dir = Dir::Right) {
+    switch (ch) {
+    case 'k':
+        return Dir::Up;
+    case 'j':
+        return Dir::Down;
+    case 'l':
+        return Dir::Right;
+    case 'h':
+        return Dir::Left;
+    default:
+        if (ch < 0) {
+            std::cin.ignore();
+        } else if (ch == 27 && std::cin.peek() == 91) {
+            std::cin.ignore();
+            auto sus = std::cin.get();
+            switch (sus) {
+            case 65:
+                return Dir::Up;
+            case 66:
+                return Dir::Down;
+            case 67:
+                return Dir::Right;
+            case 68:
+                return Dir::Left;
+            default:
+                std::cin.ignore(3);
+                break;
+            }
+        }
+
+        return dir;
+    }
+    return Dir::None;
+}
+std::string to_string(const Dir& dir) {
+    switch (dir) {
+    case Dir::Up:
+        return "↑"; // alt: ^
+    case Dir::Down:
+        return "↓"; // alt: ˇ
+    case Dir::Left:
+        return "←"; // alt: <
+    case Dir::Right:
+        return "→"; // alt: >
+    case Dir::None:
+        break;
+    }
+    return "X";
+}
 
 struct Coord {
     unsigned row;
@@ -92,57 +142,6 @@ struct Coord {
     }
 };
 using Snake = std::vector<Coord>;
-
-Dir from_char(const char& ch, const Dir& dir = Dir::Right) {
-    switch (ch) {
-    case 'k':
-        return Dir::Up;
-    case 'j':
-        return Dir::Down;
-    case 'l':
-        return Dir::Right;
-    case 'h':
-        return Dir::Left;
-    default:
-        if (ch < 0) {
-            std::cin.ignore();
-        } else if (ch == 27 && std::cin.peek() == 91) {
-            std::cin.ignore();
-            auto sus = std::cin.get();
-            switch (sus) {
-            case 65:
-                return Dir::Up;
-            case 66:
-                return Dir::Down;
-            case 67:
-                return Dir::Right;
-            case 68:
-                return Dir::Left;
-            default:
-                std::cin.ignore(3);
-                break;
-            }
-        }
-
-        return dir;
-    }
-    return Dir::None;
-}
-std::string to_string(const Dir& dir) {
-    switch (dir) {
-    case Dir::Up:
-        return "↑"; // alt: ^
-    case Dir::Down:
-        return "↓"; // alt: ˇ
-    case Dir::Left:
-        return "←"; // alt: <
-    case Dir::Right:
-        return "→"; // alt: >
-    case Dir::None:
-        break;
-    }
-    return "X";
-}
 
 std::pair<Dir, Dir> neighbours(const Snake& snake, const unsigned& idx, const Coord& ss) {
     // std::ofstream fout("babkelme.log", std::ios::app);
