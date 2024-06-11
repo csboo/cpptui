@@ -253,11 +253,15 @@ bool snake_contains(const Snake& snake, const Coord& coord, const unsigned& skip
            snake.end();
 }
 
-char ch = 'l';
+Dir dir = Dir::Right;
 void read_character() {
+    char ch = 'l';
     while (ch != 'q' && ch != 'Q' && ch != 3 /* C-c */ && ch != 4 /* C-d */ && ch != 26 /* C-z */) {
         std::cin.get(ch);
+        // get which direction the snake shall move to, if character is invalid, don't change: use `dir`
+        dir = from_char(ch, dir);
     }
+    dir = Dir::None;
 }
 
 unsigned run(const Coord& screen_size) {
@@ -265,14 +269,11 @@ unsigned run(const Coord& screen_size) {
     auto apple = Coord::random(screen_size);
     apple.print(apple_text);
 
-    auto dir = Dir::Right;
     const unsigned sleep = 100;
     Snake snake = {Coord{1, 0}};
 
-    while (ch != 'q' && ch != 'Q' && ch != 3 /* C-c */ && ch != 4 /* C-d */ && ch != 26 /* C-z */) {
+    while (dir != Dir::None) {
         auto prev_dir = dir;
-        // get which direction the snake shall move to, if character is invalid, don't change: use `dir`
-        dir = from_char(ch, dir);
         // don't try to break your neck if you may!
         if (prev_dir == opposite(dir)) {
             dir = prev_dir;
