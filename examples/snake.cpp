@@ -256,7 +256,7 @@ bool snake_contains(const Snake& snake, const Coord& coord, const unsigned& skip
 Dir dir = Dir::Right;
 void read_character() {
     char ch = 'l';
-    while (ch != 'q' && ch != 'Q' && ch != 3 /* C-c */ && ch != 4 /* C-d */ && ch != 26 /* C-z */) {
+    while (ch != 'q' && ch != 'Q' && ch != 3 /* C-c */ && ch != 4 /* C-d */ && ch != 26 /* C-z */ && dir != Dir::None) {
         std::cin.get(ch);
         // get which direction the snake shall move to, if character is invalid, don't change: use `dir`
         auto prev_dir = dir;
@@ -284,6 +284,7 @@ unsigned run(const Coord& screen_size) {
 
         // die if wanna eat itself
         if (snake_contains(snake, snake.front(), 1)) {
+            dir = Dir::None;
             return snake.size();
         }
 
