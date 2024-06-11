@@ -329,7 +329,7 @@ int main() {
         auto len = run(screen_size);
 
         tui::reset_term();
-        std::cout << "You died/quit at " << len << "\nPress enter to quit if needed." << std::endl;
+        std::cout << "You died/quit at " << len << "\nPress enter to quit if needed.\n";
     } catch (...) {
         tui::reset_term();
         std::cerr << "unknown error occured\n";
