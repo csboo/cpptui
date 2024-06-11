@@ -33,12 +33,16 @@ Dir opposite(const Dir& dir) {
 Dir from_char(const char& ch, const Dir& dir = Dir::Right) {
     switch (ch) {
     case 'k':
+    case 'w':
         return Dir::Up;
     case 'j':
+    case 's':
         return Dir::Down;
     case 'l':
+    case 'd':
         return Dir::Right;
     case 'h':
+    case 'a':
         return Dir::Left;
     default:
         // TODO: make arrows usable again
