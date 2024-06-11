@@ -259,7 +259,13 @@ void read_character() {
     while (ch != 'q' && ch != 'Q' && ch != 3 /* C-c */ && ch != 4 /* C-d */ && ch != 26 /* C-z */) {
         std::cin.get(ch);
         // get which direction the snake shall move to, if character is invalid, don't change: use `dir`
+        auto prev_dir = dir;
+
         dir = from_char(ch, dir);
+        // don't try to break your neck if you may!
+        if (prev_dir == opposite(dir)) {
+            dir = prev_dir;
+        }
     }
     dir = Dir::None;
 }
@@ -273,12 +279,6 @@ unsigned run(const Coord& screen_size) {
     Snake snake = {Coord{1, 0}};
 
     while (dir != Dir::None) {
-        auto prev_dir = dir;
-        // don't try to break your neck if you may!
-        if (prev_dir == opposite(dir)) {
-            dir = prev_dir;
-        }
-
         // and move it correspondly
         move(snake, dir, screen_size);
 
@@ -308,7 +308,8 @@ unsigned run(const Coord& screen_size) {
         snake.front().print(to_string(dir));
 
         // w/out this is mad
-        std::cout.flush();
+        tui::cursor::set_position(screen_size.row - 1, screen_size.col - 1);
+        std::cout << "\n";
         // sleep, if moving vertically: more
         std::this_thread::sleep_for(std::chrono::milliseconds(
             ((dir == Dir::Left || dir == Dir::Right) ? sleep : static_cast<unsigned>(sleep * 1.5))));
@@ -317,16 +318,22 @@ unsigned run(const Coord& screen_size) {
 }
 
 int main() {
-    tui::init_term(false);
-    // we get screen size here, not to mess up cin, cout
-    auto screen_size = Coord::screen_size();
-    std::thread reader_thread(read_character);
+    try {
+        tui::init_term(false);
+        // we get screen size here, not to mess up cin, cout
+        auto screen_size = Coord::screen_size();
+        std::thread reader_thread(read_character);
+        reader_thread.detach();
 
-    auto len = run(screen_size);
+        auto len = run(screen_size);
 
-    reader_thread.join();
+        tui::reset_term();
+        std::cout << "You died/quit at " << len << "\nPress enter to quit if needed." << std::endl;
+    } catch (...) {
+        tui::reset_term();
+        std::cerr << "unknown error occured\n";
+    }
 
     tui::reset_term();
-    std::cout << "You died/quit at " << len << std::endl;
     return 0;
 }
