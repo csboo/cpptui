@@ -262,6 +262,7 @@ unsigned run(const Coord& screen_size) {
     apple.print(apple_text);
 
     auto dir = Dir::Right;
+    const unsigned sleep = 100;
     Snake snake = {Coord{1, 0}};
 
     while (ch != 'q' && ch != 'Q' && ch != 3 /* C-c */ && ch != 4 /* C-d */ && ch != 26 /* C-z */) {
@@ -304,7 +305,8 @@ unsigned run(const Coord& screen_size) {
         // w/out this is mad
         std::cout.flush();
         // sleep, if moving vertically: more
-        std::this_thread::sleep_for(std::chrono::milliseconds(((dir == Dir::Left || dir == Dir::Right) ? 80 : 120)));
+        std::this_thread::sleep_for(std::chrono::milliseconds(
+            ((dir == Dir::Left || dir == Dir::Right) ? sleep : static_cast<unsigned>(sleep * 1.5))));
     }
     return snake.size();
 }
