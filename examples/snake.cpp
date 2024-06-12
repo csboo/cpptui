@@ -290,10 +290,23 @@ unsigned run(const Coord& screen_size) {
 
         // snake ate apple, we need a new one!
         if (snake.front() == apple) {
-            // generate, till it's not on the `snake`
-            do {
-                apple = Coord::random(screen_size);
-            } while (snake_contains(snake, apple));
+            std::vector<Coord> non_snake;
+            for (unsigned i = 1; i < screen_size.row; ++i) {
+                for (unsigned j = 1; j < screen_size.col; ++j) {
+                    if (!snake_contains(snake, Coord{i, j})) {
+                        non_snake.push_back(Coord{i, j});
+                    }
+                }
+            }
+            if (non_snake.empty()) {
+                dir = Dir::None;
+                return snake.size();
+            }
+            std::mt19937 mt{std::random_device{}()};
+            std::uniform_int_distribution<unsigned> gen_idx(0, non_snake.size() - 1);
+            unsigned idx = gen_idx(mt);
+
+            apple = non_snake.at(idx);
             apple.print(apple_text);
             // duplicate the last element of the `snake`, next round it'll be smoothed out.
             // assert(snake.size() + 1 == snake.previous_size())
@@ -329,7 +342,11 @@ int main() {
         auto len = run(screen_size);
 
         tui::reset_term();
-        std::cout << "You died/quit at " << len << "\nPress enter to quit if needed.\n";
+        if (len == screen_size.row * screen_size.col) {
+            std::cout << "Congrats, you won!\n";
+        } else {
+            std::cout << "You died/quit at " << len << "\nPress enter to quit if needed.\n";
+        }
     } catch (...) {
         tui::reset_term();
         std::cerr << "unknown error occured\n";
