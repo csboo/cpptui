@@ -302,7 +302,7 @@ Checks:
     google-readability-casting
     google-readability-function-size
     google-readability-namespace-comments
-    google-readability-todo
+    -google-readability-todo
     -google-runtime-int
     google-runtime-operator
     google-upgrade-googletest-case
@@ -434,7 +434,7 @@ Checks:
     readability-delete-null-pointer
     readability-duplicate-include
     readability-else-after-return
-    readability-function-cognitive-complexity
+    -readability-function-cognitive-complexity
     readability-function-size
     -readability-identifier-length
     readability-identifier-naming
