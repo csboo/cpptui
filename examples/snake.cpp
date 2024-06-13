@@ -352,6 +352,5 @@ int main() {
         std::cerr << "unknown error occured\n";
     }
 
-    tui::reset_term();
     return 0;
 }
