@@ -33,13 +33,13 @@ void counter_box(coord start, coord end) {
     for (auto row = start.row; row <= end.row; ++row) {
         tui::cursor::set_position(row, start.col);
         if (row % 10 == 0) {
-            std::cout << tui::tui_string(tui::text::concat(row / 10)).on_magenta();
+            std::cout << tui::tui_string(tui::concat(row / 10)).on_magenta();
         } else {
             std::cout << row % 10;
         }
         tui::cursor::set_position(row, end.col);
         if (row % 10 == 0) {
-            std::cout << tui::tui_string(tui::text::concat(row / 10)).on_magenta();
+            std::cout << tui::tui_string(tui::concat(row / 10)).on_magenta();
         } else {
             std::cout << row % 10;
         }
@@ -48,13 +48,13 @@ void counter_box(coord start, coord end) {
     for (auto col = start.col + 1; col < end.col; ++col) {
         tui::cursor::set_position(start.row, col);
         if (col % 10 == 0) {
-            std::cout << tui::tui_string(tui::text::concat(col / 10)).on_magenta();
+            std::cout << tui::tui_string(tui::concat(col / 10)).on_magenta();
         } else {
             std::cout << col % 10;
         }
         tui::cursor::set_position(end.row, col);
         if (col % 10 == 0) {
-            std::cout << tui::tui_string(tui::text::concat(col / 10)).on_magenta();
+            std::cout << tui::tui_string(tui::concat(col / 10)).on_magenta();
         } else {
             std::cout << col % 10;
         }
