@@ -44,6 +44,7 @@ void counter_box(coord start, coord end) {
     for (auto row = start.row + 1; row < end.row; ++row) {
         // left row
         tui::cursor::set_position(row, start.col);
+
         count(row);
         // right row
         tui::cursor::set_position(row, end.col);
