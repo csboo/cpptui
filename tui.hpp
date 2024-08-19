@@ -1,5 +1,6 @@
 // tui.hpp
 #pragma once
+#include <cstdio>
 #ifndef TUI_H
 #define TUI_H
 
@@ -18,6 +19,23 @@ namespace tui {
     constexpr const char PURE_ESC = '\x1B';
     // actually == "ESC[" almost everything starts with this
     constexpr const char* const ESC = "\x1B[";
+
+    // Helper function to stream a single argument
+    template <typename T> void stream_arg(std::ostringstream& oss, T&& arg) { oss << std::forward<T>(arg); }
+    // Variadic template function to concatenate any number of arguments
+    template <typename... Args> std::string concat(Args&&... args) {
+        std::ostringstream oss;
+        (void)std::initializer_list<int>{
+            (stream_arg(oss, std::forward<Args>(args)), 0)...}; // Using initializer_list for fold-like behavior
+        return oss.str();
+    }
+
+// cout ESC + ...
+#define CMD(name, ...)                                                                                                 \
+    inline void name() { AXS(__VA_ARGS__) }
+
+// ANSII escape sentence
+#define AXS(...) std::cout << concat("\x1B[", __VA_ARGS__);
 
     inline void enable_raw_mode() {
 #ifdef _WIN32
@@ -105,28 +123,29 @@ namespace tui {
     }
 
     namespace cursor {
-        // moves cursor up `n` rows
-        inline void up(unsigned n = 1) { std::cout << ESC << n << "#A"; }
-        // moves cursor down `n` rows
-        inline void down(unsigned n = 1) { std::cout << ESC << n << "#B"; }
-        // moves cursor right `n` columns
-        inline void right(unsigned n = 1) { std::cout << ESC << n << "#C"; }
-        // moves cursor left `n` columns
-        inline void left(unsigned n = 1) { std::cout << ESC << n << "#D"; }
+// template for moving cursor
+// moves cursor `n` times to `dir`
+#define move_n(dir, ch)                                                                                                \
+    inline void dir(unsigned n = 1) { AXS(n, '#', ch); }
+
+        move_n(up, 'A');
+        move_n(down, 'B');
+        move_n(right, 'C');
+        move_n(left, 'D');
 
         // moves cursor one row up, scrolling if needed
         inline void up_n_scroll() { std::cout << PURE_ESC << 'M'; }
         // moves cursor to beginning of next line, `n` rows down
-        inline void next_line(unsigned n = 1) { std::cout << ESC << n << "#E"; }
+        move_n(next_line, 'E');
         // moves cursor to beginning of previous line, `n` rows up
-        inline void prev_line(unsigned n = 1) { std::cout << ESC << n << "#F"; }
+        move_n(prev_line, 'F');
 
         // moves cursor to home position (0;0)
-        inline void home() { std::cout << ESC << 'H'; }
+        CMD(home, 'H');
         // moves cursor to (`row`;`col`), both start at 1
-        inline void set_position(unsigned row, unsigned col) { std::cout << ESC << row << ';' << col << 'H'; }
+        inline void set_position(unsigned row, unsigned col) { AXS(row, ';', col, 'H'); }
         // moves cursor to column `n`
-        inline void to_column(unsigned n) { std::cout << ESC << n << "#G"; }
+        move_n(to_column, 'G');
 
         // save cursor position
         inline void save() { std::cout << PURE_ESC << '7'; }
@@ -134,10 +153,10 @@ namespace tui {
         inline void restore() { std::cout << PURE_ESC << '8'; }
 
         // set visibility
-        inline void visible(bool visible) { std::cout << ESC << "?25" << (visible ? 'h' : 'l'); }
+        inline void visible(bool visible) { AXS("?25", (visible ? 'h' : 'l')); }
 
         // tell the terminal to check where the cursor is
-        inline void query_position() { std::cout << ESC << "6n"; }
+        CMD(query_position, "6n");
 
         // (rows;cols)
         inline std::pair<unsigned, unsigned> get_position() {
@@ -161,22 +180,22 @@ namespace tui {
 
     namespace screen {
         // clears
-        inline void clear() { std::cout << ESC << "2J"; }
-        inline void clear_line() { std::cout << ESC << "2K"; }
-        inline void clear_line_right() { std::cout << ESC << "K"; }
+        CMD(clear, "2J");
+        CMD(clear_line, "2K");
+        CMD(clear_line_right, "K");
 
         // erases
-        inline void erase_in_line(unsigned n = 0) { std::cout << ESC << n << 'K'; }
-        inline void erase_in_display(unsigned n = 0) { std::cout << ESC << n << 'J'; }
-        inline void erase_saved_lines() { std::cout << ESC << "3J"; }
+        inline void erase_in_line(unsigned n = 0) { AXS(n, 'K'); }
+        inline void erase_in_display(unsigned n = 0) { AXS(n, 'J'); }
+        CMD(erase_saved_lines, "3J");
 
-        inline void save_screen() { std::cout << ESC << "?47h"; }
-        inline void restore_screen() { std::cout << ESC << "?47l"; }
+        CMD(save_screen, "?47h");
+        CMD(restore_screen, "?47l");
 
-        inline void alternative_buffer(bool enable) { std::cout << ESC << "?1049" << (enable ? 'h' : 'l'); }
+        inline void alternative_buffer(bool enable) { AXS("?1049", (enable ? 'h' : 'l')); }
 
-        inline void scroll_up(unsigned n = 1) { std::cout << ESC << n << 'S'; }
-        inline void scroll_down(unsigned n = 1) { std::cout << ESC << n << 'T'; }
+        inline void scroll_up(unsigned n = 1) { AXS(n, 'S'); }
+        inline void scroll_down(unsigned n = 1) { AXS(n, 'T'); }
 
         // get the size of the terminal: (rows;cols)
         inline std::pair<unsigned, unsigned> size() {
@@ -186,16 +205,6 @@ namespace tui {
     } // namespace screen
 
     namespace text {
-        // Helper function to stream a single argument
-        template <typename T> void stream_arg(std::ostringstream& oss, T&& arg) { oss << std::forward<T>(arg); }
-        // Variadic template function to concatenate any number of arguments
-        template <typename... Args> std::string concat(Args&&... args) {
-            std::ostringstream oss;
-            (void)std::initializer_list<int>{
-                (stream_arg(oss, std::forward<Args>(args)), 0)...}; // Using initializer_list for fold-like behavior
-            return oss.str();
-        }
-
         namespace style {
             enum Style {
                 reset = 0,
@@ -286,7 +295,6 @@ namespace tui {
 
 // generate all
 #define make_colorizer(COLOR) colorize(COLOR) colorize_text(COLOR)
-
             make_colorizer(black);
             make_colorizer(red);
             make_colorizer(green);
@@ -309,10 +317,11 @@ namespace tui {
         } // namespace color
 
     } // namespace text
+
     class tui_string : public std::string {
       public:
         tui_string() = default;
-        template <typename T> tui_string(T s) : std::string(tui::text::concat(s)) {}
+        template <typename T> tui_string(T s) : std::string(concat(s)) {}
         tui_string(const char* s) : std::string(s) {}
         tui_string(const std::string& s) : std::string(s) {}
 
