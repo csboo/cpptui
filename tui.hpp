@@ -1,6 +1,5 @@
 // tui.hpp
 #pragma once
-#include <cstdio>
 #ifndef TUI_H
 #define TUI_H
 
