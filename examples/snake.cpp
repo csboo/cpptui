@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <chrono>
 #include <iostream>
+#include <limits>
 #include <random>
 #include <string>
 #include <thread>
@@ -9,8 +10,12 @@
 
 // this is how the apple/food will be displayed
 const tui::tui_string APPLE_TEXT = tui::tui_string('@').red().bold();
-// this is how much duration a frame lives for
-const std::chrono::milliseconds SLEEP_MS = std::chrono::milliseconds(100);
+// this is the default duration a frame lives for in ms, it's 8 fps
+const std::chrono::milliseconds SLEEP_MS = std::chrono::milliseconds(125);
+const std::chrono::milliseconds ADD_MS = std::chrono::milliseconds(1);
+const std::chrono::milliseconds MAX_MS = std::chrono::milliseconds(std::numeric_limits<unsigned>::infinity());
+// size/lenght of the snake at the game start
+const unsigned START_LEN = 5;
 
 // direction
 enum Dir {
@@ -97,6 +102,7 @@ struct Coord {
 
     bool operator==(const Coord& other) const { return (this->row == other.row && this->col == other.col); }
     bool operator<=(const Coord& other) const { return (this->row <= other.row && this->col <= other.col); }
+    Coord operator/(const unsigned& n) const { return Coord{this->row / n, this->col / n}; }
     // See what I did there?
     // we subtract the difference of the two coordinates
     Coord operator-(const Coord& other) const {
@@ -105,6 +111,8 @@ struct Coord {
             this->col - static_cast<int>(static_cast<int>(this->col) - static_cast<int>(other.col)),
         };
     }
+    Coord with_col(const unsigned& col) { return Coord{this->row, col}; }
+    Coord with_row(const unsigned& row) { return Coord{row, this->col}; }
     static Coord screen_size() {
         auto ss = tui::screen::size();
         return Coord{ss.first, ss.second};
@@ -259,8 +267,8 @@ bool snake_contains(const Snake& snake, const Coord& coord, const unsigned& skip
 }
 
 Dir dir = Dir::Right;
+char ch = 'l';
 void read_character() {
-    char ch = 'l';
     while (ch != 'q' && ch != 'Q' && ch != 3 /* C-c */ && ch != 4 /* C-d */ && ch != 26 /* C-z */ && dir != Dir::None) {
         std::cin.get(ch);
         // get which direction the snake shall move to, if character is invalid, don't change: use `dir`
@@ -279,7 +287,13 @@ unsigned run(const Coord& screen_size) {
     auto apple = Coord::random(screen_size);
     apple.print(APPLE_TEXT);
 
-    Snake snake = {Coord{1, 0}};
+    auto mid = screen_size / 2;
+    Snake snake;
+    for (auto i = 0; i < START_LEN; ++i) {
+        snake.push_back(mid.with_col(mid.col - i));
+    }
+    auto score = Coord{2, 3};
+    score.print(tui::tui_string(tui::concat("score: ", snake.size() - START_LEN)).green().italic());
 
     while (dir != Dir::None) {
         // and move it correspondly
@@ -314,21 +328,23 @@ unsigned run(const Coord& screen_size) {
             // duplicate the last element of the `snake`, next round it'll be smoothed out.
             // assert(snake.size() + 1 == snake.previous_size())
             snake.push_back(snake.back());
+            score.print(tui::tui_string(tui::concat("score: ", snake.size() - START_LEN)).green().italic());
         }
 
         // print non-head parts of snake, but only first 2
         for (auto i = 1; i < ((snake.size() == 1) ? 1 : 2); ++i) {
             auto nb = neighbours(snake, i, screen_size);
-            snake[i].print(draw(nb));
+            snake[i].print(tui::tui_string(draw(nb)).blue());
         }
         // print head
-        snake.front().print(to_string(dir));
+        snake.front().print(tui::tui_string(to_string(dir)).blue());
 
-        // w/out this is mad
+        // it's kinda like a flush(): w/out this it's quite mad
         tui::cursor::set_position(screen_size.row - 1, screen_size.col - 1);
         std::cout << "\n";
         // sleep, if moving vertically: more
-        std::this_thread::sleep_for(((dir == Dir::Left || dir == Dir::Right) ? SLEEP_MS : SLEEP_MS * 1.5));
+        std::this_thread::sleep_for(((dir == Dir::Left || dir == Dir::Right) ? SLEEP_MS : SLEEP_MS * 1.5) -
+                                    ADD_MS * snake.size());
     }
     return snake.size();
 }
