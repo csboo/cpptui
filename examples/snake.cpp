@@ -7,6 +7,11 @@
 #include <thread>
 #include <vector>
 
+// this is how the apple/food will be displayed
+const tui::tui_string APPLE_TEXT = tui::tui_string('@').red().bold();
+// this is how much duration a frame lives for
+const std::chrono::milliseconds SLEEP_MS = std::chrono::milliseconds(100);
+
 // direction
 enum Dir {
     Up = 0,
@@ -271,11 +276,9 @@ void read_character() {
 }
 
 unsigned run(const Coord& screen_size) {
-    auto apple_text = tui::tui_string('@').red().bold();
     auto apple = Coord::random(screen_size);
-    apple.print(apple_text);
+    apple.print(APPLE_TEXT);
 
-    const unsigned sleep = 100;
     Snake snake = {Coord{1, 0}};
 
     while (dir != Dir::None) {
@@ -307,7 +310,7 @@ unsigned run(const Coord& screen_size) {
             unsigned idx = gen_idx(mt);
 
             apple = non_snake.at(idx);
-            apple.print(apple_text);
+            apple.print(APPLE_TEXT);
             // duplicate the last element of the `snake`, next round it'll be smoothed out.
             // assert(snake.size() + 1 == snake.previous_size())
             snake.push_back(snake.back());
@@ -325,8 +328,7 @@ unsigned run(const Coord& screen_size) {
         tui::cursor::set_position(screen_size.row - 1, screen_size.col - 1);
         std::cout << "\n";
         // sleep, if moving vertically: more
-        std::this_thread::sleep_for(std::chrono::milliseconds(
-            ((dir == Dir::Left || dir == Dir::Right) ? sleep : static_cast<unsigned>(sleep * 1.5))));
+        std::this_thread::sleep_for(((dir == Dir::Left || dir == Dir::Right) ? SLEEP_MS : SLEEP_MS * 1.5));
     }
     return snake.size();
 }
