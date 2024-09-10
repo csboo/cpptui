@@ -8,14 +8,19 @@
 #include <thread>
 #include <vector>
 
+// /// Use the unicode block and half block characters (`█`, `▄`, and `▀`) to represent points in
+// /// a grid that is double the resolution of the terminal. Because each terminal cell is
+// /// generally about twice as tall as it is wide, this allows for a square grid of pixels.
+// HalfBlock,
+
 // this is how the apple/food will be displayed
 const tui::tui_string APPLE_TEXT = tui::tui_string('@').red().bold();
 // this is the default duration a frame lives for in ms, it's 8 fps
-const std::chrono::milliseconds SLEEP_MS = std::chrono::milliseconds(125);
+const std::chrono::milliseconds SLEEP_MS = std::chrono::milliseconds(80);
 const std::chrono::milliseconds ADD_MS = std::chrono::milliseconds(1);
 const std::chrono::milliseconds MAX_MS = std::chrono::milliseconds(std::numeric_limits<unsigned>::infinity());
-// size/lenght of the snake at the game start
-const unsigned START_LEN = 5;
+// initial size/lenght of the snake: at the game start
+const unsigned INIT_LEN = 5;
 
 // direction
 enum Dir {
@@ -289,11 +294,11 @@ unsigned run(const Coord& screen_size) {
 
     auto mid = screen_size / 2;
     Snake snake;
-    for (auto i = 0; i < START_LEN; ++i) {
+    for (auto i = 0; i < INIT_LEN; ++i) {
         snake.push_back(mid.with_col(mid.col - i));
     }
-    auto score = Coord{2, 3};
-    score.print(tui::tui_string(tui::concat("score: ", snake.size() - START_LEN)).green().italic());
+    auto score = Coord{2, 4};
+    score.print(tui::tui_string(tui::concat("score: ", snake.size() - INIT_LEN)).green().italic());
 
     while (dir != Dir::None) {
         // and move it correspondly
@@ -324,11 +329,11 @@ unsigned run(const Coord& screen_size) {
             unsigned idx = gen_idx(mt);
 
             apple = non_snake.at(idx);
-            apple.print(APPLE_TEXT);
             // duplicate the last element of the `snake`, next round it'll be smoothed out.
             // assert(snake.size() + 1 == snake.previous_size())
             snake.push_back(snake.back());
-            score.print(tui::tui_string(tui::concat("score: ", snake.size() - START_LEN)).green().italic());
+            score.print(tui::tui_string(tui::concat("score: ", snake.size() - INIT_LEN)).green().italic());
+            apple.print(APPLE_TEXT);
         }
 
         // print non-head parts of snake, but only first 2
@@ -342,11 +347,13 @@ unsigned run(const Coord& screen_size) {
         // it's kinda like a flush(): w/out this it's quite mad
         tui::cursor::set_position(screen_size.row - 1, screen_size.col - 1);
         std::cout << "\n";
+        auto sleep_mul = (dir == Dir::Left || dir == Dir::Right) ? 1. : 1.5;
+        auto sleep_dur = SLEEP_MS + (10 > snake.size() ? -(ADD_MS * 10) + ADD_MS * static_cast<unsigned>(snake.size())
+                                                       : ADD_MS * static_cast<unsigned>(snake.size()));
         // sleep, if moving vertically: more
-        std::this_thread::sleep_for(((dir == Dir::Left || dir == Dir::Right) ? SLEEP_MS : SLEEP_MS * 1.5) -
-                                    ADD_MS * snake.size());
+        std::this_thread::sleep_for(sleep_dur * sleep_mul);
     }
-    return snake.size();
+    return snake.size() - INIT_LEN;
 }
 
 int main() {
