@@ -15,9 +15,9 @@
 
 namespace tui {
     // only the Esc character
-    constexpr const char PURE_ESC = '\x1B';
-    // actually == "ESC[" almost everything starts with this
-    constexpr const char* const ESC = "\x1B[";
+    constexpr const char ESC = '\x1B';
+    // Control Sequence Introducer actually == "ESC[" almost everything starts with this
+    constexpr const char* CSI = "\x1B[";
 
     // Helper function to stream a single argument
     template <typename T> void stream_arg(std::ostringstream& oss, T&& arg) { oss << std::forward<T>(arg); }
@@ -29,12 +29,12 @@ namespace tui {
         return oss.str();
     }
 
-// cout ESC + ...
-#define CMD(name, ...)                                                                                                 \
-    inline void name() { AXS(__VA_ARGS__) }
+// control sequence introducer, then name, then command
+#define csi(name, ...)                                                                                                 \
+    inline void name() { esc(__VA_ARGS__) }
 
 // ANSII escape sentence
-#define AXS(...) std::cout << concat("\x1B[", __VA_ARGS__);
+#define esc(...) std::cout << concat("\x1B[", __VA_ARGS__);
 
     inline void enable_raw_mode() {
 #ifdef _WIN32
@@ -125,7 +125,7 @@ namespace tui {
 // template for moving cursor
 // moves cursor `n` times to `dir`
 #define move_n(dir, ch)                                                                                                \
-    inline void dir(unsigned n = 1) { AXS(n, '#', ch); }
+    inline void dir(unsigned n = 1) { esc(n, '#', ch); }
 
         move_n(up, 'A');
         move_n(down, 'B');
@@ -133,29 +133,29 @@ namespace tui {
         move_n(left, 'D');
 
         // moves cursor one row up, scrolling if needed
-        inline void up_n_scroll() { std::cout << PURE_ESC << 'M'; }
+        inline void up_n_scroll() { std::cout << ESC << 'M'; }
         // moves cursor to beginning of next line, `n` rows down
         move_n(next_line, 'E');
         // moves cursor to beginning of previous line, `n` rows up
         move_n(prev_line, 'F');
 
         // moves cursor to home position (0;0)
-        CMD(home, 'H');
+        csi(home, 'H');
         // moves cursor to (`row`;`col`), both start at 1
-        inline void set_position(unsigned row, unsigned col) { AXS(row, ';', col, 'H'); }
+        inline void set_position(unsigned row, unsigned col) { esc(row, ';', col, 'H'); }
         // moves cursor to column `n`
         move_n(to_column, 'G');
 
         // save cursor position
-        inline void save() { std::cout << PURE_ESC << '7'; }
+        inline void save() { std::cout << ESC << '7'; }
         // restore previously saved cursor position
-        inline void restore() { std::cout << PURE_ESC << '8'; }
+        inline void restore() { std::cout << ESC << '8'; }
 
         // set visibility
-        inline void visible(bool visible) { AXS("?25", (visible ? 'h' : 'l')); }
+        inline void visible(bool visible) { esc("?25", (visible ? 'h' : 'l')); }
 
         // tell the terminal to check where the cursor is
-        CMD(query_position, "6n");
+        csi(query_position, "6n");
 
         // (rows;cols)
         inline std::pair<unsigned, unsigned> get_position() {
@@ -165,7 +165,7 @@ namespace tui {
             char ch = 0;
             unsigned rows = 0;
             unsigned cols = 0;
-            if (std::cin.get(ch) && ch == PURE_ESC && std::cin.get(ch) && ch == '[') {
+            if (std::cin.get(ch) && ch == ESC && std::cin.get(ch) && ch == '[') {
                 std::cin >> rows;
                 std::cin.get(ch); // skip the ';'
                 std::cin >> cols;
@@ -179,22 +179,22 @@ namespace tui {
 
     namespace screen {
         // clears
-        CMD(clear, "2J");
-        CMD(clear_line, "2K");
-        CMD(clear_line_right, "K");
+        csi(clear, "2J");
+        csi(clear_line, "2K");
+        csi(clear_line_right, "K");
 
         // erases
-        inline void erase_in_line(unsigned n = 0) { AXS(n, 'K'); }
-        inline void erase_in_display(unsigned n = 0) { AXS(n, 'J'); }
-        CMD(erase_saved_lines, "3J");
+        inline void erase_in_line(unsigned n = 0) { esc(n, 'K'); }
+        inline void erase_in_display(unsigned n = 0) { esc(n, 'J'); }
+        csi(erase_saved_lines, "3J");
 
-        CMD(save_screen, "?47h");
-        CMD(restore_screen, "?47l");
+        csi(save_screen, "?47h");
+        csi(restore_screen, "?47l");
 
-        inline void alternative_buffer(bool enable) { AXS("?1049", (enable ? 'h' : 'l')); }
+        inline void alternative_buffer(bool enable) { esc("?1049", (enable ? 'h' : 'l')); }
 
-        inline void scroll_up(unsigned n = 1) { AXS(n, 'S'); }
-        inline void scroll_down(unsigned n = 1) { AXS(n, 'T'); }
+        inline void scroll_up(unsigned n = 1) { esc(n, 'S'); }
+        inline void scroll_down(unsigned n = 1) { esc(n, 'T'); }
 
         // get the size of the terminal: (rows;cols)
         inline std::pair<unsigned, unsigned> size() {
@@ -217,7 +217,7 @@ namespace tui {
                 strikethrough = 9,
             };
 
-            inline std::string style(const Style& style) { return concat(ESC, static_cast<unsigned>(style), 'm'); }
+            inline std::string style(const Style& style) { return concat(CSI, static_cast<unsigned>(style), 'm'); }
 
 // generate for cout << STYLE_style(); eg.: cout << bold_style();
 #define stylize(STYLE)                                                                                                 \
@@ -246,10 +246,10 @@ namespace tui {
             // printf '\e]8;;http://example.com\e\\This is a link\e]8;;\e\\\n'
             // printf 'ESC]8;;{link}ESC\\{text}ESC]8;;ESC\\'
             inline std::string link(const std::string& link, const std::string& text) {
-                return concat(PURE_ESC, "]8;;", link, PURE_ESC, "\\", text, PURE_ESC, "]8;;", PURE_ESC, "\\");
+                return concat(ESC, "]8;;", link, ESC, "\\", text, ESC, "]8;;", ESC, "\\");
             }
             inline std::string link(const char* link, const char* text) {
-                return concat(PURE_ESC, "]8;;", link, PURE_ESC, "\\", text, PURE_ESC, "]8;;", PURE_ESC, "\\");
+                return concat(ESC, "]8;;", link, ESC, "\\", text, ESC, "]8;;", ESC, "\\");
             }
 
         } // namespace style
@@ -269,7 +269,7 @@ namespace tui {
 
             // fg or bg
             inline std::string colorizer(const Color& c, bool fg) {
-                return concat(ESC, (fg ? '3' : '4'), static_cast<unsigned>(c), 'm');
+                return concat(CSI, (fg ? '3' : '4'), static_cast<unsigned>(c), 'm');
             }
 
 // generate for cout << COLOR_{fg, bg}();
@@ -307,7 +307,7 @@ namespace tui {
             // r, g, b values have to be valid:  [0;255]
             inline std::string rgb(unsigned r, unsigned g, unsigned b, bool fg) {
                 assert(r >= 0 && r <= 255 && g >= 0 && g <= 255 && b >= 0 && b <= 255);
-                return concat(ESC, (fg ? '3' : '4'), "8;2;", r, ';', g, ';', b, 'm');
+                return concat(CSI, (fg ? '3' : '4'), "8;2;", r, ';', g, ';', b, 'm');
             }
             inline std::string rgb(unsigned r, unsigned g, unsigned b, bool fg, const std::string& text) {
                 return concat(rgb(r, g, b, fg), text, style::reset_style());
@@ -363,7 +363,8 @@ namespace tui {
 
     // void handle_resize(int /*sig*/) { screen::clear(); }
     using fn_ptr = void (*)(int);
-    // needs a void function, that takes an int, doesn't yet do anything on windows
+    // needs a void function, that takes an int, doesn't yet do anything on windows,
+    // function pointer: `void function_name(int sig) { stuff }`
     inline void set_up_resize(fn_ptr handle_resize) {
 #ifdef _WIN32
         // should implement logic for windows here
