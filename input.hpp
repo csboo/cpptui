@@ -4,6 +4,7 @@
 #include <iostream>
 #include <ostream>
 
+// sorry for this ugly code, I really feel very bad about it.
 // damn macros, because given `MyEnum::Core` you can't do
 // `cout << MyEnum::Core; assert(cout.string() == "Core"|"MyEnum::Core")`
 
@@ -18,8 +19,9 @@
 std::string ctrl_to_str(const unsigned& key) { return tui::concat("Ctrl", static_cast<char>(key + 64)); }
 
 // Define Control Enum Member
-#define DCEM(X) Ctrl##X
-#define DEM(X1, X2, X3, X4) DCEM(X1), DCEM(X2), DCEM(X3), DCEM(X4)
+#define _DCEM(X) Ctrl##X
+// Define Enum Member
+#define DEM(X1, X2, X3, X4) _DCEM(X1), _DCEM(X2), _DCEM(X3), _DCEM(X4)
 
 enum Special {
     CtrlA = 1,
@@ -40,6 +42,8 @@ enum Special {
     Backspace = 127,
     None,
 };
+#undef DCEM
+#undef DEM
 std::ostream& operator<<(std::ostream& os, const Special& special) {
     switch (special) {
         CRSS(Escape, Tab, Backspace, Enter);
@@ -69,6 +73,8 @@ std::ostream& operator<<(std::ostream& os, const Arrow& arrow) {
     }
     return os;
 }
+#undef CRS
+#undef CRSS
 
 struct Input {
     bool is_ch = false;
