@@ -1,6 +1,7 @@
 #pragma once
 
 #include "tui.hpp"
+#include <fstream>
 #include <iostream>
 #include <ostream>
 
@@ -181,8 +182,10 @@ struct Input {
             break;
         }
         }
-        std::cerr << "\r\noh my, an unknown character:\n\t- code: '" << static_cast<int>(ch) << "'\n\t- display: '"
-                  << ch << "'\r\n\n";
+        std::ofstream logf("tui_input_hpp.log", std::ios::app);
+        logf << "\nerror: an unknown character:\n\t- code: '" << static_cast<int>(ch) << "'\n\t- display: '" << ch
+             << "'\n\n";
+        logf.close();
         return Input::from_special(Special::None);
     }
 };
