@@ -132,7 +132,7 @@ struct Input {
 
         if (ch >= 32 && ch <= 126) { // <char>
             return Input::from_char(ch);
-        } else if (ch >= 0 && ch <= 26) { // Ctrl<char>
+        } else if (ch >= 1 && ch <= 26) { // Ctrl<char>
             return Input::from_special(static_cast<Special>(ch));
         }
         switch (ch) {
