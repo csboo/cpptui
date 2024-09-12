@@ -35,7 +35,7 @@ enum Special {
     DEM(R, S, T, U),
     DEM(V, W, X, Y),
     CtrlZ = 26,
-    Escape = 27,
+    Esc = 27,
     F1 = 80,
     F2 = 81,
     F3 = 82,
@@ -47,7 +47,7 @@ enum Special {
 #undef DEM
 std::ostream& operator<<(std::ostream& os, const Special& special) {
     switch (special) {
-        CRSS(Escape, Tab, Backspace, Enter);
+        CRSS(Esc, Tab, Backspace, Enter);
         CRSS(F1, F2, F3, F4);
 
         CRS(None);
@@ -139,7 +139,7 @@ struct Input {
         switch (ch) {
         case Special::Backspace:
             return Input::from_special(static_cast<Special>(ch));
-        case Special::Escape: {
+        case Special::Esc: {
             pee = std::cin.peek();
             // std::cin.clear();
             // std::cerr << "\r\n--well, (): '" << std::cin.sync() << "'--\r\n\n";
@@ -176,7 +176,7 @@ struct Input {
                 break;
             }
             default:
-                return Input::from_special(Special::Escape);
+                return Input::from_special(Special::Esc);
             }
         default:
             break;
