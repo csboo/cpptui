@@ -1,10 +1,13 @@
-#include "../input.hpp"
 #include "../tui.hpp"
 #include <cassert>
 #include <chrono>
 #include <thread>
 #include <utility>
 #include <vector>
+
+using tui::input::Arrow;
+using tui::input::Input;
+using tui::input::SpecKey;
 
 std::pair<unsigned int, unsigned int> screen_size;
 

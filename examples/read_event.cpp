@@ -1,11 +1,12 @@
-#include "../input.hpp"
 #include "../tui.hpp"
-
 #include <chrono>
 #include <condition_variable>
 #include <iostream>
 #include <mutex>
 #include <thread>
+
+using tui::input::Input;
+using tui::input::SpecKey;
 
 std::mutex mtx;
 std::condition_variable cv;

@@ -1,5 +1,6 @@
-#include "../input.hpp"
 #include "../tui.hpp"
+
+using namespace tui::input;
 
 // get's called on terminall resize
 void clear(int sig) {
