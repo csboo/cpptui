@@ -145,6 +145,7 @@ namespace tui {
         inline void set_position(unsigned row, unsigned col) { esc(row, ';', col, 'H'); }
         // moves cursor to column `n`
         move_n(to_column, 'G');
+#undef move_n
 
         // save cursor position
         inline void save() { std::cout << ESC << '7'; }
@@ -242,6 +243,9 @@ namespace tui {
             make_stylizer(inverted);
             make_stylizer(invisible);
             make_stylizer(strikethrough);
+#undef make_stylizer
+#undef stylize_text
+#undef stylize
 
             // printf '\e]8;;http://example.com\e\\This is a link\e]8;;\e\\\n'
             // printf 'ESC]8;;{link}ESC\\{text}ESC]8;;ESC\\'
@@ -303,6 +307,9 @@ namespace tui {
             make_colorizer(cyan);
             make_colorizer(white);
             make_colorizer(basic);
+#undef make_colorizer
+#undef colorize_text
+#undef colorize
 
             // r, g, b values have to be valid:  [0;255]
             inline std::string rgb(unsigned r, unsigned g, unsigned b, bool fg) {
@@ -336,6 +343,7 @@ namespace tui {
         make_style(inverted);
         make_style(invisible);
         make_style(strikethrough);
+#undef make_style
 
 // generate this.COLOR(): eg this.red()
 #define make_color(COLOR)                                                                                              \
@@ -351,6 +359,7 @@ namespace tui {
         make_color(cyan);
         make_color(white);
         make_color(basic);
+#undef make_color
 
         inline tui_string link(const char* link) { return text::style::link(link, *this); }
         inline tui_string rgb(unsigned r, unsigned g, unsigned b) const {
