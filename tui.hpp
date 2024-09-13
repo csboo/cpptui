@@ -372,26 +372,14 @@ namespace tui {
         }
     };
 
-#ifdef _WIN32
-    BOOL WINAPI ConsoleEventHandler(DWORD event) {
-        if (event == CTRL_RESIZE_EVENT) {
-            handle_resize(0); // Call resize handler with arbitrary int
-            return TRUE;
-        }
-        return FALSE;
-    }
-#endif
-
     // void handle_resize(int /*sig*/) { screen::clear(); }
     using fn_ptr = void (*)(int);
+    // NOTE: does not work on Windows
     // needs a void function, that takes an int
     // function pointer: `void function_name(int sig) { stuff }`
     inline void set_up_resize(fn_ptr handle_resize) {
 #ifdef _WIN32
-        // Set up Windows-specific logic for handling resize
-        if (!SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleEventHandler, TRUE)) {
-            std::cerr << "Error: Could not set control handler" << std::endl;
-        }
+        // no such thing that's this easy
 #else
         // Register the signal handler for SIGWINCH
         struct sigaction sa {};

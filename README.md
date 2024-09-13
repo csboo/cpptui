@@ -23,7 +23,7 @@ Uses macro magic (not intentionally, but it's needed to reduce code size and ove
 -   styles
 -   raw mode
 -   alternate screen
--   custom function for resize handling, NOTE: you should lock stdout, stdin if you'd like to use this feature
+-   custom function for resize handling, NOTE: you should lock stdout, stdin when you use this feature, also, doesn't work on Windows
 
 ### input
 

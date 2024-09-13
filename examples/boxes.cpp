@@ -225,6 +225,7 @@ void run() {
     }
 }
 
+// NOTE: doesn't work on Windows
 void handle_resize(int /*sig*/) {
     screen_size = tui::screen::size();
     // tui::cursor::get_position();
@@ -239,6 +240,7 @@ void handle_resize(int /*sig*/) {
 
 int main() {
     tui::init_term(false);
+    // NOTE: doesn't work on Windows
     tui::set_up_resize(handle_resize);
     screen_size = tui::screen::size();
 
