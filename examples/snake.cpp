@@ -15,8 +15,8 @@
 
 // this is how the apple/food will be displayed
 const tui::tui_string APPLE_TEXT = tui::tui_string('@').red().bold();
-// this is the default duration a frame lives for in ms, it's 8 fps
-const std::chrono::milliseconds SLEEP_MS = std::chrono::milliseconds(80);
+// this is the default duration a frame lives for in ms, it's 23.8 fps
+const std::chrono::milliseconds SLEEP_MS = std::chrono::milliseconds(42);
 const std::chrono::milliseconds ADD_MS = std::chrono::milliseconds(1);
 const std::chrono::milliseconds MAX_MS = std::chrono::milliseconds(std::numeric_limits<unsigned>::infinity());
 // initial size/lenght of the snake: at the game start
