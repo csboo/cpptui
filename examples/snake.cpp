@@ -251,8 +251,8 @@ void handle_movement(const Dir& dir, Coord& coord, const Coord& ss) {
     }
 }
 void move(Snake& snake, const Dir& dir, const Coord& ss) {
-    // delete the last one off the screen by overwriting it with a block
-    snake.back().print(tui::tui_string("█").inverted());
+    // delete the last one off the screen by overwriting it with a space
+    snake.back().print(' ');
     auto old_snake = snake;
     for (auto i = 1; i < snake.size(); ++i) {
         snake.at(i) = old_snake.at(i - 1);
