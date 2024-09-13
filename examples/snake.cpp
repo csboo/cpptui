@@ -8,11 +8,6 @@
 #include <thread>
 #include <vector>
 
-// /// Use the unicode block and half block characters (`█`, `▄`, and `▀`) to represent points in
-// /// a grid that is double the resolution of the terminal. Because each terminal cell is
-// /// generally about twice as tall as it is wide, this allows for a square grid of pixels.
-// HalfBlock,
-
 // this is how the apple/food will be displayed
 const tui::tui_string APPLE_TEXT = tui::tui_string('@').red().bold();
 // this is the default duration a frame lives for in ms, it's 23.8 fps
