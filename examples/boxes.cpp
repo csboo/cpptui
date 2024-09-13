@@ -142,13 +142,13 @@ void run() {
 
     char ch = 0;
     Input x;
-    while (x != 'q' && x != Special::CtrlC) {
+    while (x != 'q' && x != SpecKey::CtrlC) {
         screen = coord{screen_size.first, screen_size.second};
         msg_start = coord{screen.row / 2, static_cast<unsigned int>((screen.col / 2) - msg_len / 2)};
         msg_end = coord{screen.row / 2, static_cast<unsigned int>((screen.col / 2) + msg_len / 2)};
 
         counter_box(coord{1, 1}, screen);
-        if (x == Special::Tab) {
+        if (x == SpecKey::Tab) {
             if (current_box == boxes.size() - 1) {
                 current_box = 0;
             } else {

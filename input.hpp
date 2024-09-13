@@ -24,7 +24,7 @@ std::string ctrl_to_str(const unsigned& key) { return tui::concat("Ctrl", static
 // Define Enum Member
 #define DEM(X1, X2, X3, X4) _DCEM(X1), _DCEM(X2), _DCEM(X3), _DCEM(X4)
 
-enum Special {
+enum SpecKey {
     CtrlA = 1,
     DEM(B, C, D, E),
     DEM(F, G, H, I),
@@ -45,7 +45,7 @@ enum Special {
 };
 #undef DCEM
 #undef DEM
-std::ostream& operator<<(std::ostream& os, const Special& special) {
+std::ostream& operator<<(std::ostream& os, const SpecKey& special) {
     switch (special) {
         CRSS(Esc, Tab, Backspace, Enter);
         CRSS(F1, F2, F3, F4);
@@ -84,7 +84,7 @@ struct Input {
 
     char ch = '\0';
     Arrow arrow = static_cast<Arrow>(0);
-    Special special = Special::None;
+    SpecKey special = SpecKey::None;
 
     bool operator==(const Input& other) const {
         return (this->ch == other.ch && this->is_ch == other.is_ch && this->arrow == other.arrow &&
@@ -92,11 +92,11 @@ struct Input {
                 this->is_special == other.is_special);
     }
     bool operator==(const char& other) const { return (this->is_ch && this->ch == other); }
-    bool operator==(const Special& other) const { return (this->is_special && this->special == other); }
+    bool operator==(const SpecKey& other) const { return (this->is_special && this->special == other); }
     bool operator==(const Arrow& other) const { return (this->is_arrow && this->arrow == other); }
 
     bool operator!=(const char& other) const { return !(*this == other); }
-    bool operator!=(const Special& other) const { return !(*this == other); }
+    bool operator!=(const SpecKey& other) const { return !(*this == other); }
     bool operator!=(const Arrow& other) const { return !(*this == other); }
     bool operator!=(const Input& other) const { return !(*this == other); }
 
@@ -116,7 +116,7 @@ struct Input {
 
         return tmp;
     }
-    static Input from_special(const Special& special) {
+    static Input from_special(const SpecKey& special) {
         Input tmp;
         tmp.special = special;
         tmp.is_special = true;
@@ -128,18 +128,18 @@ struct Input {
         auto pee = 0;
         if /* mostly weird stuff, like: 'Ű' */ (ch < 0) {
             std::cin.ignore();
-            return Input::from_special(Special::None);
+            return Input::from_special(SpecKey::None);
         }
 
         if (ch >= 32 && ch <= 126) { // <char>
             return Input::from_char(ch);
         } else if (ch >= 1 && ch <= 26) { // Ctrl<char>
-            return Input::from_special(static_cast<Special>(ch));
+            return Input::from_special(static_cast<SpecKey>(ch));
         }
         switch (ch) {
-        case Special::Backspace:
-            return Input::from_special(static_cast<Special>(ch));
-        case Special::Esc: {
+        case SpecKey::Backspace:
+            return Input::from_special(static_cast<SpecKey>(ch));
+        case SpecKey::Esc: {
             pee = std::cin.peek();
             // std::cin.clear();
             // std::cerr << "\r\n--well, (): '" << std::cin.sync() << "'--\r\n\n";
@@ -164,11 +164,11 @@ struct Input {
                 std::cin.ignore();
                 auto sus = std::cin.get();
                 switch (sus) {
-                case Special::F1:
-                case Special::F2:
-                case Special::F3:
-                case Special::F4:
-                    return Input::from_special(static_cast<Special>(sus));
+                case SpecKey::F1:
+                case SpecKey::F2:
+                case SpecKey::F3:
+                case SpecKey::F4:
+                    return Input::from_special(static_cast<SpecKey>(sus));
                 default:
                     std::cin.ignore(3);
                     break;
@@ -176,7 +176,7 @@ struct Input {
                 break;
             }
             default:
-                return Input::from_special(Special::Esc);
+                return Input::from_special(SpecKey::Esc);
             }
         default:
             break;
@@ -186,7 +186,7 @@ struct Input {
         logf << "\nerror: an unknown character:\n\t- code: '" << static_cast<int>(ch) << "'\n\t- display: '" << ch
              << "'\n\n";
         logf.close();
-        return Input::from_special(Special::None);
+        return Input::from_special(SpecKey::None);
     }
 };
 

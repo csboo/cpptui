@@ -12,7 +12,7 @@ std::condition_variable cv;
 Input shared_input;
 bool input_available = false;
 
-bool should_quit(const Input& input) { return input == Special::CtrlC || input == 'q'; }
+bool should_quit(const Input& input) { return input == SpecKey::CtrlC || input == 'q'; }
 
 void read_input() {
     while (!should_quit(shared_input)) {

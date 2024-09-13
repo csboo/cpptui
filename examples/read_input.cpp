@@ -22,7 +22,7 @@ int main() {
             std::cin.get(ch);                                                  // read into a character
             input.read(ch);                                                    // convert it into an `Input`
             std::cout << "ch:\t'" << ch << "'\t-\tinput: " << input << "\r\n"; // see how easy it is to print an `Input`
-        } while (input != Special::CtrlC);
+        } while (input != SpecKey::CtrlC);
     } catch (...) { // NOTE: probably won't happen, but it's good to be careful
         tui::reset_term();
         std::cerr << "\nunknown error\n\n";
