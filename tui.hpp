@@ -143,7 +143,7 @@ namespace tui {
         move_n(left, 'D');
 
         // moves cursor one row up, scrolling if needed
-        inline void up_n_scroll() { esc('M'); }
+        inline void up_n_scroll() { std::cout << ESC << 'M'; }
         // moves cursor to beginning of next line, `n` rows down
         move_n(next_line, 'E');
         // moves cursor to beginning of previous line, `n` rows up
