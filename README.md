@@ -41,6 +41,7 @@ a pretty handy header with functions and types to improve reading input from `ci
 > [!IMPORTANT] > **_caveats_**:
 >
 > -   can't properly read <kbd>Escape</kbd>: there is a one character input delay, as there are `Escape Sentences` (like Arrows, F keys), which hence the name, start with an <kbd>Escape</kbd>
+> -   under Windows, special keys are very messy
 
 ## usage
 
