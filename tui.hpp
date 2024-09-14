@@ -1,7 +1,5 @@
 // tui.hpp
 #pragma once
-#ifndef TUI_H
-#define TUI_H
 
 #ifdef _WIN32 // windows
 #include <windows.h>
@@ -609,5 +607,3 @@ namespace tui {
         }
     } // namespace input
 } // namespace tui
-
-#endif // TUI_H
