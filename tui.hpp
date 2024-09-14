@@ -5,9 +5,10 @@
 
 #ifdef _WIN32 // windows
 #include <windows.h>
+#else
+#include <csignal>
 #endif
 #include <cassert>
-#include <csignal>
 #include <fstream>
 #include <iostream>
 #include <ostream>
