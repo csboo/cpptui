@@ -4,7 +4,6 @@
 #define TUI_H
 
 #ifdef _WIN32 // windows
-#include <conio.h>
 #include <windows.h>
 #endif
 #include <cassert>
@@ -390,6 +389,9 @@ namespace tui {
     }
 
     inline void init_term(bool enable_cursor) {
+#ifdef _WIN32
+        SetConsoleOutputCP(65001); // use utf-8
+#endif
         tui::enable_raw_mode();
         tui::cursor::visible(enable_cursor);
         tui::screen::save_screen();
