@@ -420,7 +420,7 @@ namespace tui {
 #define CRSS(A, B, C, D) CRS(A) CRS(B) CRS(C) CRS(D)
 
         // convert `Ctrl+<character>` sequence to a `string` as eg.: `CtrlX`
-        std::string ctrl_to_str(const unsigned& key) { return tui::concat("Ctrl", static_cast<char>(key + 64)); }
+        inline std::string ctrl_to_str(const unsigned& key) { return tui::concat("Ctrl", static_cast<char>(key + 64)); }
 
 // Define Control Enum Member
 #define _DCEM(X) Ctrl##X
@@ -448,7 +448,7 @@ namespace tui {
         };
 #undef DCEM
 #undef DEM
-        std::ostream& operator<<(std::ostream& os, const SpecKey& special) {
+        inline std::ostream& operator<<(std::ostream& os, const SpecKey& special) {
             switch (special) {
                 CRSS(Esc, Tab, Backspace, Enter);
                 CRSS(F1, F2, F3, F4);
@@ -468,7 +468,7 @@ namespace tui {
             Right = 67,
             Left = 68,
         };
-        std::ostream& operator<<(std::ostream& os, const Arrow& arrow) {
+        inline std::ostream& operator<<(std::ostream& os, const Arrow& arrow) {
             switch (arrow) {
                 CRSS(Up, Down, Right, Left);
             default:
@@ -593,7 +593,7 @@ namespace tui {
             }
         };
 
-        std::ostream& operator<<(std::ostream& os, const Input& inp) {
+        inline std::ostream& operator<<(std::ostream& os, const Input& inp) {
             if (inp.is_ch) {
                 os << "character: '" << inp.ch << "'";
             } else if (inp.is_arrow) {
