@@ -40,11 +40,11 @@ namespace tui {
     }
 
 // control sequence introducer, then name, then command
-#define csi_fn(name, ...)                                                                                              \
-    inline void name() { csi(__VA_ARGS__) }
+#define csi(name, ...)                                                                                                 \
+    inline void name() { esc(__VA_ARGS__) }
 
 // ANSII escape sentence
-#define csi(...) std::cout << concat("\x1B[", __VA_ARGS__);
+#define esc(...) std::cout << concat("\x1B[", __VA_ARGS__);
 
     inline void enable_raw_mode() {
 #ifdef _WIN32
@@ -135,7 +135,7 @@ namespace tui {
 // template for moving cursor
 // moves cursor `n` times to `dir`
 #define move_n(dir, ch)                                                                                                \
-    inline void dir(unsigned n = 1) { csi(n, '#', ch); }
+    inline void dir(unsigned n = 1) { esc(n, '#', ch); }
 
         move_n(up, 'A');
         move_n(down, 'B');
@@ -150,9 +150,9 @@ namespace tui {
         move_n(prev_line, 'F');
 
         // moves cursor to home position (0;0)
-        csi_fn(home, 'H');
+        csi(home, 'H');
         // moves cursor to (`row`;`col`), both start at 1
-        inline void set_position(unsigned row, unsigned col) { csi(row, ';', col, 'H'); }
+        inline void set_position(unsigned row, unsigned col) { esc(row, ';', col, 'H'); }
         // moves cursor to column `n`
         move_n(to_column, 'G');
 #undef move_n
@@ -163,10 +163,10 @@ namespace tui {
         inline void restore() { std::cout << ESC << '8'; }
 
         // set visibility
-        inline void visible(bool visible) { csi("?25", (visible ? 'h' : 'l')); }
+        inline void visible(bool visible) { esc("?25", (visible ? 'h' : 'l')); }
 
         // tell the terminal to check where the cursor is
-        csi_fn(query_position, "6n");
+        csi(query_position, "6n");
 
         // (rows;cols)
         inline std::pair<unsigned, unsigned> get_position() {
@@ -189,22 +189,22 @@ namespace tui {
 
     namespace screen {
         // clears
-        csi_fn(clear, "2J");
-        csi_fn(clear_line, "2K");
-        csi_fn(clear_line_right, "K");
+        csi(clear, "2J");
+        csi(clear_line, "2K");
+        csi(clear_line_right, "K");
 
         // erases
-        inline void erase_in_line(unsigned n = 0) { csi(n, 'K'); }
-        inline void erase_in_display(unsigned n = 0) { csi(n, 'J'); }
-        csi_fn(erase_saved_lines, "3J");
+        inline void erase_in_line(unsigned n = 0) { esc(n, 'K'); }
+        inline void erase_in_display(unsigned n = 0) { esc(n, 'J'); }
+        csi(erase_saved_lines, "3J");
 
-        csi_fn(save_screen, "?47h");
-        csi_fn(restore_screen, "?47l");
+        csi(save_screen, "?47h");
+        csi(restore_screen, "?47l");
 
-        inline void alternative_buffer(bool enable) { csi("?1049", (enable ? 'h' : 'l')); }
+        inline void alternative_buffer(bool enable) { esc("?1049", (enable ? 'h' : 'l')); }
 
-        inline void scroll_up(unsigned n = 1) { csi(n, 'S'); }
-        inline void scroll_down(unsigned n = 1) { csi(n, 'T'); }
+        inline void scroll_up(unsigned n = 1) { esc(n, 'S'); }
+        inline void scroll_down(unsigned n = 1) { esc(n, 'T'); }
 
         // get the size of the terminal: (rows;cols)/(y;x)
         inline std::pair<unsigned, unsigned> size() {
