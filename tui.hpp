@@ -2,10 +2,20 @@
 #pragma once
 
 #ifdef _WIN32 // windows
+
+#include <wchar.h>
 #include <windows.h>
-#else
+
+#else // not windows
+
 #include <csignal>
+#include <err.h>       /* err */
+#include <fcntl.h>     /* open */
+#include <sys/ioctl.h> /* ioctl, TIOCGWINSZ */
+#include <unistd.h>    /* close */
+
 #endif
+
 #include <cassert>
 #include <fstream>
 #include <iostream>
@@ -175,7 +185,6 @@ namespace tui {
 
             return {rows, cols};
         }
-
     } // namespace cursor
 
     namespace screen {
@@ -197,10 +206,45 @@ namespace tui {
         inline void scroll_up(unsigned n = 1) { esc(n, 'S'); }
         inline void scroll_down(unsigned n = 1) { esc(n, 'T'); }
 
-        // get the size of the terminal: (rows;cols)
+        // get the size of the terminal: (rows;cols)/(y;x)
         inline std::pair<unsigned, unsigned> size() {
-            cursor::set_position(9999, 9999); // very huge position, that won't be reached, moves to biggest
-            return cursor::get_position();
+#ifdef _WIN32
+            HANDLE console;
+            CONSOLE_SCREEN_BUFFER_INFO info;
+            short rows;
+            short columns;
+            /* Create a handle to the console screen. */
+            console = CreateFileW(L"CONOUT$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+                                  OPEN_EXISTING, 0, NULL);
+            if (console == INVALID_HANDLE_VALUE)
+                return {0, 0};
+
+            /* Calculate the size of the console window. */
+            if (GetConsoleScreenBufferInfo(console, &info) == 0)
+                return {0, 0};
+            CloseHandle(console);
+            columns = info.srWindow.Right - info.srWindow.Left + 1;
+            rows = info.srWindow.Bottom - info.srWindow.Top + 1;
+
+            return {rows, columns};
+#else
+            struct winsize ws;
+            int fd;
+
+            /* Open the controlling terminal. */
+            fd = open("/dev/tty", O_RDWR);
+            if (fd < 0)
+                err(1, "/dev/tty");
+
+            /* Get window size of terminal. */
+            if (ioctl(fd, TIOCGWINSZ, &ws) < 0)
+                err(1, "/dev/tty");
+
+            // printf("%d rows by %d columns\n", ws.ws_row, ws.ws_col);
+            // printf("(%d by %d pixels)\n", ws.ws_xpixel, ws.ws_ypixel);
+            close(fd);
+            return {ws.ws_row, ws.ws_col};
+#endif
         }
     } // namespace screen
 
