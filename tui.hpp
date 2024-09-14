@@ -39,12 +39,17 @@ namespace tui {
         return oss.str();
     }
 
-// control sequence introducer, then name, then command
-#define csi(name, ...)                                                                                                 \
-    inline void name() { esc(__VA_ARGS__) }
+// Control Sequence Introducer
+#define csi(...) std::cout << concat("\x1B[", __VA_ARGS__);
+// function using Control Sequence Introducer
+#define csi_fn(name, ...)                                                                                              \
+    inline void name() { csi(__VA_ARGS__) }
 
-// ANSII escape sentence
-#define esc(...) std::cout << concat("\x1B[", __VA_ARGS__);
+// ANSII Escape Sequnce
+#define esc(...) std::cout << concat("\x1B", __VA_ARGS__);
+// function using ANSII Escape Sequence
+#define esc_fn(name, ...)                                                                                              \
+    inline void name() { esc(__VA_ARGS__) }
 
     inline void enable_raw_mode() {
 #ifdef _WIN32
@@ -135,7 +140,7 @@ namespace tui {
 // template for moving cursor
 // moves cursor `n` times to `dir`
 #define move_n(dir, ch)                                                                                                \
-    inline void dir(unsigned n = 1) { esc(n, '#', ch); }
+    inline void dir(unsigned n = 1) { csi(n, '#', ch); }
 
         move_n(up, 'A');
         move_n(down, 'B');
@@ -143,30 +148,30 @@ namespace tui {
         move_n(left, 'D');
 
         // moves cursor one row up, scrolling if needed
-        inline void up_n_scroll() { std::cout << ESC << 'M'; }
+        esc_fn(up_n_scroll, 'M');
         // moves cursor to beginning of next line, `n` rows down
         move_n(next_line, 'E');
         // moves cursor to beginning of previous line, `n` rows up
         move_n(prev_line, 'F');
 
         // moves cursor to home position (0;0)
-        csi(home, 'H');
+        csi_fn(home, 'H');
         // moves cursor to (`row`;`col`), both start at 1
-        inline void set_position(unsigned row, unsigned col) { esc(row, ';', col, 'H'); }
+        inline void set_position(unsigned row, unsigned col) { csi(row, ';', col, 'H'); }
         // moves cursor to column `n`
         move_n(to_column, 'G');
 #undef move_n
 
         // save cursor position
-        inline void save() { std::cout << ESC << '7'; }
+        esc_fn(save, '7');
         // restore previously saved cursor position
-        inline void restore() { std::cout << ESC << '8'; }
+        esc_fn(restore, '8');
 
         // set visibility
-        inline void visible(bool visible) { esc("?25", (visible ? 'h' : 'l')); }
+        inline void visible(bool visible) { csi("?25", (visible ? 'h' : 'l')); }
 
         // tell the terminal to check where the cursor is
-        csi(query_position, "6n");
+        csi_fn(query_position, "6n");
 
         // (rows;cols)
         inline std::pair<unsigned, unsigned> get_position() {
@@ -189,22 +194,22 @@ namespace tui {
 
     namespace screen {
         // clears
-        csi(clear, "2J");
-        csi(clear_line, "2K");
-        csi(clear_line_right, "K");
+        csi_fn(clear, "2J");
+        csi_fn(clear_line, "2K");
+        csi_fn(clear_line_right, "K");
 
         // erases
-        inline void erase_in_line(unsigned n = 0) { esc(n, 'K'); }
-        inline void erase_in_display(unsigned n = 0) { esc(n, 'J'); }
-        csi(erase_saved_lines, "3J");
+        inline void erase_in_line(unsigned n = 0) { csi(n, 'K'); }
+        inline void erase_in_display(unsigned n = 0) { csi(n, 'J'); }
+        csi_fn(erase_saved_lines, "3J");
 
-        csi(save_screen, "?47h");
-        csi(restore_screen, "?47l");
+        csi_fn(save_screen, "?47h");
+        csi_fn(restore_screen, "?47l");
 
-        inline void alternative_buffer(bool enable) { esc("?1049", (enable ? 'h' : 'l')); }
+        inline void alternative_buffer(bool enable) { csi("?1049", (enable ? 'h' : 'l')); }
 
-        inline void scroll_up(unsigned n = 1) { esc(n, 'S'); }
-        inline void scroll_down(unsigned n = 1) { esc(n, 'T'); }
+        inline void scroll_up(unsigned n = 1) { csi(n, 'S'); }
+        inline void scroll_down(unsigned n = 1) { csi(n, 'T'); }
 
         // get the size of the terminal: (rows;cols)/(y;x)
         inline std::pair<unsigned, unsigned> size() {
