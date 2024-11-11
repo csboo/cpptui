@@ -6,8 +6,6 @@ using tui::input::SpecKey;
 
 int main() {
     tui::init(false); // alternate buffer, raw mode, no cursor
-    // NOTE: avoid fetching often: it will probably mess up `std::cin/std::cout`
-    // NOTE: don't call `tui::screen::size()` before `tui::init_term()`
     auto screen_size = tui::screen::size(); // initially set
 
     const tui::string msg = "Hello Bello, TUI!"; // stylable extension of `std::string`

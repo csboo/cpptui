@@ -12,7 +12,7 @@ using tui::input::SpecKey;
 std::pair<unsigned int, unsigned int> screen_size;
 
 void text() {
-    auto cur_pos = tui::cursor::get_position();
+    // auto cur_pos = tui::cursor::get_position();
     // std::cout << tui::string("Hello").on_rgb(255, 0, 0).rgb(0, 0, 255) << " "
     //           << tui::string("World?").blue().italic().strikethrough() << " "
     //           << tui::string("Ain't no way!").on_red().bold().black() << " "

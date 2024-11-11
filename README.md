@@ -58,10 +58,10 @@ see [examples](./examples), but basically just
 #include "tui.hpp"
 #include <utility> // for std::pair
 
+using namespace tui::input;
+
 int main() {
-    tui::init_term(false); // alternate buffer, raw mode, no cursor
-    // NOTE: avoid fetching often: it will probably mess up `std::cin/std::cout`
-    // NOTE: don't call `tui::screen::size()` before `tui::init_term()`
+    tui::init(false); // alternate buffer, raw mode, no cursor
     auto screen_size = tui::screen::size(); // initially set
 
     const tui::string msg = "Hello Bello, TUI!"; // stylable extension of `std::string`
@@ -83,7 +83,7 @@ int main() {
         input.read(ch);   // convert it into an `Input`
     }
 
-    tui::reset_term(); // restore to where we came from
+    tui::reset(); // restore to where we came from
     return 0;
 }
 ```
