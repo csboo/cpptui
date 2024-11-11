@@ -9,10 +9,10 @@
 #else // not windows
 
 #include <csignal>
-#include <err.h>       /* err */
-#include <fcntl.h>     /* open */
-#include <sys/ioctl.h> /* ioctl, TIOCGWINSZ */
-#include <unistd.h>    /* close */
+#include <err.h>       // err
+#include <fcntl.h>     // open
+#include <sys/ioctl.h> // ioctl, TIOCGWINSZ
+#include <unistd.h>    // close
 
 #endif
 
@@ -29,7 +29,7 @@ namespace tui {
     // Control Sequence Introducer actually == "ESC[" almost everything starts with this
     constexpr const char* CSI = "\x1B[";
 
-    // Variadic template function to concatenate any number of arguments
+    // variadic template function to concatenate any number of arguments
     template <typename... Args> std::string concat(Args&&... args) {
         std::ostringstream oss;
         (void)std::initializer_list<int>{
@@ -145,9 +145,9 @@ namespace tui {
         // moves cursor to beginning of previous line, `n` rows up
         move_n(prev_line, 'F');
 
-        // moves cursor to home position (0;0)
+        // moves cursor to home position (1;1)
         csi_fn(home, 'H');
-        // moves cursor to (`row`;`col`), both start at 1
+        // moves cursor to (`row`; `col`), INFO: both `row` and `col` start at 1
         inline void set_position(unsigned row, unsigned col) { csi(row, ';', col, 'H'); }
         // moves cursor to column `n`
         move_n(to_column, 'G');
@@ -164,7 +164,8 @@ namespace tui {
         // tell the terminal to check where the cursor is
         csi_fn(query_position, "6n");
 
-        // (rows;cols)
+        // returns: (rows;cols)
+        // WARN: can be quite slow, don't use on eg. every screen update!
         inline std::pair<unsigned, unsigned> get_position() {
             query_position();
             std::flush(std::cout);
@@ -202,7 +203,8 @@ namespace tui {
         inline void scroll_up(unsigned n = 1) { csi(n, 'S'); }
         inline void scroll_down(unsigned n = 1) { csi(n, 'T'); }
 
-        // get the size of the terminal: (rows;cols)/(y;x)
+        // get the size of the terminal.
+        // returns: (rows;cols)/(y;x)
         inline std::pair<unsigned, unsigned> size() {
 #ifdef _WIN32
             HANDLE console;
@@ -227,12 +229,12 @@ namespace tui {
             struct winsize ws;
             int fd;
 
-            /* Open the controlling terminal. */
+            // open the controlling terminal.
             fd = open("/dev/tty", O_RDWR);
             if (fd < 0)
                 err(1, "/dev/tty");
 
-            /* Get window size of terminal. */
+            // get window size of terminal
             if (ioctl(fd, TIOCGWINSZ, &ws) < 0)
                 err(1, "/dev/tty");
 
@@ -412,22 +414,22 @@ namespace tui {
 
     // void handle_resize(int /*sig*/) { screen::clear(); }
     using fn_ptr = void (*)(int);
-    // NOTE: does not work on Windows
+    // WARN: does not work on windows
     // needs a void function, that takes an int
     // function pointer: `void function_name(int sig) { stuff }`
     inline void set_up_resize(fn_ptr handle_resize) {
 #ifdef _WIN32
-        // no such thing that's this easy
+        // TODO: make it work, or at least try to
 #else
-        // Register the signal handler for SIGWINCH
+        // register the signal handler for SIGWINCH
         struct sigaction sa {};
         sa.sa_handler = handle_resize;
-        sa.sa_flags = SA_RESTART; // Restart functions if interrupted by handler
+        sa.sa_flags = SA_RESTART; // restart functions if interrupted by handler
         sigaction(SIGWINCH, &sa, nullptr);
 #endif
     }
 
-    inline void init_term(bool enable_cursor) {
+    inline void init(bool enable_cursor) {
 #ifdef _WIN32
         SetConsoleOutputCP(65001); // use utf-8
 #endif
@@ -438,7 +440,7 @@ namespace tui {
         tui::screen::clear();
         tui::cursor::home();
     }
-    inline void reset_term() {
+    inline void reset() {
         tui::disable_raw_mode();
         tui::screen::alternative_buffer(false);
         tui::screen::restore_screen();

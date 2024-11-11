@@ -353,7 +353,7 @@ unsigned run(const Coord& screen_size) {
 
 int main() {
     try {
-        tui::init_term(false);
+        tui::init(false);
         // we get screen size here, not to mess up cin, cout
         auto screen_size = Coord::screen_size();
         std::thread reader_thread(read_character);
@@ -361,14 +361,14 @@ int main() {
 
         auto len = run(screen_size);
 
-        tui::reset_term();
+        tui::reset();
         if (len == screen_size.row * screen_size.col) {
             std::cout << "Congrats, you won!\n";
         } else {
             std::cout << "You died/quit at " << len << "\nPress enter to quit if needed.\n";
         }
     } catch (...) {
-        tui::reset_term();
+        tui::reset();
         std::cerr << "unknown error occured\n";
     }
 

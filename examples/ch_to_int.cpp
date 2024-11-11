@@ -2,7 +2,7 @@
 #include <iostream>
 
 int main() {
-    tui::init_term(false);
+    tui::init(false);
 
     try {
         char input = 0;
@@ -13,10 +13,10 @@ int main() {
         }
     } catch (...) {
         std::cout << "baj.";
-        tui::reset_term();
+        tui::reset();
         return 1;
     }
 
-    tui::reset_term();
+    tui::reset();
     return 0;
 }

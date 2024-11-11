@@ -11,7 +11,7 @@ void clear(int sig) {
 }
 
 int main() {
-    tui::init_term(false);
+    tui::init(false);
     // NOTE: doesn't work on windows
     // on terminal resize, we use our `clear()` function
     tui::set_up_resize(clear);
@@ -25,11 +25,11 @@ int main() {
             std::cout << "ch:\t'" << ch << "'\t-\tinput: " << input << "\r\n"; // see how easy it is to print an `Input`
         } while (input != SpecKey::CtrlC);
     } catch (...) { // NOTE: probably won't happen, but it's good to be careful
-        tui::reset_term();
+        tui::reset();
         std::cerr << "\nunknown error\n\n";
         return 1;
     }
 
-    tui::reset_term();
+    tui::reset();
     return 0;
 }

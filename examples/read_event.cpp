@@ -50,13 +50,13 @@ void main_task() {
 }
 
 int main() {
-    tui::init_term(false);
+    tui::init(false);
     std::thread reader_thread(read_input);
 
     main_task(); // Main thread doing its job
 
     reader_thread.join();
 
-    tui::reset_term();
+    tui::reset();
     return 0;
 }

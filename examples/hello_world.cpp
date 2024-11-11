@@ -5,7 +5,7 @@ using tui::input::Input;
 using tui::input::SpecKey;
 
 int main() {
-    tui::init_term(false); // alternate buffer, raw mode, no cursor
+    tui::init(false); // alternate buffer, raw mode, no cursor
     // NOTE: avoid fetching often: it will probably mess up `std::cin/std::cout`
     // NOTE: don't call `tui::screen::size()` before `tui::init_term()`
     auto screen_size = tui::screen::size(); // initially set
@@ -29,6 +29,6 @@ int main() {
         input.read(ch);   // convert it into an `Input`
     }
 
-    tui::reset_term(); // restore to where we came from
+    tui::reset(); // restore to where we came from
     return 0;
 }

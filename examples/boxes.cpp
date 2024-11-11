@@ -239,7 +239,7 @@ void handle_resize(int /*sig*/) {
 }
 
 int main() {
-    tui::init_term(false);
+    tui::init(false);
     // NOTE: doesn't work on Windows
     tui::set_up_resize(handle_resize);
     screen_size = tui::screen::size();
@@ -251,7 +251,7 @@ int main() {
     try {
         run();
     } catch (...) {
-        tui::reset_term();
+        tui::reset();
         std::cout << "ran into a problem";
         return 1;
     }
@@ -262,5 +262,5 @@ int main() {
     // tui::cursor::to_column(40);
     // std::cout << tui::tui_string("Press `Ret` to quit...").yellow();
 
-    tui::reset_term();
+    tui::reset();
 }
