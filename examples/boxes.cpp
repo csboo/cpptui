@@ -13,13 +13,13 @@ std::pair<unsigned int, unsigned int> screen_size;
 
 void text() {
     auto cur_pos = tui::cursor::get_position();
-    // std::cout << tui::tui_string("Hello").on_rgb(255, 0, 0).rgb(0, 0, 255) << " "
-    //           << tui::tui_string("World?").blue().italic().strikethrough() << " "
-    //           << tui::tui_string("Ain't no way!").on_red().bold().black() << " "
+    // std::cout << tui::string("Hello").on_rgb(255, 0, 0).rgb(0, 0, 255) << " "
+    //           << tui::string("World?").blue().italic().strikethrough() << " "
+    //           << tui::string("Ain't no way!").on_red().bold().black() << " "
     //           << "cursor at: " << cur_pos.first << ";" << cur_pos.second << " "
-    //           << tui::tui_string("it's more like I'm on the").underline() << " "
-    //           << tui::tui_string("Moon").link("https://www.moon.com/").underline().blue() << "\r\n";
-    std::cout << tui::tui_string("RESIZED").red();
+    //           << tui::string("it's more like I'm on the").underline() << " "
+    //           << tui::string("Moon").link("https://www.moon.com/").underline().blue() << "\r\n";
+    std::cout << tui::string("RESIZED").red();
 }
 
 struct coord {
@@ -33,9 +33,9 @@ struct coord {
 void count(const unsigned long long& x) {
     unsigned r = 0;
     if (x % 100 == 0) {
-        std::cout << tui::tui_string(x / 100).on_red().black();
+        std::cout << tui::string(x / 100).on_red().black();
     } else if (x % 10 == 0) {
-        std::cout << tui::tui_string(x / 10 % 10).on_blue().black();
+        std::cout << tui::string(x / 10 % 10).on_blue().black();
     } else {
         std::cout << x % 10;
     }
@@ -127,7 +127,7 @@ void draw_box(coord start, coord end, kind with) {
 void run() {
     auto screen = coord{screen_size.first, screen_size.second};
 
-    auto msg = tui::tui_string("Szia Csongi!");
+    auto msg = tui::string("Szia Csongi!");
     unsigned msg_len = msg.size();
     auto msg_start = coord{screen.row / 2, static_cast<unsigned int>((screen.col / 2) - msg_len / 2)};
     auto msg_end = coord{screen.row / 2, static_cast<unsigned int>((screen.col / 2) + msg_len / 2)};
@@ -209,7 +209,7 @@ void run() {
         std::cout << msg.bold().italic().inverted().blue();
 
         tui::cursor::set_position(screen.row / 3 * 2, screen.col / 3 * 2);
-        std::cout << tui::tui_string("tui.hpp").bold().blue().link("https://github.com/csboo/cpptui").on_magenta();
+        std::cout << tui::string("tui.hpp").bold().blue().link("https://github.com/csboo/cpptui").on_magenta();
         // tui::cursor::set_position(39, 140);
         // std::cout << "\\──────┘";
         // std::cout << "████████";
@@ -260,7 +260,7 @@ int main() {
     // tui::cursor::move_to(2, 20);
     // tui::cursor::right(40);
     // tui::cursor::to_column(40);
-    // std::cout << tui::tui_string("Press `Ret` to quit...").yellow();
+    // std::cout << tui::string("Press `Ret` to quit...").yellow();
 
     tui::reset();
 }

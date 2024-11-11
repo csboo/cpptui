@@ -10,8 +10,8 @@ int main() {
     // NOTE: don't call `tui::screen::size()` before `tui::init_term()`
     auto screen_size = tui::screen::size(); // initially set
 
-    const tui::tui_string msg = "Hello Bello, TUI!"; // stylable extension of `std::string`
-    const tui::tui_string note = "press q or Ctrl+C to quit";
+    const tui::string msg = "Hello Bello, TUI!"; // stylable extension of `std::string`
+    const tui::string note = "press q or Ctrl+C to quit";
 
     char ch = 0;                                      // we will read into this from `std::cin`
     Input input;                                      // this will handle special stuff like arrows, ctrl+c, ...

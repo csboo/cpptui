@@ -366,16 +366,16 @@ namespace tui {
 
     } // namespace text
 
-    class tui_string : public std::string {
+    class string : public std::string {
       public:
-        tui_string() = default;
-        template <typename T> tui_string(T s) : std::string(concat(s)) {}
-        tui_string(const char* s) : std::string(s) {}
-        tui_string(const std::string& s) : std::string(s) {}
+        string() = default;
+        template <typename T> string(T s) : std::string(concat(s)) {}
+        string(const char* s) : std::string(s) {}
+        string(const std::string& s) : std::string(s) {}
 
 // generate this.STYLE(): eg this.italic()
 #define make_style(STYLE)                                                                                              \
-    inline tui_string STYLE() const { return text::style::STYLE##_style(*this); }
+    inline tui::string STYLE() const { return text::style::STYLE##_style(*this); }
 
         make_style(bold);
         make_style(dim);
@@ -389,8 +389,8 @@ namespace tui {
 
 // generate this.COLOR(): eg this.red()
 #define make_color(COLOR)                                                                                              \
-    inline tui_string COLOR() const { return text::color::COLOR##_fg(*this); }                                         \
-    inline tui_string on_##COLOR() const { return text::color::COLOR##_bg(*this); }
+    inline tui::string COLOR() const { return text::color::COLOR##_fg(*this); }                                         \
+    inline tui::string on_##COLOR() const { return text::color::COLOR##_bg(*this); }
 
         make_color(black);
         make_color(red);
@@ -403,11 +403,11 @@ namespace tui {
         make_color(basic);
 #undef make_color
 
-        inline tui_string link(const char* link) { return text::style::link(link, *this); }
-        inline tui_string rgb(unsigned r, unsigned g, unsigned b) const {
+        inline string link(const char* link) { return text::style::link(link, *this); }
+        inline string rgb(unsigned r, unsigned g, unsigned b) const {
             return text::color::rgb(r, g, b, true, *this);
         }
-        inline tui_string on_rgb(unsigned r, unsigned g, unsigned b) const {
+        inline string on_rgb(unsigned r, unsigned g, unsigned b) const {
             return text::color::rgb(r, g, b, false, *this);
         }
     };

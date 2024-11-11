@@ -9,7 +9,7 @@
 #include <vector>
 
 // this is how the apple/food will be displayed
-const tui::tui_string APPLE_TEXT = tui::tui_string('@').red().bold();
+const tui::string APPLE_TEXT = tui::string('@').red().bold();
 // this is the default duration a frame lives for in ms, it's 23.8 fps
 const std::chrono::milliseconds SLEEP_MS = std::chrono::milliseconds(42);
 const std::chrono::milliseconds ADD_MS = std::chrono::milliseconds(1);
@@ -293,7 +293,7 @@ unsigned run(const Coord& screen_size) {
         snake.push_back(mid.with_col(mid.col - i));
     }
     auto score = Coord{2, 4};
-    score.print(tui::tui_string(tui::concat("score: ", snake.size() - INIT_LEN)).green().italic());
+    score.print(tui::string(tui::concat("score: ", snake.size() - INIT_LEN)).green().italic());
 
     while (dir != Dir::None) {
         // and move it correspondly
@@ -327,17 +327,17 @@ unsigned run(const Coord& screen_size) {
             // duplicate the last element of the `snake`, next round it'll be smoothed out.
             // assert(snake.size() + 1 == snake.previous_size())
             snake.push_back(snake.back());
-            score.print(tui::tui_string(tui::concat("score: ", snake.size() - INIT_LEN)).green().italic());
+            score.print(tui::string(tui::concat("score: ", snake.size() - INIT_LEN)).green().italic());
             apple.print(APPLE_TEXT);
         }
 
         // print non-head parts of snake, but only first 2
         for (auto i = 1; i < ((snake.size() == 1) ? 1 : 2); ++i) {
             auto nb = neighbours(snake, i, screen_size);
-            snake[i].print(tui::tui_string(draw(nb)).blue());
+            snake[i].print(tui::string(draw(nb)).blue());
         }
         // print head
-        snake.front().print(tui::tui_string(to_string(dir)).blue());
+        snake.front().print(tui::string(to_string(dir)).blue());
 
         // it's kinda like a flush(): w/out this it's quite mad
         tui::cursor::set_position(screen_size.row - 1, screen_size.col - 1);
