@@ -33,7 +33,7 @@ namespace tui {
     template <typename... Args> std::string concat(Args&&... args) {
         std::ostringstream oss;
         (void)std::initializer_list<int>{
-            (oss << std::forward<Args>(args), 0)...}; // Using initializer_list for fold-like behavior
+            (oss << std::forward<Args>(args), 0)...}; // using initializer_list for fold-like behavior
         return oss.str();
     }
 
@@ -211,13 +211,13 @@ namespace tui {
             CONSOLE_SCREEN_BUFFER_INFO info;
             short rows;
             short columns;
-            /* Create a handle to the console screen. */
+            // create a handle to the console screen
             console = CreateFileW(L"CONOUT$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
                                   OPEN_EXISTING, 0, NULL);
             if (console == INVALID_HANDLE_VALUE)
                 return {0, 0};
 
-            /* Calculate the size of the console window. */
+            // calculate the size of the console window
             if (GetConsoleScreenBufferInfo(console, &info) == 0)
                 return {0, 0};
             CloseHandle(console);
