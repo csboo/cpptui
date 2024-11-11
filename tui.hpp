@@ -389,7 +389,7 @@ namespace tui {
 
 // generate this.COLOR(): eg this.red()
 #define make_color(COLOR)                                                                                              \
-    inline tui::string COLOR() const { return text::color::COLOR##_fg(*this); }                                         \
+    inline tui::string COLOR() const { return text::color::COLOR##_fg(*this); }                                        \
     inline tui::string on_##COLOR() const { return text::color::COLOR##_bg(*this); }
 
         make_color(black);
@@ -404,9 +404,7 @@ namespace tui {
 #undef make_color
 
         inline string link(const char* link) { return text::style::link(link, *this); }
-        inline string rgb(unsigned r, unsigned g, unsigned b) const {
-            return text::color::rgb(r, g, b, true, *this);
-        }
+        inline string rgb(unsigned r, unsigned g, unsigned b) const { return text::color::rgb(r, g, b, true, *this); }
         inline string on_rgb(unsigned r, unsigned g, unsigned b) const {
             return text::color::rgb(r, g, b, false, *this);
         }
