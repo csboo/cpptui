@@ -427,7 +427,7 @@ namespace tui {
 #endif
     }
 
-    inline void init(bool enable_cursor) {
+    inline void init(bool enable_cursor = false) {
 #ifdef _WIN32
         SetConsoleOutputCP(65001); // use utf-8
 #endif
