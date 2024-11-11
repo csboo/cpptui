@@ -29,13 +29,11 @@ namespace tui {
     // Control Sequence Introducer actually == "ESC[" almost everything starts with this
     constexpr const char* CSI = "\x1B[";
 
-    // Helper function to stream a single argument
-    template <typename T> void stream_arg(std::ostringstream& oss, T&& arg) { oss << std::forward<T>(arg); }
     // Variadic template function to concatenate any number of arguments
     template <typename... Args> std::string concat(Args&&... args) {
         std::ostringstream oss;
         (void)std::initializer_list<int>{
-            (stream_arg(oss, std::forward<Args>(args)), 0)...}; // Using initializer_list for fold-like behavior
+            (oss << std::forward<Args>(args), 0)...}; // Using initializer_list for fold-like behavior
         return oss.str();
     }
 
