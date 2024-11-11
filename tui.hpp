@@ -49,20 +49,24 @@ namespace tui {
 #define esc_fn(name, ...)                                                                                              \
     inline void name() { esc(__VA_ARGS__) }
 
-    inline void enable_raw_mode() {
-#ifdef _WIN32
-        // Windows-specific code
-        HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
-        if (hStdin == INVALID_HANDLE_VALUE) {
-            std::cerr << "Error getting the standard input handle." << std::endl;
-            exit(1);
-        }
+#ifdef _WIN32 // windows
+// basic setup of windows terminal handling
+#define win_setup()                                                                                                    \
+    HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);                                                                    \
+    if (hStdin == INVALID_HANDLE_VALUE) {                                                                              \
+        std::cerr << "Error getting the standard input handle." << std::endl;                                          \
+        exit(1);                                                                                                       \
+    }                                                                                                                  \
+    DWORD mode;                                                                                                        \
+    if (!GetConsoleMode(hStdin, &mode)) {                                                                              \
+        std::cerr << "Error getting the console mode." << std::endl;                                                   \
+        exit(1);                                                                                                       \
+    }
+#endif
 
-        DWORD mode;
-        if (!GetConsoleMode(hStdin, &mode)) {
-            std::cerr << "Error getting the console mode." << std::endl;
-            exit(1);
-        }
+    inline void enable_raw_mode() {
+#ifdef _WIN32 // windows
+        win_setup();
 
         DWORD newMode = mode;
         newMode &= ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
@@ -71,8 +75,10 @@ namespace tui {
             std::cerr << "Error setting the console to raw mode." << std::endl;
             exit(1);
         }
-#else
-        // Unix-like systems specific code
+#else // not windows
+        system("stty raw");
+        system("stty -echo");
+
         // struct termios term {};
         // if (tcgetattr(STDIN_FILENO, &term) == -1) {
         //     std::cerr << "Error getting terminal attributes." << std::endl;
@@ -86,26 +92,12 @@ namespace tui {
         //     std::cerr << "Error setting terminal to raw mode." << std::endl;
         //     exit(1);
         // }
-
-        system("stty raw");
-        system("stty -echo");
 #endif
     }
 
     inline void disable_raw_mode() {
-#ifdef _WIN32
-        // Windows-specific code
-        HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
-        if (hStdin == INVALID_HANDLE_VALUE) {
-            std::cerr << "Error getting the standard input handle." << std::endl;
-            exit(1);
-        }
-
-        DWORD mode;
-        if (!GetConsoleMode(hStdin, &mode)) {
-            std::cerr << "Error getting the console mode." << std::endl;
-            exit(1);
-        }
+#ifdef _WIN32 // windows
+        win_setup();
 
         // Restore original mode
         mode |= (ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
@@ -113,8 +105,7 @@ namespace tui {
             std::cerr << "Error restoring the console mode." << std::endl;
             exit(1);
         }
-#else
-        // Unix-like systems specific code
+#else // not windows
         system("stty -raw");
         system("stty echo");
 
@@ -133,6 +124,8 @@ namespace tui {
         // }
 #endif
     }
+
+#undef win_setup
 
     namespace cursor {
 // template for moving cursor
