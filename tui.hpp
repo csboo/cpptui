@@ -195,8 +195,8 @@ namespace tui {
         inline void erase_in_display(unsigned n = 0) { csi(n, 'J'); }
         csi_fn(erase_saved_lines, "3J");
 
-        csi_fn(save_screen, "?47h");
-        csi_fn(restore_screen, "?47l");
+        csi_fn(save, "?47h");
+        csi_fn(restore, "?47l");
 
         inline void alternative_buffer(bool enable) { csi("?1049", (enable ? 'h' : 'l')); }
 
@@ -433,16 +433,14 @@ namespace tui {
 #endif
         tui::enable_raw_mode();
         tui::cursor::visible(enable_cursor);
-        tui::screen::save_screen();
         tui::screen::alternative_buffer(true);
         tui::screen::clear();
         tui::cursor::home();
     }
     inline void reset() {
-        tui::disable_raw_mode();
         tui::screen::alternative_buffer(false);
-        tui::screen::restore_screen();
         tui::cursor::visible(true);
+        tui::disable_raw_mode();
     }
 
     namespace input {
