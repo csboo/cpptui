@@ -2,10 +2,20 @@
 #include <algorithm>
 #include <chrono>
 #include <iostream>
+#include <limits>
 #include <random>
 #include <string>
 #include <thread>
 #include <vector>
+
+// this is how the apple/food will be displayed
+const tui::string APPLE_TEXT = tui::string('@').red().bold();
+// this is the default duration a frame lives for in ms, it's 23.8 fps
+const std::chrono::milliseconds SLEEP_MS = std::chrono::milliseconds(42);
+const std::chrono::milliseconds ADD_MS = std::chrono::milliseconds(1);
+const std::chrono::milliseconds MAX_MS = std::chrono::milliseconds(std::numeric_limits<unsigned>::infinity());
+// initial size/lenght of the snake: at the game start
+const unsigned INIT_LEN = 5;
 
 // direction
 enum Dir {
@@ -92,6 +102,7 @@ struct Coord {
 
     bool operator==(const Coord& other) const { return (this->row == other.row && this->col == other.col); }
     bool operator<=(const Coord& other) const { return (this->row <= other.row && this->col <= other.col); }
+    Coord operator/(const unsigned& n) const { return Coord{this->row / n, this->col / n}; }
     // See what I did there?
     // we subtract the difference of the two coordinates
     Coord operator-(const Coord& other) const {
@@ -100,6 +111,8 @@ struct Coord {
             this->col - static_cast<int>(static_cast<int>(this->col) - static_cast<int>(other.col)),
         };
     }
+    Coord with_col(const unsigned& col) { return Coord{this->row, col}; }
+    Coord with_row(const unsigned& row) { return Coord{row, this->col}; }
     static Coord screen_size() {
         auto ss = tui::screen::size();
         return Coord{ss.first, ss.second};
@@ -254,8 +267,8 @@ bool snake_contains(const Snake& snake, const Coord& coord, const unsigned& skip
 }
 
 Dir dir = Dir::Right;
+char ch = 'l';
 void read_character() {
-    char ch = 'l';
     while (ch != 'q' && ch != 'Q' && ch != 3 /* C-c */ && ch != 4 /* C-d */ && ch != 26 /* C-z */ && dir != Dir::None) {
         std::cin.get(ch);
         // get which direction the snake shall move to, if character is invalid, don't change: use `dir`
@@ -271,12 +284,16 @@ void read_character() {
 }
 
 unsigned run(const Coord& screen_size) {
-    auto apple_text = tui::tui_string('@').red().bold();
     auto apple = Coord::random(screen_size);
-    apple.print(apple_text);
+    apple.print(APPLE_TEXT);
 
-    const unsigned sleep = 100;
-    Snake snake = {Coord{1, 0}};
+    auto mid = screen_size / 2;
+    Snake snake;
+    for (auto i = 0; i < INIT_LEN; ++i) {
+        snake.push_back(mid.with_col(mid.col - i));
+    }
+    auto score = Coord{2, 4};
+    score.print(tui::string(tui::concat("score: ", snake.size() - INIT_LEN)).green().italic());
 
     while (dir != Dir::None) {
         // and move it correspondly
@@ -307,33 +324,36 @@ unsigned run(const Coord& screen_size) {
             unsigned idx = gen_idx(mt);
 
             apple = non_snake.at(idx);
-            apple.print(apple_text);
             // duplicate the last element of the `snake`, next round it'll be smoothed out.
             // assert(snake.size() + 1 == snake.previous_size())
             snake.push_back(snake.back());
+            score.print(tui::string(tui::concat("score: ", snake.size() - INIT_LEN)).green().italic());
+            apple.print(APPLE_TEXT);
         }
 
         // print non-head parts of snake, but only first 2
         for (auto i = 1; i < ((snake.size() == 1) ? 1 : 2); ++i) {
             auto nb = neighbours(snake, i, screen_size);
-            snake[i].print(draw(nb));
+            snake[i].print(tui::string(draw(nb)).blue());
         }
         // print head
-        snake.front().print(to_string(dir));
+        snake.front().print(tui::string(to_string(dir)).blue());
 
-        // w/out this is mad
+        // it's kinda like a flush(): w/out this it's quite mad
         tui::cursor::set_position(screen_size.row - 1, screen_size.col - 1);
         std::cout << "\n";
+        auto sleep_mul = (dir == Dir::Left || dir == Dir::Right) ? 1. : 1.5;
+        auto sleep_dur = SLEEP_MS + (10 > snake.size() ? -(ADD_MS * 10) + ADD_MS * static_cast<unsigned>(snake.size())
+                                                       : ADD_MS * static_cast<unsigned>(snake.size()));
         // sleep, if moving vertically: more
-        std::this_thread::sleep_for(std::chrono::milliseconds(
-            ((dir == Dir::Left || dir == Dir::Right) ? sleep : static_cast<unsigned>(sleep * 1.5))));
+        std::this_thread::sleep_for(sleep_dur * sleep_mul);
     }
-    return snake.size();
+    return snake.size() - INIT_LEN;
 }
 
 int main() {
     try {
-        tui::init_term(false);
+        tui::init(false);
         // we get screen size here, not to mess up cin, cout
         auto screen_size = Coord::screen_size();
         std::thread reader_thread(read_character);
@@ -341,14 +361,14 @@ int main() {
 
         auto len = run(screen_size);
 
-        tui::reset_term();
+        tui::reset();
         if (len == screen_size.row * screen_size.col) {
             std::cout << "Congrats, you won!\n";
         } else {
             std::cout << "You died/quit at " << len << "\nPress enter to quit if needed.\n";
         }
     } catch (...) {
-        tui::reset_term();
+        tui::reset();
         std::cerr << "unknown error occured\n";
     }
 

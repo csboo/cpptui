@@ -2,19 +2,24 @@
 #include <cassert>
 #include <chrono>
 #include <thread>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
+using tui::input::Arrow;
+using tui::input::Input;
+using tui::input::SpecKey;
+
+std::pair<unsigned int, unsigned int> screen_size;
+
 void text() {
-    auto cur_pos = tui::cursor::get_position();
-    // std::cout << tui::tui_string("Hello").on_rgb(255, 0, 0).rgb(0, 0, 255) << " "
-    //           << tui::tui_string("World?").blue().italic().strikethrough() << " "
-    //           << tui::tui_string("Ain't no way!").on_red().bold().black() << " "
+    // auto cur_pos = tui::cursor::get_position();
+    // std::cout << tui::string("Hello").on_rgb(255, 0, 0).rgb(0, 0, 255) << " "
+    //           << tui::string("World?").blue().italic().strikethrough() << " "
+    //           << tui::string("Ain't no way!").on_red().bold().black() << " "
     //           << "cursor at: " << cur_pos.first << ";" << cur_pos.second << " "
-    //           << tui::tui_string("it's more like I'm on the").underline() << " "
-    //           << tui::tui_string("Moon").link("https://www.moon.com/").underline().blue() << "\r\n";
-    std::cout << tui::tui_string("RESIZED").red();
+    //           << tui::string("it's more like I'm on the").underline() << " "
+    //           << tui::string("Moon").link("https://www.moon.com/").underline().blue() << "\r\n";
+    std::cout << tui::string("RESIZED").red();
 }
 
 struct coord {
@@ -28,9 +33,9 @@ struct coord {
 void count(const unsigned long long& x) {
     unsigned r = 0;
     if (x % 100 == 0) {
-        std::cout << tui::tui_string(x / 100).on_red().black();
+        std::cout << tui::string(x / 100).on_red().black();
     } else if (x % 10 == 0) {
-        std::cout << tui::tui_string(x / 10 % 10).on_blue().black();
+        std::cout << tui::string(x / 10 % 10).on_blue().black();
     } else {
         std::cout << x % 10;
     }
@@ -71,12 +76,10 @@ enum kind {
     rounded,
 };
 
-std::unordered_map<kind, std::vector<std::string>> kinds() {
-    return {{empty, {" ", " ", " ", " ", " ", " "}},
-            {basic, {"┌", "┐", "└", "┘", "│", "─"}},
-            {bold, {"┏", "┓", "┗", "┛", "┃", "━"}},
-            {rounded, {"╭", "╮", "╰", "╯", "│", "─"}}};
-}
+const std::vector<std::vector<std::string>> kinds = {{{" ", " ", " ", " ", " ", " "}},
+                                                     {{"┌", "┐", "└", "┘", "│", "─"}},
+                                                     {{"┏", "┓", "┗", "┛", "┃", "━"}},
+                                                     {{"╭", "╮", "╰", "╯", "│", "─"}}};
 
 // start.row ------------ start.col
 // |                              |
@@ -90,7 +93,7 @@ std::unordered_map<kind, std::vector<std::string>> kinds() {
 void draw_box(coord start, coord end, kind with) {
     assert(start.row <= end.row && start.col <= end.col);
 
-    auto draw = kinds()[with];
+    auto draw = kinds[with];
 
     // do rows
     for (auto row = start.row + 1; row < end.row; ++row) {
@@ -121,43 +124,10 @@ void draw_box(coord start, coord end, kind with) {
     std::cout << draw[3];
 }
 
-// catch special characters, that might mess up things
-void filter_chars(char ch) {
-    if (ch < 0) {
-        std::cin.ignore();
-        ch = 0;
-    } else if (ch == 27 && std::cin.peek() == 91) {
-        tui::cursor::set_position(40, 140 - 2);
-        std::cin.ignore();
-        auto sus = std::cin.get();
-        std::cout << "oh! an arrow? ";
-        switch (sus) {
-        case 65:
-            std::cout << "up   ";
-            break;
-        case 66:
-            std::cout << "down ";
-            break;
-        case 67:
-            std::cout << "right";
-            break;
-        case 68:
-            std::cout << "left ";
-            break;
-        default:
-            std::cout << "NO!  ";
-            std::cin.get();
-            std::cin.get();
-            std::cin.ignore();
-            break;
-        }
-    }
-}
 void run() {
-    auto screen_size = tui::screen::size();
     auto screen = coord{screen_size.first, screen_size.second};
 
-    auto msg = tui::tui_string("Szia Csongi!");
+    auto msg = tui::string("Szia Csongi!");
     unsigned msg_len = msg.size();
     auto msg_start = coord{screen.row / 2, static_cast<unsigned int>((screen.col / 2) - msg_len / 2)};
     auto msg_end = coord{screen.row / 2, static_cast<unsigned int>((screen.col / 2) + msg_len / 2)};
@@ -173,37 +143,36 @@ void run() {
 
     auto current_box = 0;
 
-    char x = 0;
-    while (x != 'q') {
-
-        screen_size = tui::screen::size();
+    char ch = 0;
+    Input x;
+    while (x != 'q' && x != SpecKey::CtrlC) {
         screen = coord{screen_size.first, screen_size.second};
         msg_start = coord{screen.row / 2, static_cast<unsigned int>((screen.col / 2) - msg_len / 2)};
         msg_end = coord{screen.row / 2, static_cast<unsigned int>((screen.col / 2) + msg_len / 2)};
 
         counter_box(coord{1, 1}, screen);
-        if (x == 9 /* tab */) {
+        if (x == SpecKey::Tab) {
             if (current_box == boxes.size() - 1) {
                 current_box = 0;
             } else {
                 current_box++;
             }
-        } else if (x == 'j') {
+        } else if (x == 'j' || x == Arrow::Down) {
             auto* cb = &boxes[current_box];
             draw_box(cb->first, cb->second, empty);
             cb->first.row++;
             cb->second.row++;
-        } else if (x == 'k') {
+        } else if (x == 'k' || x == Arrow::Up) {
             auto* cb = &boxes[current_box];
             draw_box(cb->first, cb->second, empty);
             cb->first.row--;
             cb->second.row--;
-        } else if (x == 'h') {
+        } else if (x == 'h' || x == Arrow::Left) {
             auto* cb = &boxes[current_box];
             draw_box(cb->first, cb->second, empty);
             cb->first.col--;
             cb->second.col--;
-        } else if (x == 'l') {
+        } else if (x == 'l' || x == Arrow::Right) {
             auto* cb = &boxes[current_box];
             draw_box(cb->first, cb->second, empty);
             cb->first.col++;
@@ -240,7 +209,7 @@ void run() {
         std::cout << msg.bold().italic().inverted().blue();
 
         tui::cursor::set_position(screen.row / 3 * 2, screen.col / 3 * 2);
-        std::cout << tui::tui_string("tui.hpp").bold().blue().link("https://github.com/csboo/cpptui").on_magenta();
+        std::cout << tui::string("tui.hpp").bold().blue().link("https://github.com/csboo/cpptui").on_magenta();
         // tui::cursor::set_position(39, 140);
         // std::cout << "\\──────┘";
         // std::cout << "████████";
@@ -251,23 +220,29 @@ void run() {
 
         // 120fps
         std::this_thread::sleep_for(std::chrono::milliseconds(8));
-        std::cin.get(x);
-        filter_chars(x);
+        std::cin.get(ch);
+        x.read(ch);
     }
 }
 
+// NOTE: doesn't work on Windows
 void handle_resize(int /*sig*/) {
+    screen_size = tui::screen::size();
     // tui::cursor::get_position();
     tui::screen::clear();
-    // tui::cursor::home();
+    tui::cursor::home();
+    // std::cout << "\n";
+    std::cout.flush();
     // []() { std::cout << "RESIZED"; };
     // text();
     // std::cout << "RESIZED";
 }
 
 int main() {
-    tui::init_term(false);
+    tui::init(false);
+    // NOTE: doesn't work on Windows
     tui::set_up_resize(handle_resize);
+    screen_size = tui::screen::size();
 
     // tui::cursor::set_position(2, 20);
     // for (auto i = 0; i < 40; ++i) {
@@ -276,7 +251,7 @@ int main() {
     try {
         run();
     } catch (...) {
-        tui::reset_term();
+        tui::reset();
         std::cout << "ran into a problem";
         return 1;
     }
@@ -285,7 +260,7 @@ int main() {
     // tui::cursor::move_to(2, 20);
     // tui::cursor::right(40);
     // tui::cursor::to_column(40);
-    // std::cout << tui::tui_string("Press `Ret` to quit...").yellow();
+    // std::cout << tui::string("Press `Ret` to quit...").yellow();
 
-    tui::reset_term();
+    tui::reset();
 }

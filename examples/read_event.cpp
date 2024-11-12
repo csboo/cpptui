@@ -1,41 +1,46 @@
 #include "../tui.hpp"
-
 #include <chrono>
 #include <condition_variable>
 #include <iostream>
 #include <mutex>
 #include <thread>
 
+using tui::input::Input;
+using tui::input::SpecKey;
+
 std::mutex mtx;
 std::condition_variable cv;
-char shared_char;
-bool char_available = false;
+Input shared_input;
+bool input_available = false;
 
-void read_character() {
-    while (shared_char != 'q') {
+bool should_quit(const Input& input) { return input == SpecKey::CtrlC || input == 'q'; }
+
+void read_input() {
+    while (!should_quit(shared_input)) {
         char c = 0;
-        std::cin >> c;
+        std::cin.get(c);
 
         std::lock_guard<std::mutex> lock(mtx);
-        shared_char = c;
-        char_available = true;
+        shared_input.read(c);
+        input_available = true;
         cv.notify_one();
+        std::this_thread::sleep_for(std::chrono::milliseconds(8));
     }
 }
 
 void main_task() {
     int i = 0;
     while (true) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(400));
+        std::this_thread::sleep_for(std::chrono::milliseconds(40));
 
         {
             std::lock_guard<std::mutex> lock(mtx);
-            if (char_available) {
-                std::cout << "Character read from input: " << shared_char << "\r\n";
-                if (shared_char == 'q') {
+            if (input_available) {
+                std::cout << "Character read from input: " << shared_input << "\r\n";
+                if (should_quit(shared_input)) {
                     return;
                 }
-                char_available = false;
+                input_available = false;
             }
         }
 
@@ -45,13 +50,13 @@ void main_task() {
 }
 
 int main() {
-    std::thread reader_thread(read_character);
-    tui::init_term(false);
+    tui::init(false);
+    std::thread reader_thread(read_input);
 
     main_task(); // Main thread doing its job
 
     reader_thread.join();
 
-    tui::reset_term();
+    tui::reset();
     return 0;
 }
