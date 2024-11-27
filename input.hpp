@@ -231,7 +231,7 @@ struct Input {
 
         // read raw input
         if (_kbhit()) {
-            return Input::read_helper(_getch, Input::noop);
+            return Input::read_helper(Input::read_ch, Input::noop);
         }
         return Input::from_special(SpecKey::None);
     }
