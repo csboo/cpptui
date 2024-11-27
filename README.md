@@ -38,11 +38,6 @@ a pretty handy header with functions and types to improve reading input from `ci
 -   <kbd>Backspace</kbd>, <kbd>Tab</kbd>, <kbd>Enter/Return</kbd>
 -   <kbd>F[1,2,3,4]</kbd>
 
-> [!IMPORTANT] > **_caveats_**:
->
-> -   can't properly read <kbd>Escape</kbd>: there is a one character input delay, as there are `Escape Sentences` (like Arrows, F keys), which hence the name, start with an <kbd>Escape</kbd>
-> -   under Windows, special keys are very messy
-
 ## usage
 
 you could use [poac](https://github.com/poac-dev/poac):
