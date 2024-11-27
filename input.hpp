@@ -221,6 +221,11 @@ struct Input {
 // TODO: test
 #ifdef _WIN32 // windows
     static void noop(bool on) {}
+    static char read_ch() {
+        char tmp;
+        tmp = _getch();
+        return tmp;
+    }
     static Input read() {
         char byte;
 
