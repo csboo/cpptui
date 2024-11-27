@@ -141,6 +141,7 @@ struct Input {
         return tmp;
     }
 
+  private:
     using reader_fn = char (*)();
     using esc_setup_fn = void (*)(bool);
     static Input read_helper(reader_fn get_char, esc_setup_fn dont_block) {
@@ -216,6 +217,7 @@ struct Input {
         return input;
     }
 
+  public:
 // TODO: test
 #ifdef _WIN32 // windows
     static void noop(bool on) {}
