@@ -134,10 +134,55 @@ void draw_box(Box box, Kind with) {
     std::cout << draw[3];
 }
 
+void handle_keys(std::vector<Box>& boxes, int& cnt_box_ix) {
+    auto cnt_box = &boxes[cnt_box_ix];
+    if (state.input == 'n' || state.input == SpecKey::Tab) {
+        if (cnt_box_ix++ == boxes.size() - 1) {
+            cnt_box_ix = 0;
+        }
+    } else if (state.input == 'p' /* || state.input == SpecKey::ShiftTab */) {
+        if (cnt_box_ix-- == 0) {
+            cnt_box_ix = boxes.size() - 1;
+        }
+    } else if (state.input == 'j' || state.input == Arrow::Down) {
+        draw_box(*cnt_box, Kind::Empty);
+        cnt_box->first.row++;
+        cnt_box->second.row++;
+    } else if (state.input == 'k' || state.input == Arrow::Up) {
+        draw_box(*cnt_box, Kind::Empty);
+        cnt_box->first.row--;
+        cnt_box->second.row--;
+    } else if (state.input == 'h' || state.input == Arrow::Left) {
+        draw_box(*cnt_box, Kind::Empty);
+        cnt_box->first.col--;
+        cnt_box->second.col--;
+    } else if (state.input == 'l' || state.input == Arrow::Right) {
+        draw_box(*cnt_box, Kind::Empty);
+        cnt_box->first.col++;
+        cnt_box->second.col++;
+    } else if (state.input == '-') {
+        draw_box(*cnt_box, Kind::Empty);
+        cnt_box->first.row++;
+        cnt_box->first.col++;
+
+        cnt_box->second.row--;
+        cnt_box->second.col--;
+    } else if (state.input == '+') {
+        draw_box(*cnt_box, Kind::Empty);
+        cnt_box->first.row--;
+        cnt_box->first.col--;
+
+        cnt_box->second.row++;
+        cnt_box->second.col++;
+    } else if (state.input == 'd' || state.input == SpecKey::Backspace) {
+        draw_box(*cnt_box, Kind::Empty);
+        boxes.erase(boxes.begin() + cnt_box_ix);
+    }
+}
 void run() {
     const auto msg = tui::string("Szia Csongi!");
     auto msg_coord = [msg](bool left) {
-        return Coord{state.size.row / 2,
+        return Coord{state.size.row / 2 + 1,
                      static_cast<unsigned int>((state.size.col / 2) + (left ? -msg.size() : +msg.size()) / 2)};
     };
 
@@ -156,48 +201,10 @@ void run() {
         if (!state.new_input) {
             continue; // if there's no new input, don't draw anything
         }
+        counter_box({1, 1}, state.size);
+        handle_keys(boxes, current_box);
         auto msg_start = msg_coord(true);
         auto msg_end = msg_coord(false);
-
-        auto cb = &boxes[current_box];
-        counter_box({1, 1}, state.size);
-        if (state.input == SpecKey::Tab) {
-            if (current_box == boxes.size() - 1) {
-                current_box = 0;
-            } else {
-                current_box++;
-            }
-        } else if (state.input == 'j' || state.input == Arrow::Down) {
-            draw_box(*cb, Empty);
-            cb->first.row++;
-            cb->second.row++;
-        } else if (state.input == 'k' || state.input == Arrow::Up) {
-            draw_box(*cb, Empty);
-            cb->first.row--;
-            cb->second.row--;
-        } else if (state.input == 'h' || state.input == Arrow::Left) {
-            draw_box(*cb, Empty);
-            cb->first.col--;
-            cb->second.col--;
-        } else if (state.input == 'l' || state.input == Arrow::Right) {
-            draw_box(*cb, Empty);
-            cb->first.col++;
-            cb->second.col++;
-        } else if (state.input == '-') {
-            draw_box(*cb, Empty);
-            cb->first.row++;
-            cb->first.col++;
-
-            cb->second.row--;
-            cb->second.col--;
-        } else if (state.input == '+') {
-            draw_box(*cb, Empty);
-            cb->first.row--;
-            cb->first.col--;
-
-            cb->second.row++;
-            cb->second.col++;
-        }
         Box msg_box = {{msg_start.row - 1, msg_start.col - 1}, {msg_end.row + 1, msg_end.col}};
         if (!std::any_of(boxes.begin(), boxes.end(), [msg_box](Box item) { return item == msg_box; })) {
             boxes.push_back(msg_box);
