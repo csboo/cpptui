@@ -17,11 +17,7 @@
 #ifndef _WIN32
 void set_non_blocking(bool enable) {
     int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
-    if (enable) {
-        fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
-    } else {
-        fcntl(STDIN_FILENO, F_SETFL, flags & ~O_NONBLOCK);
-    }
+    fcntl(STDIN_FILENO, F_SETFL, enable ? flags | O_NONBLOCK : flags & ~O_NONBLOCK);
 }
 #endif
 
