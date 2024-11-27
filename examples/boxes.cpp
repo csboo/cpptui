@@ -228,6 +228,7 @@ void run() {
 
         state.new_input = false;
 
+        std::cout.flush();
         // 120fps
         std::this_thread::sleep_for(std::chrono::milliseconds(8));
     }
@@ -237,8 +238,7 @@ void run() {
 void handle_read() {
     char ch;
     while (!state.quit) {
-        std::cin.get(ch);
-        state.input.read(ch);
+        state.input = Input::read();
         state.new_input = true;
         std::this_thread::sleep_for(std::chrono::milliseconds(8));
     }
@@ -254,7 +254,7 @@ void handle_resize() {
             state.new_input = true;
         }
         prev = state.size;
-        std::this_thread::sleep_for(std::chrono::milliseconds(40));
+        std::this_thread::sleep_for(std::chrono::milliseconds(256));
     }
     std::cout << "resizer thread done\n";
 }

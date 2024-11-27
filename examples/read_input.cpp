@@ -11,18 +11,16 @@ void clear(int sig) {
 }
 
 int main() {
-    tui::init(false);
+    tui::init();
     // NOTE: doesn't work on windows
     // on terminal resize, we use our `clear()` function
     tui::set_up_resize(clear);
 
     try {
-        char ch = 0;
         Input input;
         do {
-            std::cin.get(ch);                                                  // read into a character
-            input.read(ch);                                                    // convert it into an `Input`
-            std::cout << "ch:\t'" << ch << "'\t-\tinput: " << input << "\r\n"; // see how easy it is to print an `Input`
+            input = Input::read();                        // convert it into an `Input`
+            std::cout << "-\tinput: " << input << "\r\n"; // see how easy it is to print an `Input`
         } while (input != SpecKey::CtrlC);
     } catch (...) { // NOTE: probably won't happen, but it's good to be careful
         tui::reset();
