@@ -195,14 +195,14 @@ void run() {
         },
     };
 
-    auto current_box = 0;
+    auto cnt_box_ix = 0;
 
     while (state.input != 'q' && state.input != SpecKey::CtrlC) {
         if (!state.new_input) {
             continue; // if there's no new input, don't draw anything
         }
         counter_box({1, 1}, state.size);
-        handle_keys(boxes, current_box);
+        handle_keys(boxes, cnt_box_ix);
         auto msg_start = msg_coord(true);
         auto msg_end = msg_coord(false);
         Box msg_box = {{msg_start.row - 1, msg_start.col - 1}, {msg_end.row + 1, msg_end.col}};
@@ -211,7 +211,7 @@ void run() {
         }
 
         for (auto box : boxes) {
-            if (box == boxes[current_box]) {
+            if (box == boxes[cnt_box_ix]) {
                 std::cout << tui::text::color::cyan_fg();
                 draw_box(box, Kind::Rounded);
                 std::cout << tui::text::style::reset_style();
