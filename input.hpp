@@ -1,6 +1,29 @@
 #pragma once
 
 #include "tui.hpp"
+#include <iostream>
+
+// Platform-specific includes
+#ifdef _WIN32
+#include <conio.h>   // For _kbhit() and _getch() on Windows
+#include <windows.h> // For GetConsoleMode and SetConsoleMode
+#else
+#include <fcntl.h>   // For fcntl() on Unix-like systems
+#include <termios.h> // For termios on Unix-like systems
+#include <unistd.h>  // For read(), usleep() on Unix-like systems
+#endif
+
+// Function to set stdin non-blocking on Unix-like systems
+#ifdef __unix__
+void set_non_blocking(bool enable) {
+    int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
+    if (enable) {
+        fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
+    } else {
+        fcntl(STDIN_FILENO, F_SETFL, flags & ~O_NONBLOCK);
+    }
+}
+#endif
 
 namespace input {
 // sorry for this ugly code, I really feel very bad about it.
@@ -121,7 +144,7 @@ namespace input {
 
             return tmp;
         }
-        void read(const char& ch) { *this = Input::read_from(ch); }
+        // void read(const char& ch) { *this = Input::read_from(ch); }
         static Input read_from(const char& ch) {
             auto pee = 0;
             if /* mostly weird stuff, like: 'Ű' */ (ch < 0) {
@@ -185,6 +208,120 @@ namespace input {
                  << "'\n\n";
             logf.close();
             return Input::from_special(SpecKey::None);
+        }
+#ifdef _WIN32
+        static Input read_win() {
+            char byte;
+            bool running = true;
+            if (_kbhit()) {         // Check if a key is pressed
+                byte = _getch();    // Get the key press without waiting for Enter
+                if (byte == 27) {   // Esc key or arrow key
+                    if (_kbhit()) { // If there's another key press following Esc
+                        char nextByte = _getch();
+                        if (nextByte == '[') { // Arrow keys start with Esc + '['
+                            char arrow = _getch();
+                            if (arrow == 'A')
+                                std::cout << "Up arrow detected!\n";
+                            else if (arrow == 'B')
+                                std::cout << "Down arrow detected!\n";
+                            else if (arrow == 'C')
+                                std::cout << "Right arrow detected!\n";
+                            else if (arrow == 'D')
+                                std::cout << "Left arrow detected!\n";
+                        }
+                    } else {
+                        std::cout << "Esc key detected!\n";
+                    }
+                } else if (byte == 3 || byte == 4) { // Ctrl+C or Ctrl+D
+                    running = false;                 // Exit on Ctrl+D or Ctrl+C
+                }
+            }
+        }
+#else
+        static Input read_non_win() {
+            char byte;
+
+            // read raw input
+            if (::read(STDIN_FILENO, &byte, 1) == 1) {
+                Input input;
+                if (byte < 0) {
+                    char ignore_byte;
+                    ::read(STDIN_FILENO, &ignore_byte, 1);
+                    input = Input::from_special(SpecKey::None);
+                } else if (byte >= 32 && byte <= 126) { // <char>
+                    input = Input::from_char(byte);
+                } else if (byte >= 1 && byte <= 26) { // Ctrl<char>
+                    input = Input::from_special(static_cast<SpecKey>(byte));
+                }
+
+                switch (byte) {
+                case SpecKey::Backspace:
+                    input = Input::from_special(static_cast<SpecKey>(byte));
+                    break;
+                case SpecKey::Esc: {
+                    set_non_blocking(true); // Temporarily make stdin non-blocking
+                    // usleep(100000);          // Wait briefly for potential arrow key sequence
+                    char next_byte;
+                    ::read(STDIN_FILENO, &next_byte, 1);
+                    // char ignore;
+
+                    switch (next_byte) {
+                    case 91: {
+                        char arrow;
+                        // get arrow key character
+                        ::read(STDIN_FILENO, &arrow, 1);
+                        switch (arrow) {
+                        case Arrow::Up:
+                        case Arrow::Down:
+                        case Arrow::Right:
+                        case Arrow::Left:
+                            input = Input::from_arrow(static_cast<Arrow>(arrow));
+                            break;
+                        default:
+                            // ::read(STDIN_FILENO, &next_byte, 3);
+                            break;
+                        }
+                        break;
+                    }
+                    case 79: {
+                        char f_key;
+                        // get function key character
+                        ::read(STDIN_FILENO, &f_key, 1);
+                        switch (f_key) {
+                        case SpecKey::F1:
+                        case SpecKey::F2:
+                        case SpecKey::F3:
+                        case SpecKey::F4:
+                            input = Input::from_special(static_cast<SpecKey>(f_key));
+                            break;
+                        default:
+                            // ::read(STDIN_FILENO, &next_byte, 3);
+                            break;
+                        }
+                        break;
+                    }
+                    default:
+                        input = Input::from_special(SpecKey::Esc);
+                        break;
+                    }
+                    set_non_blocking(false);
+                    break;
+                }
+                }
+                if (input == Input()) {
+                    input = Input::from_special(SpecKey::None);
+                }
+                return input;
+            }
+            return Input::from_special(SpecKey::None);
+        }
+#endif
+        static Input read() {
+#ifdef _WIN32
+            return Input::read_win();
+#else
+            return Input::read_non_win();
+#endif
         }
     };
 
