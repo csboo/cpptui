@@ -141,163 +141,110 @@ struct Input {
         return tmp;
     }
 
-// TODO: just like in non-windows read()
-// TODO: use a fn ptr, or sg in order to reduce boilerplate
+    using reader_fn = char (*)();
+    using esc_setup_fn = void (*)(bool);
+    static Input read_helper(reader_fn get_char, esc_setup_fn dont_block) {
+        char byte = get_char();
+
+        Input input;
+        if (byte < 0) {
+            char ignore_byte;
+            ignore_byte = get_char();
+            input = Input::from_special(SpecKey::None);
+        } else if (byte >= 32 && byte <= 126) { // <char>
+            input = Input::from_char(byte);
+        } else if (byte >= 1 && byte <= 26) { // Ctrl<char>
+            input = Input::from_special(static_cast<SpecKey>(byte));
+        }
+
+        switch (byte) {
+        case SpecKey::Backspace:
+            input = Input::from_special(static_cast<SpecKey>(byte));
+            break;
+        case SpecKey::Esc: {
+            dont_block(true);
+            char next_byte;
+            next_byte = get_char();
+            // char ignore;
+
+            switch (next_byte) {
+            case 91: {
+                char arrow;
+                // get arrow key character
+                arrow = get_char();
+                switch (arrow) {
+                case Arrow::Up:
+                case Arrow::Down:
+                case Arrow::Right:
+                case Arrow::Left:
+                    input = Input::from_arrow(static_cast<Arrow>(arrow));
+                    break;
+                default:
+                    // ignore = _getch(3);
+                    break;
+                }
+                break;
+            }
+            case 79: {
+                char f_key;
+                // get function key character
+                f_key = get_char();
+                switch (f_key) {
+                case SpecKey::F1:
+                case SpecKey::F2:
+                case SpecKey::F3:
+                case SpecKey::F4:
+                    input = Input::from_special(static_cast<SpecKey>(f_key));
+                    break;
+                default:
+                    // ignore = _getch(3);
+                    break;
+                }
+                break;
+            }
+            default:
+                input = Input::from_special(SpecKey::Esc);
+                break;
+            }
+            dont_block(false);
+            break;
+        }
+        }
+        if (input == Input()) {
+            input = Input::from_special(SpecKey::None);
+        }
+        return input;
+    }
+
+// TODO: test
 #ifdef _WIN32 // windows
+    static void noop(bool on) {}
     static Input read() {
         char byte;
 
-        // _kbhit();        // key pressed
-        // byte = _getch(); // Get the key press without waiting for Enter
-
         // read raw input
         if (_kbhit()) {
-            Input input;
-            if (byte < 0) {
-                char ignore_byte;
-                ignore_byte = _getch();
-                input = Input::from_special(SpecKey::None);
-            } else if (byte >= 32 && byte <= 126) { // <char>
-                input = Input::from_char(byte);
-            } else if (byte >= 1 && byte <= 26) { // Ctrl<char>
-                input = Input::from_special(static_cast<SpecKey>(byte));
-            }
-
-            switch (byte) {
-            case SpecKey::Backspace:
-                input = Input::from_special(static_cast<SpecKey>(byte));
-                break;
-            case SpecKey::Esc: {
-                char next_byte;
-                next_byte = _getch();
-                // char ignore;
-
-                switch (next_byte) {
-                case 91: {
-                    char arrow;
-                    // get arrow key character
-                    arrow = _getch();
-                    switch (arrow) {
-                    case Arrow::Up:
-                    case Arrow::Down:
-                    case Arrow::Right:
-                    case Arrow::Left:
-                        input = Input::from_arrow(static_cast<Arrow>(arrow));
-                        break;
-                    default:
-                        // ignore = _getch(3);
-                        break;
-                    }
-                    break;
-                }
-                case 79: {
-                    char f_key;
-                    // get function key character
-                    f_key = _getch();
-                    switch (f_key) {
-                    case SpecKey::F1:
-                    case SpecKey::F2:
-                    case SpecKey::F3:
-                    case SpecKey::F4:
-                        input = Input::from_special(static_cast<SpecKey>(f_key));
-                        break;
-                    default:
-                        // ignore = _getch(3);
-                        break;
-                    }
-                    break;
-                }
-                default:
-                    input = Input::from_special(SpecKey::Esc);
-                    break;
-                }
-                break;
-            }
-            }
-            if (input == Input()) {
-                input = Input::from_special(SpecKey::None);
-            }
-            return input;
+            return Input::read_helper(_getch, Input::noop);
         }
         return Input::from_special(SpecKey::None);
     }
 #else // not windows
+    static void non_blocking(bool on) {
+        set_non_blocking(on); // Temporarily make stdin non-blocking
+    }
+    static char read_ch() {
+        char tmp;
+        ::read(STDIN_FILENO, &tmp, 1);
+        return tmp;
+    }
     static Input read() {
         char byte;
 
         // read raw input
-        if (::read(STDIN_FILENO, &byte, 1) == 1) {
-            Input input;
-            if (byte < 0) {
-                char ignore_byte;
-                ::read(STDIN_FILENO, &ignore_byte, 1);
-                input = Input::from_special(SpecKey::None);
-            } else if (byte >= 32 && byte <= 126) { // <char>
-                input = Input::from_char(byte);
-            } else if (byte >= 1 && byte <= 26) { // Ctrl<char>
-                input = Input::from_special(static_cast<SpecKey>(byte));
-            }
-
-            switch (byte) {
-            case SpecKey::Backspace:
-                input = Input::from_special(static_cast<SpecKey>(byte));
-                break;
-            case SpecKey::Esc: {
-                set_non_blocking(true); // Temporarily make stdin non-blocking
-                // usleep(100000);          // Wait briefly for potential arrow key sequence
-                char next_byte;
-                ::read(STDIN_FILENO, &next_byte, 1);
-                // char ignore;
-
-                switch (next_byte) {
-                case 91: {
-                    char arrow;
-                    // get arrow key character
-                    ::read(STDIN_FILENO, &arrow, 1);
-                    switch (arrow) {
-                    case Arrow::Up:
-                    case Arrow::Down:
-                    case Arrow::Right:
-                    case Arrow::Left:
-                        input = Input::from_arrow(static_cast<Arrow>(arrow));
-                        break;
-                    default:
-                        // ::read(STDIN_FILENO, &next_byte, 3);
-                        break;
-                    }
-                    break;
-                }
-                case 79: {
-                    char f_key;
-                    // get function key character
-                    ::read(STDIN_FILENO, &f_key, 1);
-                    switch (f_key) {
-                    case SpecKey::F1:
-                    case SpecKey::F2:
-                    case SpecKey::F3:
-                    case SpecKey::F4:
-                        input = Input::from_special(static_cast<SpecKey>(f_key));
-                        break;
-                    default:
-                        // ::read(STDIN_FILENO, &next_byte, 3);
-                        break;
-                    }
-                    break;
-                }
-                default:
-                    input = Input::from_special(SpecKey::Esc);
-                    break;
-                }
-                set_non_blocking(false);
-                break;
-            }
-            }
-            if (input == Input()) {
-                input = Input::from_special(SpecKey::None);
-            }
-            return input;
-        }
-        return Input::from_special(SpecKey::None);
+        // if (::read(STDIN_FILENO, &byte, 1) == 1) {
+        return Input::read_helper(Input::read_ch, Input::non_blocking);
+        // }
+        // return Input::from_special(SpecKey::None);
     }
 #endif
 };
