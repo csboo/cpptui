@@ -9,7 +9,6 @@ Uses macro magic (not intentionally, but it's needed to reduce code size and ove
 
 ## features
 
--   1 header and that's all
 -   minimal
 -   zero dependencies
 -   cross-platform (mostly?)
@@ -23,20 +22,20 @@ Uses macro magic (not intentionally, but it's needed to reduce code size and ove
 -   styles
 -   raw mode
 -   alternate screen
--   custom function for resize handling, NOTE: you should lock stdout, stdin when you use this feature, also, doesn't work on Windows
+-   custom function for resize handling, NOTE: you should probably lock `stdout`, stdin when you use this feature, also, doesn't work on Windows
 
 ### input
 
-a pretty handy header with functions and types to improve reading input from `cin`.
+a pretty handy header with functions and types to improve reading input from `stdin`.
 
 **supported input**:
 
--   basic characters, be it upper or lowercase, special ones like: `['ö', 'ä', 'á', ...]` are safely ignored
 -   basic symbols, such as `['~', ';', '*', ...]`, but not `['$', '€', ...]`
 -   <kbd>Ctrl</kbd>`+alphabetical characters`
 -   arrows
--   <kbd>Backspace</kbd>, <kbd>Tab</kbd>, <kbd>Enter/Return</kbd>
--   <kbd>F[1,2,3,4]</kbd>
+-   <kbd>Backspace</kbd>, <kbd>(Shift)Tab</kbd>, <kbd>Enter/Return</kbd>, <kbd>Delete</kbd>, <kbd>Page[Up,Down]</kbd>, <kbd>Home,End</kbd>, <kbd>Insert</kbd>,
+-   <kbd>F[1,2,3,4]</kbd> **_NOTE_**: the other F-keys are damn hard to implement, might be done in the future though
+-   basic characters, be it upper or lowercase, special ones like: `['ö', 'ä', 'á', ...]` are safely ignored
 
 ## usage
 
