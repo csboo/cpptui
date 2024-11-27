@@ -1,8 +1,7 @@
 #include "../tui.hpp"
 #include <utility> // for std::pair
 
-using tui::input::Input;
-using tui::input::SpecKey;
+using namespace tui::input;
 
 int main() {
     tui::init(false);                       // alternate buffer, raw mode, no cursor
