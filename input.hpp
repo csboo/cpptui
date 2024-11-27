@@ -15,7 +15,7 @@
 
 // Function to set stdin non-blocking on Unix-like systems
 #ifndef _WIN32
-void set_non_blocking(bool enable) {
+inline void set_non_blocking(bool enable) {
     int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
     fcntl(STDIN_FILENO, F_SETFL, enable ? flags | O_NONBLOCK : flags & ~O_NONBLOCK);
 }
@@ -97,7 +97,6 @@ inline std::ostream& operator<<(std::ostream& os, const Arrow& arrow) {
         CRSS(Up, Down, Right, Left);
     default:
         os << "Unknown";
-        break;
     }
     return os;
 }
@@ -157,11 +156,10 @@ struct Input {
     static Input read_helper(reader_fn get_char, esc_setup_fn dont_block) {
         char byte = get_char();
 
-        char ignore_byte;
-        Input input;
+        char ignore_byte = 0;
+        auto input = Input::from_special(SpecKey::None);
         if (byte < 0) {
             ignore_byte = get_char();
-            input = Input::from_special(SpecKey::None);
         } else if (byte >= 32 && byte <= 126) { // <char>
             input = Input::from_char(byte);
         } else if (byte >= 1 && byte <= 26) { // Ctrl<char>
@@ -205,9 +203,8 @@ struct Input {
                 break;
             }
             case 79: {
-                char f_key;
                 // get function key character
-                f_key = get_char();
+                char f_key = get_char();
                 switch (f_key) {
                 case SpecKey::F1:
                 case SpecKey::F2:
@@ -223,14 +220,11 @@ struct Input {
             }
             default:
                 input = Input::from_special(SpecKey::Esc);
-                break;
             }
             dont_block(false);
+        }
+        default:
             break;
-        }
-        }
-        if (input == Input()) {
-            input = Input::from_special(SpecKey::None);
         }
         return input;
     }
@@ -240,13 +234,10 @@ struct Input {
 #ifdef _WIN32 // windows
     static void noop(bool on) {}
     static char read_ch() {
-        char tmp;
-        tmp = _getch();
+        char tmp = _getch();
         return tmp;
     }
     static Input read() {
-        char byte;
-
         // read raw input
         if (_kbhit()) {
             return Input::read_helper(Input::read_ch, Input::noop);
@@ -258,13 +249,12 @@ struct Input {
         set_non_blocking(on); // Temporarily make stdin non-blocking
     }
     static char read_ch() {
-        char tmp;
+        char tmp = 0;
         ::read(STDIN_FILENO, &tmp, 1);
         return tmp;
     }
     static Input read() {
-        char byte;
-
+        // char byte;
         // read raw input
         // if (::read(STDIN_FILENO, &byte, 1) == 1) {
         return Input::read_helper(Input::read_ch, Input::non_blocking);

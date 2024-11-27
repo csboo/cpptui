@@ -225,17 +225,19 @@ namespace tui {
 
             return {rows, columns};
 #else
-            struct winsize ws;
-            int fd;
+            struct winsize ws {};
+            int fd = 0;
 
             // open the controlling terminal.
-            fd = open("/dev/tty", O_RDWR);
-            if (fd < 0)
+            fd = open("/dev/tty", O_RDWR | O_CLOEXEC);
+            if (fd < 0) {
                 err(1, "/dev/tty");
+            }
 
             // get window size of terminal
-            if (ioctl(fd, TIOCGWINSZ, &ws) < 0)
+            if (ioctl(fd, TIOCGWINSZ, &ws) < 0) {
                 err(1, "/dev/tty");
+            }
 
             // printf("%d rows by %d columns\n", ws.ws_row, ws.ws_col);
             // printf("(%d by %d pixels)\n", ws.ws_xpixel, ws.ws_ypixel);
