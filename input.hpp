@@ -25,22 +25,12 @@ void set_non_blocking(bool enable) {
 // damn macros, because given `MyEnum::Core` you can't do
 // `cout << MyEnum::Core; assert(cout.string() == "Core"|"MyEnum::Core")`
 
-// `case`, return as `string`
-#define CRS(X)                                                                                                         \
-    case X:                                                                                                            \
-        return os << #X;
-// 4 case, return string-s
-#define CRSS(A, B, C, D) CRS(A) CRS(B) CRS(C) CRS(D)
-
-// convert `Ctrl+<character>` sequence to a `string` as eg.: `CtrlX`
-inline std::string ctrl_to_str(const unsigned& key) { return tui::concat("Ctrl", static_cast<char>(key + 64)); }
-
 // Define Control Enum Member
 #define _DCEM(X) Ctrl##X
 // Define Enum Member
 #define DEM(X1, X2, X3, X4) _DCEM(X1), _DCEM(X2), _DCEM(X3), _DCEM(X4)
 
-// TODO: maybe add keys: del, F(5-12), home, end, pg(up,down), ShiftTab, ...
+// TODO: maybe add keys: F(5-12) NOTE: shall need an own `struct F {num: u8}`, ...
 enum SpecKey {
     CtrlA = 1,
     DEM(B, C, D, E),
@@ -53,21 +43,46 @@ enum SpecKey {
     DEM(V, W, X, Y),
     CtrlZ = 26,
     Esc = 27,
+    Insert = 50,
+    Delete = 51,
+    PageUp = 53,
+    PageDown = 54,
+    End = 70,
+    Home = 72,
     F1 = 80,
     F2 = 81,
     F3 = 82,
     F4 = 83,
+    ShiftTab = 90,
     Backspace = 127,
     None,
 };
 #undef DCEM
 #undef DEM
+
+enum Arrow {
+    Up = 65,
+    Down = 66,
+    Right = 67,
+    Left = 68,
+};
+
+// `case`, return as `string`
+#define CRS(X)                                                                                                         \
+    case X:                                                                                                            \
+        return os << #X;
+// 4 case, return string-s
+#define CRSS(A, B, C, D) CRS(A) CRS(B) CRS(C) CRS(D)
+
+// convert `Ctrl+<character>` sequence to a `string` as eg.: `CtrlX`
+inline std::string ctrl_to_str(const unsigned& key) { return tui::concat("Ctrl", static_cast<char>(key + 64)); }
+
 inline std::ostream& operator<<(std::ostream& os, const SpecKey& special) {
     switch (special) {
         CRSS(Esc, Tab, Backspace, Enter);
         CRSS(F1, F2, F3, F4);
-
-        CRS(None);
+        CRSS(Home, End, PageUp, PageDown);
+        CRSS(ShiftTab, Insert, Delete, None);
     default:
         if (special >= 1 && special <= 26) {
             return os << ctrl_to_str(special);
@@ -76,12 +91,7 @@ inline std::ostream& operator<<(std::ostream& os, const SpecKey& special) {
     }
     return os;
 }
-enum Arrow {
-    Up = 65,
-    Down = 66,
-    Right = 67,
-    Left = 68,
-};
+
 inline std::ostream& operator<<(std::ostream& os, const Arrow& arrow) {
     switch (arrow) {
         CRSS(Up, Down, Right, Left);
@@ -147,9 +157,9 @@ struct Input {
     static Input read_helper(reader_fn get_char, esc_setup_fn dont_block) {
         char byte = get_char();
 
+        char ignore_byte;
         Input input;
         if (byte < 0) {
-            char ignore_byte;
             ignore_byte = get_char();
             input = Input::from_special(SpecKey::None);
         } else if (byte >= 32 && byte <= 126) { // <char>
@@ -164,24 +174,32 @@ struct Input {
             break;
         case SpecKey::Esc: {
             dont_block(true);
-            char next_byte;
-            next_byte = get_char();
-            // char ignore;
+            char next_byte = get_char();
 
             switch (next_byte) {
             case 91: {
-                char arrow;
-                // get arrow key character
-                arrow = get_char();
-                switch (arrow) {
+                char special = get_char();
+                switch (special) {
                 case Arrow::Up:
                 case Arrow::Down:
                 case Arrow::Right:
                 case Arrow::Left:
-                    input = Input::from_arrow(static_cast<Arrow>(arrow));
+                    input = Input::from_arrow(static_cast<Arrow>(special));
+                    break;
+                case SpecKey::End:
+                case SpecKey::Home:
+                case SpecKey::ShiftTab:
+                    input = Input::from_special(static_cast<SpecKey>(special));
+                    break;
+                case SpecKey::Insert:
+                case SpecKey::Delete:
+                case SpecKey::PageUp:
+                case SpecKey::PageDown:
+                    ignore_byte = get_char(); // ~
+                    input = Input::from_special(static_cast<SpecKey>(special));
                     break;
                 default:
-                    // ignore = _getch(3);
+                    // ignore_byte = _getch(3);
                     break;
                 }
                 break;
@@ -198,7 +216,7 @@ struct Input {
                     input = Input::from_special(static_cast<SpecKey>(f_key));
                     break;
                 default:
-                    // ignore = _getch(3);
+                    // ignore_byte = _getch(3);
                     break;
                 }
                 break;
