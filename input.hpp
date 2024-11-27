@@ -141,34 +141,88 @@ struct Input {
         return tmp;
     }
 
+// TODO: just like in non-windows read()
+// TODO: use a fn ptr, or sg in order to reduce boilerplate
 #ifdef _WIN32 // windows
-    // TODO: just like in non-windows read()
     static Input read() {
         char byte;
-        bool running = true;
-        if (_kbhit()) {         // Check if a key is pressed
-            byte = _getch();    // Get the key press without waiting for Enter
-            if (byte == 27) {   // Esc key or arrow key
-                if (_kbhit()) { // If there's another key press following Esc
-                    char nextByte = _getch();
-                    if (nextByte == '[') { // Arrow keys start with Esc + '['
-                        char arrow = _getch();
-                        if (arrow == 'A')
-                            std::cout << "Up arrow detected!\n";
-                        else if (arrow == 'B')
-                            std::cout << "Down arrow detected!\n";
-                        else if (arrow == 'C')
-                            std::cout << "Right arrow detected!\n";
-                        else if (arrow == 'D')
-                            std::cout << "Left arrow detected!\n";
-                    }
-                } else {
-                    std::cout << "Esc key detected!\n";
-                }
-            } else if (byte == 3 || byte == 4) { // Ctrl+C or Ctrl+D
-                running = false;                 // Exit on Ctrl+D or Ctrl+C
+
+        // _kbhit();        // key pressed
+        // byte = _getch(); // Get the key press without waiting for Enter
+
+        // read raw input
+        if (_kbhit()) {
+            Input input;
+            if (byte < 0) {
+                char ignore_byte;
+                ignore_byte = _getch();
+                input = Input::from_special(SpecKey::None);
+            } else if (byte >= 32 && byte <= 126) { // <char>
+                input = Input::from_char(byte);
+            } else if (byte >= 1 && byte <= 26) { // Ctrl<char>
+                input = Input::from_special(static_cast<SpecKey>(byte));
             }
+
+            switch (byte) {
+            case SpecKey::Backspace:
+                input = Input::from_special(static_cast<SpecKey>(byte));
+                break;
+            case SpecKey::Esc: {
+                set_non_blocking(true); // Temporarily make stdin non-blocking
+                // usleep(100000);          // Wait briefly for potential arrow key sequence
+                char next_byte;
+                next_byte = _getch();
+                // char ignore;
+
+                switch (next_byte) {
+                case 91: {
+                    char arrow;
+                    // get arrow key character
+                    arrow = _getch();
+                    switch (arrow) {
+                    case Arrow::Up:
+                    case Arrow::Down:
+                    case Arrow::Right:
+                    case Arrow::Left:
+                        input = Input::from_arrow(static_cast<Arrow>(arrow));
+                        break;
+                    default:
+                        // ignore = _getch(3);
+                        break;
+                    }
+                    break;
+                }
+                case 79: {
+                    char f_key;
+                    // get function key character
+                    f_key = _getch();
+                    switch (f_key) {
+                    case SpecKey::F1:
+                    case SpecKey::F2:
+                    case SpecKey::F3:
+                    case SpecKey::F4:
+                        input = Input::from_special(static_cast<SpecKey>(f_key));
+                        break;
+                    default:
+                        // ignore = _getch(3);
+                        break;
+                    }
+                    break;
+                }
+                default:
+                    input = Input::from_special(SpecKey::Esc);
+                    break;
+                }
+                set_non_blocking(false);
+                break;
+            }
+            }
+            if (input == Input()) {
+                input = Input::from_special(SpecKey::None);
+            }
+            return input;
         }
+        return Input::from_special(SpecKey::None);
     }
 #else // not windows
     static Input read() {
