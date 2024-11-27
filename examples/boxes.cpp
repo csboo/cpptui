@@ -8,19 +8,6 @@
 
 using namespace tui::input;
 
-std::pair<unsigned int, unsigned int> screen_size;
-
-void text() {
-    auto cur_pos = tui::cursor::get_position();
-    // std::cout << tui::tui_string("Hello").on_rgb(255, 0, 0).rgb(0, 0, 255) << " "
-    //           << tui::tui_string("World?").blue().italic().strikethrough() << " "
-    //           << tui::tui_string("Ain't no way!").on_red().bold().black() << " "
-    //           << "cursor at: " << cur_pos.first << ";" << cur_pos.second << " "
-    //           << tui::tui_string("it's more like I'm on the").underline() << " "
-    //           << tui::tui_string("Moon").link("https://www.moon.com/").underline().blue() << "\r\n";
-    std::cout << tui::tui_string("RESIZED").red();
-}
-
 struct Coord {
     unsigned row;
     unsigned col;
@@ -52,10 +39,10 @@ void count(const unsigned long long& x) {
     unsigned r = 0;
     if (x % 100 == 0) {
         auto print = std::to_string(x / 100);
-        std::cout << tui::tui_string(print[0]).on_red().black();
+        std::cout << tui::string(print[0]).on_red().black();
     } else if (x % 10 == 0) {
         auto print = std::to_string(x / 10 % 10);
-        std::cout << tui::tui_string(print[0]).on_blue().black();
+        std::cout << tui::string(print[0]).on_blue().black();
     } else {
         auto print = std::to_string(x);
         std::cout << print.back();
@@ -148,16 +135,11 @@ void draw_box(Box box, Kind with) {
 }
 
 void run() {
-    const auto msg = tui::tui_string("Szia Csongi!");
+    const auto msg = tui::string("Szia Csongi!");
     auto msg_coord = [msg](bool left) {
         return Coord{state.size.row / 2,
                      static_cast<unsigned int>((state.size.col / 2) + (left ? -msg.size() : +msg.size()) / 2)};
     };
-
-    auto msg = tui::tui_string("Szia Csongi!");
-    unsigned msg_len = msg.size();
-    auto msg_start = coord{screen.row / 2, static_cast<unsigned int>((screen.col / 2) - msg_len / 2)};
-    auto msg_end = coord{screen.row / 2, static_cast<unsigned int>((screen.col / 2) + msg_len / 2)};
 
     std::vector<Box> boxes = {
         {{6, 6}, {12, 12}},
@@ -235,7 +217,7 @@ void run() {
         std::cout << msg.bold().italic().inverted().blue();
 
         tui::cursor::set_position(state.size.row / 3 * 2, state.size.col / 3 * 2);
-        std::cout << tui::tui_string("tui.hpp").blue().link("https://github.com/csboo/cpptui").on_magenta();
+        std::cout << tui::string("tui.hpp").blue().link("https://github.com/csboo/cpptui").on_magenta();
 
         state.new_input = false;
 
@@ -271,7 +253,7 @@ void handle_resize() {
 }
 
 int main() {
-    tui::init_term(false);
+    tui::init();
 
     std::thread reader(handle_read);
     std::thread resizer(handle_resize);
@@ -285,7 +267,7 @@ int main() {
     }
 
     Coord boxcord(state.size.row / 2, state.size.col / 2);
-    tui::tui_string msg = "Press any key to quit.";
+    tui::string msg = "Press any key to quit.";
     unsigned msghalf = msg.size() / 2;
     Coord msgcord(boxcord.row, boxcord.col - msghalf);
     Box box = {{boxcord.row - 2, boxcord.col - msghalf - 2}, {boxcord.row + 2, boxcord.col + msghalf + 2}};
@@ -296,7 +278,7 @@ int main() {
 
     resizer.join();
     reader.join();
-    tui::reset_term();
+    tui::reset();
 
     return 0;
 }
