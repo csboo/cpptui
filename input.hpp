@@ -168,8 +168,6 @@ struct Input {
                 input = Input::from_special(static_cast<SpecKey>(byte));
                 break;
             case SpecKey::Esc: {
-                set_non_blocking(true); // Temporarily make stdin non-blocking
-                // usleep(100000);          // Wait briefly for potential arrow key sequence
                 char next_byte;
                 next_byte = _getch();
                 // char ignore;
@@ -213,7 +211,6 @@ struct Input {
                     input = Input::from_special(SpecKey::Esc);
                     break;
                 }
-                set_non_blocking(false);
                 break;
             }
             }
