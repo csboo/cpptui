@@ -50,12 +50,12 @@ void counter_box(Coord start, Coord end) {
 
     // do columns
     // top left
-    tui::cursor::set_position(start.row, start.col);
+    start.set_cursor();
     for (auto col = start.col; col <= end.col; ++col) {
         std::cout << count(col);
     }
     // bottom left
-    tui::cursor::set_position(end.row, start.col);
+    end.with_col(start.col).set_cursor();
     for (auto col = start.col; col <= end.col; ++col) {
         std::cout << count(col);
     }
@@ -92,25 +92,21 @@ void draw_box(Box box, Kind with) {
     // do rows
     for (auto row = start.row + 1; row < end.row; ++row) {
         // left row
-        tui::cursor::set_position(row, start.col);
-        std::cout << draw[4];
+        start.with_row(row).print(draw[4]);
         // right row
-        tui::cursor::set_position(row, end.col);
-        std::cout << draw[4];
+        end.with_row(row).print(draw[4]);
     }
 
     // do columns
     // top left
-    tui::cursor::set_position(start.row, start.col);
-    std::cout << draw[0];
+    start.print(draw[0]);
     for (auto i = start.col + 1; i < end.col; ++i) {
         std::cout << draw[5];
     }
     // top right
     std::cout << draw[1];
     // bottom left
-    tui::cursor::set_position(end.row, start.col);
-    std::cout << draw[2];
+    end.with_col(start.col).print(draw[2]);
     for (auto i = start.col + 1; i < end.col; ++i) {
         std::cout << draw[5];
     }

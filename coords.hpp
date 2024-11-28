@@ -61,9 +61,12 @@ struct Coord {
 
     std::string display() const { return "(" + std::to_string(this->row) + ";" + std::to_string(this->col) + ")"; }
 
+    // set cursor to this `Coord` on the screen
+    void set_cursor() const { tui::cursor::set_position(this->row, this->col); }
+
     // print to `stdout` starting from this `Coord`
-    template <typename T> void print(const T& print) {
-        tui::cursor::set_position(this->row, this->col);
+    template <typename T> void print(const T& print) const {
+        this->set_cursor();
         std::cout << print;
     }
 };
