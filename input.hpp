@@ -152,15 +152,59 @@ struct Input {
 
   private:
     using reader_fn = char (*)();
-    using esc_setup_fn = void (*)(bool);
-    static Input read_helper(reader_fn get_char, esc_setup_fn dont_block) {
+    static Input read_helper(reader_fn get_char) {
         char byte = get_char();
 
         char ignore_byte = 0;
         auto input = Input::from_special(SpecKey::None);
+#ifdef _WIN32
+        if (byte == 0 || byte == 224) {
+            char next_byte = get_char();
+            switch (next_byte) {
+            case 59:
+                return Input::from_special(SpecKey::F1);
+            case 60:
+                return Input::from_special(SpecKey::F2);
+            case 61:
+                return Input::from_special(SpecKey::F3);
+            case 62:
+                return Input::from_special(SpecKey::F4);
+            default:
+                break;
+            }
+        } else if (byte == -32) {
+            char next_byte = get_char();
+            switch (next_byte) {
+            case 72:
+                return Input::from_arrow(Arrow::Up);
+            case 75:
+                return Input::from_arrow(Arrow::Left);
+            case 77:
+                return Input::from_arrow(Arrow::Right);
+            case 80:
+                return Input::from_arrow(Arrow::Down);
+            case 83:
+                return Input::from_special(SpecKey::Delete);
+            case 81:
+                return Input::from_special(SpecKey::PageDown);
+            case 71:
+                return Input::from_special(SpecKey::Home);
+            case 73:
+                return Input::from_special(SpecKey::PageUp);
+            case 79:
+                return Input::from_special(SpecKey::End);
+            case 82:
+                return Input::from_special(SpecKey::Insert);
+            default:
+                break;
+            }
+        }
+#else
         if (byte < 0) {
             ignore_byte = get_char();
-        } else if (byte >= 32 && byte <= 126) { // <char>
+        }
+#endif
+        if (byte >= 32 && byte <= 126) { // <char>
             input = Input::from_char(byte);
         } else if (byte >= 1 && byte <= 26) { // Ctrl<char>
             input = Input::from_special(static_cast<SpecKey>(byte));
@@ -171,7 +215,8 @@ struct Input {
             input = Input::from_special(static_cast<SpecKey>(byte));
             break;
         case SpecKey::Esc: {
-            dont_block(true);
+#ifndef _WIN32
+            set_non_blocking(false); // Temporarily make stdin non-blocking
             char next_byte = get_char();
 
             switch (next_byte) {
@@ -213,7 +258,6 @@ struct Input {
                     input = Input::from_special(static_cast<SpecKey>(f_key));
                     break;
                 default:
-                    // ignore_byte = _getch(3);
                     break;
                 }
                 break;
@@ -221,7 +265,10 @@ struct Input {
             default:
                 input = Input::from_special(SpecKey::Esc);
             }
-            dont_block(false);
+            set_non_blocking(false); // Temporarily make stdin non-blocking
+#else
+            input = Input::from_special(SpecKey::Esc);
+#endif
         }
         default:
             break;
@@ -232,34 +279,23 @@ struct Input {
   public:
 // TODO: test
 #ifdef _WIN32 // windows
-    static void noop(bool on) {}
     static char read_ch() {
         char tmp = _getch();
         return tmp;
     }
     static Input read() {
         // read raw input
-        if (_kbhit()) {
-            return Input::read_helper(Input::read_ch, Input::noop);
-        }
-        return Input::from_special(SpecKey::None);
+        return Input::read_helper(Input::read_ch);
     }
 #else // not windows
-    static void non_blocking(bool on) {
-        set_non_blocking(on); // Temporarily make stdin non-blocking
-    }
     static char read_ch() {
         char tmp = 0;
         ::read(STDIN_FILENO, &tmp, 1);
         return tmp;
     }
     static Input read() {
-        // char byte;
         // read raw input
-        // if (::read(STDIN_FILENO, &byte, 1) == 1) {
-        return Input::read_helper(Input::read_ch, Input::non_blocking);
-        // }
-        // return Input::from_special(SpecKey::None);
+        return Input::read_helper(Input::read_ch);
     }
 #endif
 };
