@@ -166,14 +166,14 @@ struct App {
 
     bool snake_contains(const Coord& coord, const unsigned& skip = 0) {
         return std::find_if(std::begin(this->snake) + skip, this->snake.end(),
-                            [&](const Coord& item) { return item == coord; }) != snake.end();
+                            [&](const Coord& item) { return item == coord; }) != this->snake.end();
     }
 
     void eat_apple() {
         std::vector<Coord> non_snake;
         for (unsigned i = 1; i < this->screen_size.row; ++i) {
             for (unsigned j = 1; j < this->screen_size.col; ++j) {
-                if (!snake_contains(Coord{i, j})) {
+                if (!this->snake_contains(Coord{i, j})) {
                     non_snake.emplace_back(i, j);
                 }
             }
@@ -217,39 +217,39 @@ struct App {
     }
 
     void handle_movement() {
-        auto coord = this->snake.front();
+        auto& head = this->snake.front();
         switch (this->dir) {
         case Dir::Up:
             // move to the `Down` side of the screen if would go too far `Up`
-            if (coord.row - 1 == 0) {
-                coord.row = this->screen_size.row;
+            if (head.row - 1 == 0) {
+                head.row = this->screen_size.row;
                 break;
             }
-            coord.row--;
+            head.row--;
             break;
         case Dir::Down:
             // move to the `Up`per side the screen if would go too far `Down`
-            if (coord.row + 1 > this->screen_size.row) {
-                coord.row = 1;
+            if (head.row + 1 > this->screen_size.row) {
+                head.row = 1;
                 break;
             }
-            coord.row++;
+            head.row++;
             break;
         case Dir::Left:
             // move to the `Right` side the screen if would go too far `Left`
-            if (coord.col - 1 == 0) {
-                coord.col = this->screen_size.col;
+            if (head.col - 1 == 0) {
+                head.col = this->screen_size.col;
                 break;
             }
-            coord.col--;
+            head.col--;
             break;
         case Dir::Right:
             // move to the `Left` side the screen if would go too far `Right`
-            if (coord.col + 1 > this->screen_size.col) {
-                coord.col = 1;
+            if (head.col + 1 > this->screen_size.col) {
+                head.col = 1;
                 break;
             }
-            coord.col++;
+            head.col++;
             break;
         case Dir::None:
             break;
