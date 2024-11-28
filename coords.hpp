@@ -25,12 +25,12 @@ struct Coord {
     Coord operator/(const unsigned& n) const { return Coord{this->row / n, this->col / n}; }
     // See what I did there?
     // we subtract the difference of the two coordinates
-    Coord operator-(const Coord& other) const {
-        return Coord{
-            this->row - static_cast<int>(static_cast<int>(this->row) - static_cast<int>(other.row)),
-            this->col - static_cast<int>(static_cast<int>(this->col) - static_cast<int>(other.col)),
-        };
-    }
+    // Coord operator-(const Coord& other) const {
+    //     return Coord{
+    //         this->row - static_cast<int>(static_cast<int>(this->row) - static_cast<int>(other.row)),
+    //         this->col - static_cast<int>(static_cast<int>(this->col) - static_cast<int>(other.col)),
+    //     };
+    // }
     // Coord operator=(std::pair<unsigned, unsigned> other) {
     //     this->row = other.first;
     //     this->col = other.second;

@@ -102,7 +102,7 @@ Dir meets_at(const Coord& lhs, const Coord& rhs, const Coord& screen_size) {
     int col_diff = static_cast<int>(lhs.col) - static_cast<int>(rhs.col);
 
     // we set both row and col to x-1 as it's needed :D
-    auto teleport = screen_size - Coord{1, 1};
+    auto teleport = Coord{screen_size.row - 1, screen_size.col - 1};
 
     if (row_diff == 1 || teleport.row == -row_diff) {
         return Dir::Up;
@@ -299,9 +299,7 @@ unsigned run(const Coord& screen_size) {
         // print head
         snake.front().print(tui::string(to_string(dir)).blue());
 
-        // it's kinda like a flush(): w/out this it's quite mad
-        tui::cursor::set_position(screen_size.row - 1, screen_size.col - 1);
-        std::cout << "\n";
+        std::cout.flush();
         auto sleep_mul = (dir == Dir::Left || dir == Dir::Right) ? 1. : 1.5;
         auto sleep_dur = SLEEP_MS + (10 > snake.size() ? -(ADD_MS * 10) + ADD_MS * static_cast<unsigned>(snake.size())
                                                        : ADD_MS * static_cast<unsigned>(snake.size()));
