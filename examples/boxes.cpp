@@ -1,30 +1,13 @@
+#include "../coords.hpp"
 #include "../tui.hpp"
 #include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <cstdint>
 #include <thread>
-#include <utility>
 #include <vector>
 
 using namespace tui::input;
-
-struct Coord {
-    unsigned row;
-    unsigned col;
-
-    Coord(const unsigned& row, const unsigned& col) : row{row}, col{col} {}
-    // Coord(const Coord& copy) : row{copy.row}, col{copy.col} {}
-    Coord(const std::pair<unsigned, unsigned>& copy) : row{copy.first}, col{copy.second} {}
-
-    bool operator==(const Coord& other) const { return (this->row == other.row && this->col == other.col); }
-    // bool operator!=(const Coord& other) const { return !(this == &other); }
-    // Coord operator=(std::pair<unsigned, unsigned> other) {
-    //     this->row = other.first;
-    //     this->col = other.second;
-    //     return *this;
-    // }
-};
 
 using Box = std::pair<Coord, Coord>;
 
@@ -36,18 +19,21 @@ struct AppState {
 } state;
 
 // make `x` be good for `counter_box`
-void count(const uint64_t& x) {
+[[nodiscard]]
+std::string count(const uint64_t& x) {
     unsigned r = 0;
+    std::string print;
     if (x % 100 == 0) {
-        auto print = std::to_string(x / 100);
-        std::cout << tui::string(print[0]).on_red().black();
+        print = std::to_string(x / 100);
+        print = tui::string(print[0]).on_red().black();
     } else if (x % 10 == 0) {
-        auto print = std::to_string(x / 10 % 10);
-        std::cout << tui::string(print[0]).on_blue().black();
+        print = std::to_string(x / 10 % 10);
+        print = tui::string(print[0]).on_blue().black();
     } else {
-        auto print = std::to_string(x);
-        std::cout << print.back();
+        print = std::to_string(x);
+        print = print.back();
     }
+    return print;
 }
 
 void counter_box(Coord start, Coord end) {
@@ -57,24 +43,21 @@ void counter_box(Coord start, Coord end) {
     // from top to down
     for (auto row = start.row + 1; row < end.row; ++row) {
         // left row
-        tui::cursor::set_position(row, start.col);
-
-        count(row);
+        start.with_row(row).print(count(row));
         // right row
-        tui::cursor::set_position(row, end.col);
-        count(row);
+        end.with_row(row).print(count(row));
     }
 
     // do columns
     // top left
     tui::cursor::set_position(start.row, start.col);
     for (auto col = start.col; col <= end.col; ++col) {
-        count(col);
+        std::cout << count(col);
     }
     // bottom left
     tui::cursor::set_position(end.row, start.col);
     for (auto col = start.col; col <= end.col; ++col) {
-        count(col);
+        std::cout << count(col);
     }
 }
 
@@ -135,7 +118,7 @@ void draw_box(Box box, Kind with) {
     std::cout << draw[3];
 }
 
-void handle_keys(std::vector<Box>& boxes, int& cnt_box_ix) {
+void handle_keys(std::vector<Box>& boxes, unsigned& cnt_box_ix) {
     auto* cnt_box = &boxes[cnt_box_ix];
     if (state.input == 'n' || state.input == SpecKey::Tab) {
         if (cnt_box_ix++ == boxes.size() - 1) {
@@ -143,7 +126,7 @@ void handle_keys(std::vector<Box>& boxes, int& cnt_box_ix) {
         }
     } else if (state.input == 'p' /* || state.input == SpecKey::ShiftTab */) {
         if (cnt_box_ix-- == 0) {
-            cnt_box_ix = boxes.size() - 1;
+            cnt_box_ix = static_cast<int>(boxes.size()) - 1;
         }
     } else if (state.input == 'j' || state.input == Arrow::Down) {
         draw_box(*cnt_box, Kind::Empty);
@@ -196,7 +179,7 @@ void run() {
         },
     };
 
-    auto cnt_box_ix = 0;
+    unsigned cnt_box_ix = 0;
 
     while (state.input != 'q' && state.input != SpecKey::CtrlC) {
         if (!state.new_input) {

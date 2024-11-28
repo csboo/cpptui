@@ -1,3 +1,4 @@
+#include "../coords.hpp"
 #include "../tui.hpp"
 #include <algorithm>
 #include <chrono>
@@ -96,72 +97,31 @@ std::string to_string(const Dir& dir) {
     return "X";
 }
 
-struct Coord {
-    unsigned row;
-    unsigned col;
+Dir meets_at(const Coord& lhs, const Coord& rhs, const Coord& screen_size) {
+    int row_diff = static_cast<int>(lhs.row) - static_cast<int>(rhs.row);
+    int col_diff = static_cast<int>(lhs.col) - static_cast<int>(rhs.col);
 
-    bool operator==(const Coord& other) const { return (this->row == other.row && this->col == other.col); }
-    bool operator<=(const Coord& other) const { return (this->row <= other.row && this->col <= other.col); }
-    Coord operator/(const unsigned& n) const { return Coord{this->row / n, this->col / n}; }
-    // See what I did there?
-    // we subtract the difference of the two coordinates
-    Coord operator-(const Coord& other) const {
-        return Coord{
-            this->row - static_cast<int>(static_cast<int>(this->row) - static_cast<int>(other.row)),
-            this->col - static_cast<int>(static_cast<int>(this->col) - static_cast<int>(other.col)),
-        };
+    // we set both row and col to x-1 as it's needed :D
+    auto teleport = screen_size - Coord{1, 1};
+
+    if (row_diff == 1 || teleport.row == -row_diff) {
+        return Dir::Up;
     }
-    Coord with_col(const unsigned& col) { return Coord{this->row, col}; }
-    Coord with_row(const unsigned& row) { return Coord{row, this->col}; }
-    static Coord screen_size() {
-        auto ss = tui::screen::size();
-        return Coord{ss.first, ss.second};
+    if (row_diff == -1 || teleport.row == row_diff) {
+        return Dir::Down;
     }
-    static Coord random(const Coord& ss) {
-        std::mt19937 mt{std::random_device{}()};
-
-        std::uniform_int_distribution<unsigned> gen_y(1, ss.row - 1);
-        unsigned y = gen_y(mt);
-
-        std::uniform_int_distribution<unsigned> gen_x(1, ss.col - 1);
-        unsigned x = gen_x(mt);
-
-        return Coord{y, x};
+    if (col_diff == 1 || teleport.col == -col_diff) {
+        return Dir::Left;
     }
-    std::pair<unsigned, unsigned> to_pair() const { return {this->row, this->col}; }
-    std::string display() const { return "(" + std::to_string(this->row) + ";" + std::to_string(this->col) + ")"; }
-
-    Dir meets_at(const Coord& other, const Coord& ss) const {
-        int row_diff = static_cast<int>(this->row) - static_cast<int>(other.row);
-        int col_diff = static_cast<int>(this->col) - static_cast<int>(other.col);
-
-        // we set both row and col to x-1 as it's needed :D
-        auto teleport = Coord{ss.row - 1, ss.col - 1};
-
-        if (row_diff == 1 || teleport.row == -row_diff) {
-            return Dir::Up;
-        }
-        if (row_diff == -1 || teleport.row == row_diff) {
-            return Dir::Down;
-        }
-        if (col_diff == 1 || teleport.col == -col_diff) {
-            return Dir::Left;
-        }
-        if (col_diff == -1 || teleport.col == col_diff) {
-            return Dir::Right;
-        }
-        return Dir::None;
+    if (col_diff == -1 || teleport.col == col_diff) {
+        return Dir::Right;
     }
+    return Dir::None;
+}
 
-    // print starting from this Coord
-    template <typename T> void print(const T& print) {
-        tui::cursor::set_position(this->row, this->col);
-        std::cout << print;
-    }
-};
 using Snake = std::vector<Coord>;
 
-std::pair<Dir, Dir> neighbours(const Snake& snake, const unsigned& idx, const Coord& ss) {
+std::pair<Dir, Dir> neighbours(const Snake& snake, const unsigned& idx, const Coord& screen_size) {
     // std::ofstream fout("babkelme.log", std::ios::app);
     auto coord = snake[idx];
 
@@ -177,8 +137,8 @@ std::pair<Dir, Dir> neighbours(const Snake& snake, const unsigned& idx, const Co
         next = snake.at(idx + 1);
     }
 
-    Dir first = coord.meets_at(prev, ss);
-    Dir second = coord.meets_at(next, ss);
+    Dir first = meets_at(coord, prev, screen_size);
+    Dir second = meets_at(coord, next, screen_size);
 
     return {first, second};
 }
@@ -311,7 +271,7 @@ unsigned run(const Coord& screen_size) {
             for (unsigned i = 1; i < screen_size.row; ++i) {
                 for (unsigned j = 1; j < screen_size.col; ++j) {
                     if (!snake_contains(snake, Coord{i, j})) {
-                        non_snake.push_back(Coord{i, j});
+                        non_snake.emplace_back(i, j);
                     }
                 }
             }
