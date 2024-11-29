@@ -112,6 +112,11 @@ struct Input {
     Arrow arrow = static_cast<Arrow>(0);
     SpecKey special = SpecKey::None;
 
+    Input() = default;
+    Input(const Arrow& arrow) : arrow(arrow), is_arrow(true) {}
+    Input(const char& ch) : ch(ch), is_ch(true) {}
+    Input(const SpecKey& special) : special(special), is_special(true) {}
+
     bool operator==(const Input& other) const {
         return (this->ch == other.ch && this->is_ch == other.is_ch && this->arrow == other.arrow &&
                 this->is_arrow == other.is_arrow && this->special == other.special &&
@@ -128,47 +133,25 @@ struct Input {
 
     friend std::ostream& operator<<(std::ostream& os, const Input& inp);
 
-    static Input from_arrow(const Arrow& arrow) {
-        Input tmp;
-        tmp.arrow = arrow;
-        tmp.is_arrow = true;
-
-        return tmp;
-    }
-    static Input from_char(const char& ch) {
-        Input tmp;
-        tmp.ch = ch;
-        tmp.is_ch = true;
-
-        return tmp;
-    }
-    static Input from_special(const SpecKey& special) {
-        Input tmp;
-        tmp.special = special;
-        tmp.is_special = true;
-
-        return tmp;
-    }
-
   private:
     using reader_fn = char (*)();
     static Input read_helper(reader_fn get_char) {
         char byte = get_char();
 
         char ignore_byte = 0;
-        auto input = Input::from_special(SpecKey::None);
+        auto input = Input(SpecKey::None);
 #ifdef _WIN32
         if (byte == 0 || byte == 224) {
             char next_byte = get_char();
             switch (next_byte) {
             case 59:
-                return Input::from_special(SpecKey::F1);
+                return Input(SpecKey::F1);
             case 60:
-                return Input::from_special(SpecKey::F2);
+                return Input(SpecKey::F2);
             case 61:
-                return Input::from_special(SpecKey::F3);
+                return Input(SpecKey::F3);
             case 62:
-                return Input::from_special(SpecKey::F4);
+                return Input(SpecKey::F4);
             default:
                 break;
             }
@@ -176,25 +159,25 @@ struct Input {
             char next_byte = get_char();
             switch (next_byte) {
             case 72:
-                return Input::from_arrow(Arrow::Up);
+                return Input(Arrow::Up);
             case 75:
-                return Input::from_arrow(Arrow::Left);
+                return Input(Arrow::Left);
             case 77:
-                return Input::from_arrow(Arrow::Right);
+                return Input(Arrow::Right);
             case 80:
-                return Input::from_arrow(Arrow::Down);
+                return Input(Arrow::Down);
             case 83:
-                return Input::from_special(SpecKey::Delete);
+                return Input(SpecKey::Delete);
             case 81:
-                return Input::from_special(SpecKey::PageDown);
+                return Input(SpecKey::PageDown);
             case 71:
-                return Input::from_special(SpecKey::Home);
+                return Input(SpecKey::Home);
             case 73:
-                return Input::from_special(SpecKey::PageUp);
+                return Input(SpecKey::PageUp);
             case 79:
-                return Input::from_special(SpecKey::End);
+                return Input(SpecKey::End);
             case 82:
-                return Input::from_special(SpecKey::Insert);
+                return Input(SpecKey::Insert);
             default:
                 break;
             }
@@ -205,14 +188,14 @@ struct Input {
         }
 #endif
         if (byte >= 32 && byte <= 126) { // <char>
-            input = Input::from_char(byte);
+            input = Input(byte);
         } else if (byte >= 1 && byte <= 26) { // Ctrl<char>
-            input = Input::from_special(static_cast<SpecKey>(byte));
+            input = Input(static_cast<SpecKey>(byte));
         }
 
         switch (byte) {
         case SpecKey::Backspace:
-            input = Input::from_special(static_cast<SpecKey>(byte));
+            input = Input(static_cast<SpecKey>(byte));
             break;
         case SpecKey::Esc: {
 #ifndef _WIN32
@@ -227,19 +210,19 @@ struct Input {
                 case Arrow::Down:
                 case Arrow::Right:
                 case Arrow::Left:
-                    input = Input::from_arrow(static_cast<Arrow>(special));
+                    input = Input(static_cast<Arrow>(special));
                     break;
                 case SpecKey::End:
                 case SpecKey::Home:
                 case SpecKey::ShiftTab:
-                    input = Input::from_special(static_cast<SpecKey>(special));
+                    input = Input(static_cast<SpecKey>(special));
                     break;
                 case SpecKey::Insert:
                 case SpecKey::Delete:
                 case SpecKey::PageUp:
                 case SpecKey::PageDown:
                     ignore_byte = get_char(); // ~
-                    input = Input::from_special(static_cast<SpecKey>(special));
+                    input = Input(static_cast<SpecKey>(special));
                     break;
                 default:
                     // ignore_byte = _getch(3);
@@ -255,7 +238,7 @@ struct Input {
                 case SpecKey::F2:
                 case SpecKey::F3:
                 case SpecKey::F4:
-                    input = Input::from_special(static_cast<SpecKey>(f_key));
+                    input = Input(static_cast<SpecKey>(f_key));
                     break;
                 default:
                     break;
@@ -263,11 +246,11 @@ struct Input {
                 break;
             }
             default:
-                input = Input::from_special(SpecKey::Esc);
+                input = Input(SpecKey::Esc);
             }
             set_non_blocking(false); // Temporarily make stdin non-blocking
 #else
-            input = Input::from_special(SpecKey::Esc);
+            input = Input(SpecKey::Esc);
 #endif
         }
         default:
