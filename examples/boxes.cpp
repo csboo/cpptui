@@ -177,7 +177,7 @@ void run() {
 
     unsigned cnt_box_ix = 0;
 
-    while (state.input != 'q' && state.input != SpecKey::CtrlC) {
+    do {
         if (!state.new_input) {
             continue; // if there's no new input, don't draw anything
         }
@@ -211,17 +211,16 @@ void run() {
         std::cout.flush();
         // 120fps
         std::this_thread::sleep_for(std::chrono::milliseconds(8));
-    }
-    state.quit = true;
+    } while (!state.quit);
 }
 
 void handle_read() {
-    while (!state.quit) {
+    while (state.input != 'q' && state.input != SpecKey::CtrlC) {
         state.input = Input::read();
         state.new_input = true;
         std::this_thread::sleep_for(std::chrono::milliseconds(8));
     }
-    std::cout << "reader thread done\n";
+    state.quit = true;
 }
 
 void handle_resize() {
@@ -235,7 +234,6 @@ void handle_resize() {
         prev = state.size;
         std::this_thread::sleep_for(std::chrono::milliseconds(256));
     }
-    std::cout << "resizer thread done\n";
 }
 
 int main() {
@@ -251,16 +249,6 @@ int main() {
         std::cout << "ran into a problem";
         return 1;
     }
-
-    Coord boxcord(state.size.row / 2, state.size.col / 2);
-    tui::string msg = "Press any key to quit.";
-    unsigned msghalf = msg.size() / 2;
-    Coord msgcord(boxcord.row, boxcord.col - msghalf);
-    Box box = {{boxcord.row - 2, boxcord.col - msghalf - 2}, {boxcord.row + 2, boxcord.col + msghalf + 2}};
-
-    draw_box(box, Kind::Bold);
-    tui::cursor::set_position(msgcord.row, msgcord.col);
-    std::cout << msg.italic().magenta().on_black().underline();
 
     resizer.join();
     reader.join();
