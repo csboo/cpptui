@@ -4,6 +4,16 @@
 #include <random>
 #include <utility>
 
+// NOTE: full-screen iteration goes:
+// ```c++
+// auto orig = Coord::origin();
+// auto screen_size = Coord::screen_size();
+// for (auto row = orig.row; row <= screen_size.row; ++row) {
+//     for (auto col = orig.col; col <= screen_size.col; ++col) {
+//         Coord(row, col).print('x');
+//     }
+// }
+// ```
 struct Coord {
     // lines, y axis
     unsigned row = 0;
@@ -39,6 +49,9 @@ struct Coord {
 
     // convert to a pair `{row, col}`
     std::pair<unsigned, unsigned> to_pair() const { return {this->row, this->col}; }
+
+    // first valid `Coord` on screen
+    static Coord origin() { return Coord{1, 1}; }
 
     // get terminal screen size
     static Coord screen_size() {
