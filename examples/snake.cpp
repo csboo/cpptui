@@ -164,8 +164,8 @@ struct App {
     }
 
     bool snake_contains(const Coord& coord, const unsigned& skip = 0) {
-        return std::find_if(std::begin(this->snake) + skip, this->snake.end(),
-                            [&](const Coord& item) { return item == coord; }) != this->snake.end();
+        return std::any_of(this->snake.begin() + skip, this->snake.end(),
+                           [&](const Coord& item) { return item == coord; });
     }
 
     void eat_apple() {
