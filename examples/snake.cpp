@@ -153,7 +153,6 @@ struct App {
     Dir dir = Dir::Right;
     Input input;
     bool quit = false;
-    bool new_input = true;
 
     static Snake default_snake() {
         auto mid = Coord::screen_size() / 2;
@@ -273,7 +272,6 @@ void handle_read() {
     while (!app.quit && app.input != 'q' && app.input != 'Q' && app.input != SpecKey::CtrlC &&
            app.input != SpecKey::CtrlD && app.input != SpecKey::CtrlZ) {
         app.input = Input::read();
-        app.new_input = true;
         std::this_thread::sleep_for(std::chrono::milliseconds(8));
     }
     app.quit = true;
@@ -283,10 +281,6 @@ void handle_read() {
 void run() {
     app.apple.print(APPLE_TEXT);
     do {
-        if (!app.new_input) {
-            continue;
-        }
-
         // get direction
         auto prev_dir = app.dir;
         app.dir = from_input(app.input, prev_dir);
