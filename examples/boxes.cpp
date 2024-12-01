@@ -15,7 +15,7 @@ struct AppState {
     Input input;
     bool quit = false;
     bool new_input = true;
-    Coord size = tui::screen::size();
+    Coord size = Coord::screen_size();
 } state;
 
 // make `x` be good for `counter_box`
@@ -176,9 +176,14 @@ void run() {
     };
 
     unsigned cnt_box_ix = 0;
+    Coord prev_size;
 
     do {
-        if (!state.new_input) {
+        state.size = Coord::screen_size();
+        if (!(prev_size == state.size)) {
+            prev_size = state.size;
+            tui::screen::clear();
+        } else if (!state.new_input) {
             continue; // if there's no new input, don't draw anything
         }
         counter_box({1, 1}, state.size);
@@ -200,11 +205,10 @@ void run() {
             }
         }
 
-        tui::cursor::set_position(msg_start.row, msg_start.col);
-        std::cout << msg.bold().italic().inverted().blue();
+        msg_start.print(msg.bold().italic().inverted().blue());
 
-        tui::cursor::set_position(state.size.row / 3 * 2, state.size.col / 3 * 2);
-        std::cout << tui::string("tui.hpp").blue().link("https://github.com/csboo/cpptui").on_magenta();
+        Coord(state.size.row / 3 * 2, state.size.col / 3 * 2)
+            .print(tui::string("tui.hpp").blue().link("https://github.com/csboo/cpptui").on_magenta());
 
         state.new_input = false;
 
@@ -223,35 +227,15 @@ void handle_read() {
     state.quit = true;
 }
 
-void handle_resize() {
-    Coord prev = state.size;
-    while (!state.quit) {
-        state.size = tui::screen::size();
-        if (prev.col != state.size.col || prev.row != state.size.row) {
-            tui::screen::clear();
-            state.new_input = true;
-        }
-        prev = state.size;
-        std::this_thread::sleep_for(std::chrono::milliseconds(256));
-    }
-}
-
 int main() {
     tui::init();
 
     std::thread reader(handle_read);
-    std::thread resizer(handle_resize);
 
-    try {
-        run();
-    } catch (...) {
-        tui::reset();
-        std::cout << "ran into a problem";
-        return 1;
-    }
+    run();
 
-    resizer.join();
     reader.join();
+
     tui::reset();
 
     return 0;
