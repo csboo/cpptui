@@ -180,7 +180,7 @@ void run() {
 
     do {
         state.size = Coord::screen_size();
-        if (!(prev_size == state.size)) {
+        if (prev_size != state.size) {
             prev_size = state.size;
             tui::screen::clear();
         } else if (!state.new_input) {
