@@ -29,7 +29,7 @@ struct Coord {
     Coord with_row(const unsigned& row) const { return Coord{row, this->col}; }
 
     // operator overloads
-    bool operator!=(const Coord& other) const { return !(this == &other); }
+    bool operator!=(const Coord& other) const { return !(*this == other); }
     bool operator==(const Coord& other) const { return (this->row == other.row && this->col == other.col); }
     bool operator<=(const Coord& other) const { return (this->row <= other.row && this->col <= other.col); }
     Coord operator/(const unsigned& n) const { return Coord{this->row / n, this->col / n}; }
