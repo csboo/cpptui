@@ -9,7 +9,6 @@ Uses macro magic (not intentionally, but it's needed to reduce code size and ove
 
 ## features
 
--   1 header and that's all
 -   minimal
 -   zero dependencies
 -   cross-platform (mostly?)
@@ -23,25 +22,20 @@ Uses macro magic (not intentionally, but it's needed to reduce code size and ove
 -   styles
 -   raw mode
 -   alternate screen
--   custom function for resize handling, NOTE: you should lock stdout, stdin when you use this feature, also, doesn't work on Windows
+-   custom function for resize handling, NOTE: you should probably lock `stdout`, stdin when you use this feature, also, doesn't work on Windows
 
 ### input
 
-a pretty handy header with functions and types to improve reading input from `cin`.
+a pretty handy header with functions and types to improve reading input from `stdin`.
 
 **supported input**:
 
--   basic characters, be it upper or lowercase, special ones like: `['ö', 'ä', 'á', ...]` are safely ignored
 -   basic symbols, such as `['~', ';', '*', ...]`, but not `['$', '€', ...]`
 -   <kbd>Ctrl</kbd>`+alphabetical characters`
 -   arrows
--   <kbd>Backspace</kbd>, <kbd>Tab</kbd>, <kbd>Enter/Return</kbd>
--   <kbd>F[1,2,3,4]</kbd>
-
-> [!IMPORTANT] > **_caveats_**:
->
-> -   can't properly read <kbd>Escape</kbd>: there is a one character input delay, as there are `Escape Sentences` (like Arrows, F keys), which hence the name, start with an <kbd>Escape</kbd>
-> -   under Windows, special keys are very messy
+-   <kbd>Backspace</kbd>, <kbd>(Shift)Tab</kbd>, <kbd>Enter/Return</kbd>, <kbd>Delete</kbd>, <kbd>Page[Up,Down]</kbd>, <kbd>Home,End</kbd>, <kbd>Insert</kbd>,
+-   <kbd>F[1,2,3,4]</kbd> **_NOTE_**: the other F-keys are damn hard to implement, might be done in the future though
+-   basic characters, be it upper or lowercase, special ones like: `['ö', 'ä', 'á', ...]` are safely ignored
 
 ## usage
 
@@ -62,13 +56,12 @@ see [examples](./examples), but basically just
 using namespace tui::input;
 
 int main() {
-    tui::init(false); // alternate buffer, raw mode, no cursor
+    tui::init(false);                       // alternate buffer, raw mode, no cursor
     auto screen_size = tui::screen::size(); // initially set
 
     const tui::string msg = "Hello Bello, TUI!"; // stylable extension of `std::string`
     const tui::string note = "press q or Ctrl+C to quit";
 
-    char ch = 0;                                      // we will read into this from `std::cin`
     Input input;                                      // this will handle special stuff like arrows, ctrl+c, ...
     while (input != SpecKey::CtrlC && input != 'q') { // main loop
         // NOTE: use `.size()` before styling, as it'd be completely crazy after applying styles
@@ -80,8 +73,8 @@ int main() {
         tui::cursor::set_position(screen_size.first / 2 + 1, screen_size.second / 2 - (note.size() / 2));
         std::cout << note.on_rgb(106, 150, 137).rgb(148, 105, 117).italic().dim();
 
-        std::cin.get(ch); // read into a character
-        input.read(ch);   // convert it into an `Input`
+        std::cout.flush();
+        input = Input::read(); // read into an `Input`
     }
 
     tui::reset(); // restore to where we came from

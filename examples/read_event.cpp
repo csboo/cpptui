@@ -17,11 +17,8 @@ bool should_quit(const Input& input) { return input == SpecKey::CtrlC || input =
 
 void read_input() {
     while (!should_quit(shared_input)) {
-        char c = 0;
-        std::cin.get(c);
-
+        shared_input = Input::read();
         std::lock_guard<std::mutex> lock(mtx);
-        shared_input.read(c);
         input_available = true;
         cv.notify_one();
         std::this_thread::sleep_for(std::chrono::milliseconds(8));

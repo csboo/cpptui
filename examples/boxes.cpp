@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cassert>
 #include <chrono>
+#include <cstdint>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -35,7 +36,7 @@ struct AppState {
 } state;
 
 // make `x` be good for `counter_box`
-void count(const unsigned long long& x) {
+void count(const uint64_t& x) {
     unsigned r = 0;
     if (x % 100 == 0) {
         auto print = std::to_string(x / 100);
@@ -135,7 +136,7 @@ void draw_box(Box box, Kind with) {
 }
 
 void handle_keys(std::vector<Box>& boxes, int& cnt_box_ix) {
-    auto cnt_box = &boxes[cnt_box_ix];
+    auto* cnt_box = &boxes[cnt_box_ix];
     if (state.input == 'n' || state.input == SpecKey::Tab) {
         if (cnt_box_ix++ == boxes.size() - 1) {
             cnt_box_ix = 0;
@@ -228,6 +229,7 @@ void run() {
 
         state.new_input = false;
 
+        std::cout.flush();
         // 120fps
         std::this_thread::sleep_for(std::chrono::milliseconds(8));
     }
@@ -235,10 +237,8 @@ void run() {
 }
 
 void handle_read() {
-    char ch;
     while (!state.quit) {
-        std::cin.get(ch);
-        state.input.read(ch);
+        state.input = Input::read();
         state.new_input = true;
         std::this_thread::sleep_for(std::chrono::milliseconds(8));
     }
@@ -254,7 +254,7 @@ void handle_resize() {
             state.new_input = true;
         }
         prev = state.size;
-        std::this_thread::sleep_for(std::chrono::milliseconds(40));
+        std::this_thread::sleep_for(std::chrono::milliseconds(256));
     }
     std::cout << "resizer thread done\n";
 }
