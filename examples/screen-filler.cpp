@@ -10,7 +10,7 @@ struct State {
 } state;
 
 const Coord TOP_LEFT = Coord::origin();
-const tui::string MSG = tui::string(" ");
+const tui::string CH = tui::string(" ");
 
 void read_char() {
     while (state.input != 'q' && state.input != SpecKey::CtrlC) {
@@ -33,7 +33,7 @@ void run() {
 
         for (unsigned row = TOP_LEFT.row; row <= screen_size.row; ++row) {
             for (unsigned col = TOP_LEFT.col; col <= screen_size.col; ++col) {
-                Coord(row, col).print(MSG.on_white());
+                Coord(row, col).print(CH.on_white());
             }
         }
 
@@ -51,26 +51,26 @@ void run() {
         auto mid_ver = screen_size.row / 2 + mod_mid_ver;
         auto mid_mid = Coord(mid_ver, mid_hor);
 
-        TOP_LEFT.print(MSG.on_black());
-        top_right.print(MSG.on_cyan());
+        TOP_LEFT.print(CH.on_black());
+        top_right.print(CH.on_cyan());
 
-        mid_mid.print(MSG.on_green());
+        mid_mid.print(CH.on_green());
 
         if (even_mid_hor) {
-            mid_mid.with_col(mid_hor + 1).print(MSG.on_green());
+            mid_mid.with_col(mid_hor + 1).print(CH.on_green());
         }
         if (even_mid_ver) {
             auto left_lower = mid_mid.with_row(mid_ver + 1);
-            left_lower.print(MSG.on_green());
+            left_lower.print(CH.on_green());
             if (even_mid_hor) {
-                left_lower.with_col(mid_hor + 1).print(MSG.on_green());
+                left_lower.with_col(mid_hor + 1).print(CH.on_green());
             }
         }
 
-        bottom_left.print(MSG.on_magenta());
+        bottom_left.print(CH.on_magenta());
         // std::cout
         //     << tui::string(tui::concat(" [size: (", screen_size.row, ";", screen_size.col, ")]")).on_white().black();
-        bottom_right.print(MSG.on_red());
+        bottom_right.print(CH.on_red());
 
         // NOTE: it's necessary!
         std::cout.flush();
