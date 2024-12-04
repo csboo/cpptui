@@ -1,30 +1,13 @@
+#include "../coords.hpp"
 #include "../tui.hpp"
 #include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <cstdint>
 #include <thread>
-#include <utility>
 #include <vector>
 
 using namespace tui::input;
-
-struct Coord {
-    unsigned row;
-    unsigned col;
-
-    Coord(const unsigned& row, const unsigned& col) : row{row}, col{col} {}
-    // Coord(const Coord& copy) : row{copy.row}, col{copy.col} {}
-    Coord(const std::pair<unsigned, unsigned>& copy) : row{copy.first}, col{copy.second} {}
-
-    bool operator==(const Coord& other) const { return (this->row == other.row && this->col == other.col); }
-    // bool operator!=(const Coord& other) const { return !(this == &other); }
-    // Coord operator=(std::pair<unsigned, unsigned> other) {
-    //     this->row = other.first;
-    //     this->col = other.second;
-    //     return *this;
-    // }
-};
 
 using Box = std::pair<Coord, Coord>;
 
@@ -32,22 +15,25 @@ struct AppState {
     Input input;
     bool quit = false;
     bool new_input = true;
-    Coord size = tui::screen::size();
+    Coord size = Coord::screen_size();
 } state;
 
 // make `x` be good for `counter_box`
-void count(const uint64_t& x) {
+[[nodiscard]]
+std::string count(const uint64_t& x) {
     unsigned r = 0;
+    std::string print;
     if (x % 100 == 0) {
-        auto print = std::to_string(x / 100);
-        std::cout << tui::string(print[0]).on_red().black();
+        print = std::to_string(x / 100);
+        print = tui::string(print[0]).on_red().black();
     } else if (x % 10 == 0) {
-        auto print = std::to_string(x / 10 % 10);
-        std::cout << tui::string(print[0]).on_blue().black();
+        print = std::to_string(x / 10 % 10);
+        print = tui::string(print[0]).on_blue().black();
     } else {
-        auto print = std::to_string(x);
-        std::cout << print.back();
+        print = std::to_string(x);
+        print = print.back();
     }
+    return print;
 }
 
 void counter_box(Coord start, Coord end) {
@@ -57,24 +43,21 @@ void counter_box(Coord start, Coord end) {
     // from top to down
     for (auto row = start.row + 1; row < end.row; ++row) {
         // left row
-        tui::cursor::set_position(row, start.col);
-
-        count(row);
+        start.with_row(row).print(count(row));
         // right row
-        tui::cursor::set_position(row, end.col);
-        count(row);
+        end.with_row(row).print(count(row));
     }
 
     // do columns
     // top left
-    tui::cursor::set_position(start.row, start.col);
+    start.set_cursor();
     for (auto col = start.col; col <= end.col; ++col) {
-        count(col);
+        std::cout << count(col);
     }
     // bottom left
-    tui::cursor::set_position(end.row, start.col);
+    end.with_col(start.col).set_cursor();
     for (auto col = start.col; col <= end.col; ++col) {
-        count(col);
+        std::cout << count(col);
     }
 }
 
@@ -109,25 +92,21 @@ void draw_box(Box box, Kind with) {
     // do rows
     for (auto row = start.row + 1; row < end.row; ++row) {
         // left row
-        tui::cursor::set_position(row, start.col);
-        std::cout << draw[4];
+        start.with_row(row).print(draw[4]);
         // right row
-        tui::cursor::set_position(row, end.col);
-        std::cout << draw[4];
+        end.with_row(row).print(draw[4]);
     }
 
     // do columns
     // top left
-    tui::cursor::set_position(start.row, start.col);
-    std::cout << draw[0];
+    start.print(draw[0]);
     for (auto i = start.col + 1; i < end.col; ++i) {
         std::cout << draw[5];
     }
     // top right
     std::cout << draw[1];
     // bottom left
-    tui::cursor::set_position(end.row, start.col);
-    std::cout << draw[2];
+    end.with_col(start.col).print(draw[2]);
     for (auto i = start.col + 1; i < end.col; ++i) {
         std::cout << draw[5];
     }
@@ -135,7 +114,7 @@ void draw_box(Box box, Kind with) {
     std::cout << draw[3];
 }
 
-void handle_keys(std::vector<Box>& boxes, int& cnt_box_ix) {
+void handle_keys(std::vector<Box>& boxes, unsigned& cnt_box_ix) {
     auto* cnt_box = &boxes[cnt_box_ix];
     if (state.input == 'n' || state.input == SpecKey::Tab) {
         if (cnt_box_ix++ == boxes.size() - 1) {
@@ -143,7 +122,7 @@ void handle_keys(std::vector<Box>& boxes, int& cnt_box_ix) {
         }
     } else if (state.input == 'p' /* || state.input == SpecKey::ShiftTab */) {
         if (cnt_box_ix-- == 0) {
-            cnt_box_ix = boxes.size() - 1;
+            cnt_box_ix = static_cast<int>(boxes.size()) - 1;
         }
     } else if (state.input == 'j' || state.input == Arrow::Down) {
         draw_box(*cnt_box, Kind::Empty);
@@ -196,10 +175,15 @@ void run() {
         },
     };
 
-    auto cnt_box_ix = 0;
+    unsigned cnt_box_ix = 0;
+    Coord prev_size;
 
-    while (state.input != 'q' && state.input != SpecKey::CtrlC) {
-        if (!state.new_input) {
+    do {
+        state.size = Coord::screen_size();
+        if (prev_size != state.size) {
+            prev_size = state.size;
+            tui::screen::clear();
+        } else if (!state.new_input) {
             continue; // if there's no new input, don't draw anything
         }
         counter_box({1, 1}, state.size);
@@ -221,70 +205,37 @@ void run() {
             }
         }
 
-        tui::cursor::set_position(msg_start.row, msg_start.col);
-        std::cout << msg.bold().italic().inverted().blue();
+        msg_start.print(msg.bold().italic().inverted().blue());
 
-        tui::cursor::set_position(state.size.row / 3 * 2, state.size.col / 3 * 2);
-        std::cout << tui::string("tui.hpp").blue().link("https://github.com/csboo/cpptui").on_magenta();
+        Coord(state.size.row / 3 * 2, state.size.col / 3 * 2)
+            .print(tui::string("tui.hpp").blue().link("https://github.com/csboo/cpptui").on_magenta());
 
         state.new_input = false;
 
         std::cout.flush();
         // 120fps
         std::this_thread::sleep_for(std::chrono::milliseconds(8));
-    }
-    state.quit = true;
+    } while (!state.quit);
 }
 
 void handle_read() {
-    while (!state.quit) {
+    while (state.input != 'q' && state.input != SpecKey::CtrlC) {
         state.input = Input::read();
         state.new_input = true;
         std::this_thread::sleep_for(std::chrono::milliseconds(8));
     }
-    std::cout << "reader thread done\n";
-}
-
-void handle_resize() {
-    Coord prev = state.size;
-    while (!state.quit) {
-        state.size = tui::screen::size();
-        if (prev.col != state.size.col || prev.row != state.size.row) {
-            tui::screen::clear();
-            state.new_input = true;
-        }
-        prev = state.size;
-        std::this_thread::sleep_for(std::chrono::milliseconds(256));
-    }
-    std::cout << "resizer thread done\n";
+    state.quit = true;
 }
 
 int main() {
     tui::init();
 
     std::thread reader(handle_read);
-    std::thread resizer(handle_resize);
 
-    try {
-        run();
-    } catch (...) {
-        tui::reset();
-        std::cout << "ran into a problem";
-        return 1;
-    }
+    run();
 
-    Coord boxcord(state.size.row / 2, state.size.col / 2);
-    tui::string msg = "Press any key to quit.";
-    unsigned msghalf = msg.size() / 2;
-    Coord msgcord(boxcord.row, boxcord.col - msghalf);
-    Box box = {{boxcord.row - 2, boxcord.col - msghalf - 2}, {boxcord.row + 2, boxcord.col + msghalf + 2}};
-
-    draw_box(box, Kind::Bold);
-    tui::cursor::set_position(msgcord.row, msgcord.col);
-    std::cout << msg.italic().magenta().on_black().underline();
-
-    resizer.join();
     reader.join();
+
     tui::reset();
 
     return 0;
