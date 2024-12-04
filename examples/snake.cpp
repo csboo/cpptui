@@ -313,7 +313,7 @@ void run() {
         std::cout << tui::text::style::reset_style();
 
         std::cout.flush();
-        auto sleep_mul = (app.dir == Dir::Left || app.dir == Dir::Right) ? 1. : 1.5;
+        auto sleep_mul = (app.dir == Dir::Left || app.dir == Dir::Right) ? 1 : 2;
         auto sleep_dur =
             SLEEP_MS + (10 > app.snake.size() ? -(ADD_MS * 10) + ADD_MS * static_cast<unsigned>(app.snake.size())
                                               : ADD_MS * static_cast<unsigned>(app.snake.size()));
