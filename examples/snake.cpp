@@ -314,9 +314,7 @@ void run() {
 
         std::cout.flush();
         auto sleep_mul = (app.dir == Dir::Left || app.dir == Dir::Right) ? 1 : 2;
-        auto sleep_dur =
-            SLEEP_MS + (10 > app.snake.size() ? -(ADD_MS * 10) + ADD_MS * static_cast<unsigned>(app.snake.size())
-                                              : ADD_MS * static_cast<unsigned>(app.snake.size()));
+        auto sleep_dur = SLEEP_MS + (-(ADD_MS * 10) + ADD_MS * static_cast<unsigned>(app.snake.size()));
         // sleep, if moving vertically: more
         std::this_thread::sleep_for(sleep_dur * sleep_mul);
     } while (!app.quit);
