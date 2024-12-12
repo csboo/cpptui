@@ -22,7 +22,8 @@ Uses macro magic (not intentionally, but it's needed to reduce code size and ove
 -   styles
 -   raw mode
 -   alternate screen
--   custom function for resize handling, NOTE: you should probably lock `stdout`, stdin when you use this feature, also, doesn't work on Windows
+-   performant screen size query
+-   custom function for resize handling, NOTE: you should probably lock `stdout`, stdin when you use this feature, also, **doesn't work on Windows**
 
 ### input
 
@@ -36,6 +37,10 @@ a pretty handy header with functions and types to improve reading input from `st
 -   <kbd>Backspace</kbd>, <kbd>(Shift)Tab</kbd>, <kbd>Enter/Return</kbd>, <kbd>Delete</kbd>, <kbd>Page[Up,Down]</kbd>, <kbd>Home,End</kbd>, <kbd>Insert</kbd>,
 -   <kbd>F[1,2,3,4]</kbd> **_NOTE_**: the other F-keys are damn hard to implement, might be done in the future though
 -   basic characters, be it upper or lowercase, special ones like: `['ö', 'ä', 'á', ...]` are safely ignored
+
+### coordinates
+
+`coords.hpp` provides easy management of coordinates
 
 ## usage
 
