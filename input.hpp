@@ -203,6 +203,7 @@ struct Input {
             char next_byte = get_char();
 
             switch (next_byte) {
+            case 79:
             case 91: {
                 char special = get_char();
                 switch (special) {
@@ -212,6 +213,10 @@ struct Input {
                 case Arrow::Left:
                     input = Input(static_cast<Arrow>(special));
                     break;
+                case SpecKey::F1:
+                case SpecKey::F2:
+                case SpecKey::F3:
+                case SpecKey::F4:
                 case SpecKey::End:
                 case SpecKey::Home:
                 case SpecKey::ShiftTab:
@@ -230,21 +235,7 @@ struct Input {
                 }
                 break;
             }
-            case 79: {
-                // get function key character
-                char f_key = get_char();
-                switch (f_key) {
-                case SpecKey::F1:
-                case SpecKey::F2:
-                case SpecKey::F3:
-                case SpecKey::F4:
-                    input = Input(static_cast<SpecKey>(f_key));
-                    break;
-                default:
-                    break;
-                }
-                break;
-            }
+
             default:
                 input = Input(SpecKey::Esc);
             }
