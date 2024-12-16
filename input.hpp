@@ -193,9 +193,7 @@ struct Input {
 #ifndef _WIN32
             char next_byte = get_char();
 
-            switch (next_byte) {
-            case 79:
-            case 91: {
+            if (next_byte == 79 || next_byte == 91) {
                 char special = get_char();
                 switch (special) {
                 case Arrow::Up:
@@ -221,18 +219,13 @@ struct Input {
                     input = Input(static_cast<SpecKey>(special));
                     break;
                 default:
-                    // ignore_byte = _getch(3);
+                    // ignore_byte = get_char();
                     break;
                 }
                 break;
             }
-
-            default:
-                input = Input(SpecKey::Esc);
-            }
-#else
-            input = Input(SpecKey::Esc);
 #endif
+            input = Input(SpecKey::Esc);
         }
         default:
             break;
