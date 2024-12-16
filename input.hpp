@@ -240,21 +240,17 @@ struct Input {
         char tmp = _getch();
         return tmp;
     }
-    static Input read() {
-        // read raw input
-        return Input::read_helper(Input::read_ch);
-    }
 #else // not windows
     static char read_ch() {
         char tmp = 0;
         ::read(STDIN_FILENO, &tmp, 1);
         return tmp;
     }
+#endif
     static Input read() {
         // read raw input
         return Input::read_helper(Input::read_ch);
     }
-#endif
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Input& inp) {
