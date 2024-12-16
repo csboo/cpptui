@@ -13,14 +13,6 @@
 #include <unistd.h>  // For read(), usleep() on Unix-like systems
 #endif
 
-// Function to set stdin non-blocking on Unix-like systems
-#ifndef _WIN32
-inline void set_non_blocking(bool enable) {
-    int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
-    fcntl(STDIN_FILENO, F_SETFL, enable ? flags | O_NONBLOCK : flags & ~O_NONBLOCK);
-}
-#endif
-
 // sorry for this ugly code, I really feel very bad about it.
 // damn macros, because given `MyEnum::Core` you can't do
 // `cout << MyEnum::Core; assert(cout.string() == "Core"|"MyEnum::Core")`
@@ -199,7 +191,6 @@ struct Input {
             break;
         case SpecKey::Esc: {
 #ifndef _WIN32
-            set_non_blocking(false); // Temporarily make stdin non-blocking
             char next_byte = get_char();
 
             switch (next_byte) {
@@ -239,7 +230,6 @@ struct Input {
             default:
                 input = Input(SpecKey::Esc);
             }
-            set_non_blocking(false); // Temporarily make stdin non-blocking
 #else
             input = Input(SpecKey::Esc);
 #endif
