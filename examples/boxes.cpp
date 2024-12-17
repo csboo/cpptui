@@ -15,7 +15,7 @@ struct AppState {
     Input input;
     bool quit = false;
     bool new_input = true;
-    Coord size = tui::screen::size();
+    Coord size = Coord::screen_size();
 } state;
 
 // make `x` be good for `counter_box`
@@ -176,9 +176,14 @@ void run() {
     };
 
     unsigned cnt_box_ix = 0;
+    Coord prev_size;
 
-    while (state.input != 'q' && state.input != SpecKey::CtrlC) {
-        if (!state.new_input) {
+    do {
+        state.size = Coord::screen_size();
+        if (prev_size != state.size) {
+            prev_size = state.size;
+            tui::screen::clear();
+        } else if (!state.new_input) {
             continue; // if there's no new input, don't draw anything
         }
         counter_box({1, 1}, state.size);
@@ -200,70 +205,37 @@ void run() {
             }
         }
 
-        tui::cursor::set_position(msg_start.row, msg_start.col);
-        std::cout << msg.bold().italic().inverted().blue();
+        msg_start.print(msg.bold().italic().inverted().blue());
 
-        tui::cursor::set_position(state.size.row / 3 * 2, state.size.col / 3 * 2);
-        std::cout << tui::string("tui.hpp").blue().link("https://github.com/csboo/cpptui").on_magenta();
+        Coord(state.size.row / 3 * 2, state.size.col / 3 * 2)
+            .print(tui::string("tui.hpp").blue().link("https://github.com/csboo/cpptui").on_magenta());
 
         state.new_input = false;
 
         std::cout.flush();
         // 120fps
         std::this_thread::sleep_for(std::chrono::milliseconds(8));
-    }
-    state.quit = true;
+    } while (!state.quit);
 }
 
 void handle_read() {
-    while (!state.quit) {
+    while (state.input != 'q' && state.input != SpecKey::CtrlC) {
         state.input = Input::read();
         state.new_input = true;
         std::this_thread::sleep_for(std::chrono::milliseconds(8));
     }
-    std::cout << "reader thread done\n";
-}
-
-void handle_resize() {
-    Coord prev = state.size;
-    while (!state.quit) {
-        state.size = tui::screen::size();
-        if (prev.col != state.size.col || prev.row != state.size.row) {
-            tui::screen::clear();
-            state.new_input = true;
-        }
-        prev = state.size;
-        std::this_thread::sleep_for(std::chrono::milliseconds(256));
-    }
-    std::cout << "resizer thread done\n";
+    state.quit = true;
 }
 
 int main() {
     tui::init();
 
     std::thread reader(handle_read);
-    std::thread resizer(handle_resize);
 
-    try {
-        run();
-    } catch (...) {
-        tui::reset();
-        std::cout << "ran into a problem";
-        return 1;
-    }
+    run();
 
-    Coord boxcord(state.size.row / 2, state.size.col / 2);
-    tui::string msg = "Press any key to quit.";
-    unsigned msghalf = msg.size() / 2;
-    Coord msgcord(boxcord.row, boxcord.col - msghalf);
-    Box box = {{boxcord.row - 2, boxcord.col - msghalf - 2}, {boxcord.row + 2, boxcord.col + msghalf + 2}};
-
-    draw_box(box, Kind::Bold);
-    tui::cursor::set_position(msgcord.row, msgcord.col);
-    std::cout << msg.italic().magenta().on_black().underline();
-
-    resizer.join();
     reader.join();
+
     tui::reset();
 
     return 0;
