@@ -23,7 +23,7 @@ Uses macro magic (not intentionally, but it's needed to reduce code size and ove
 -   raw mode
 -   alternate screen
 -   performant screen size query
--   custom function for resize handling, NOTE: you should probably lock `stdout`, stdin when you use this feature, also, **doesn't work on Windows**
+-   custom function for resize handling, **_NOTE_**: you should probably lock `stdout`, stdin when you use this feature, also, **doesn't work on Windows**
 
 ### input
 
@@ -34,9 +34,11 @@ a pretty handy header with functions and types to improve reading input from `st
 -   basic symbols, such as `['~', ';', '*', ...]`, but not `['$', '€', ...]`
 -   <kbd>Ctrl</kbd>`+alphabetical characters`
 -   arrows
+-   touchpad/mouse scroll
 -   <kbd>Backspace</kbd>, <kbd>(Shift)Tab</kbd>, <kbd>Enter/Return</kbd>, <kbd>Delete</kbd>, <kbd>Page[Up,Down]</kbd>, <kbd>Home,End</kbd>, <kbd>Insert</kbd>,
 -   <kbd>F[1,2,3,4]</kbd> **_NOTE_**: the other F-keys are damn hard to implement, might be done in the future though
--   basic characters, be it upper or lowercase, special ones like: `['ö', 'ä', 'á', ...]` are safely ignored
+-   basic characters, be it upper or lowercase
+-   **_NOTE_**: special ones like: `['ö', 'ä', 'á', ...]` are safely ignored
 
 ### coordinates
 
@@ -94,7 +96,7 @@ int main() {
 
 ## non-goals
 
--   mouse support
+-   full mouse support
 -   huge number of widgets
 -   high level functions
 -   thousands of more features: just what's necessary
