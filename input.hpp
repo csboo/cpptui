@@ -141,7 +141,7 @@ struct Input {
         char ignore_byte = 0;
         auto input = Input(SpecKey::None);
 #ifdef _WIN32
-        if (byte == 0 || byte == 224) {
+        if (byte == 0 || byte == 224 || byte == -32) {
             char next_byte = get_char();
             switch (next_byte) {
             case 59:
@@ -152,12 +152,6 @@ struct Input {
                 return Input(SpecKey::F3);
             case 62:
                 return Input(SpecKey::F4);
-            default:
-                break;
-            }
-        } else if (byte == -32) {
-            char next_byte = get_char();
-            switch (next_byte) {
             case 72:
                 return Input(Arrow::Up);
             case 75:
