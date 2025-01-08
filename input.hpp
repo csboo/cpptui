@@ -13,14 +13,6 @@
 #include <unistd.h>  // For read(), usleep() on Unix-like systems
 #endif
 
-// Function to set stdin non-blocking on Unix-like systems
-#ifndef _WIN32
-inline void set_non_blocking(bool enable) {
-    int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
-    fcntl(STDIN_FILENO, F_SETFL, enable ? flags | O_NONBLOCK : flags & ~O_NONBLOCK);
-}
-#endif
-
 // sorry for this ugly code, I really feel very bad about it.
 // damn macros, because given `MyEnum::Core` you can't do
 // `cout << MyEnum::Core; assert(cout.string() == "Core"|"MyEnum::Core")`
@@ -199,11 +191,9 @@ struct Input {
             break;
         case SpecKey::Esc: {
 #ifndef _WIN32
-            set_non_blocking(false); // Temporarily make stdin non-blocking
             char next_byte = get_char();
 
-            switch (next_byte) {
-            case 91: {
+            if (next_byte == 79 || next_byte == 91) {
                 char special = get_char();
                 switch (special) {
                 case Arrow::Up:
@@ -212,6 +202,10 @@ struct Input {
                 case Arrow::Left:
                     input = Input(static_cast<Arrow>(special));
                     break;
+                case SpecKey::F1:
+                case SpecKey::F2:
+                case SpecKey::F3:
+                case SpecKey::F4:
                 case SpecKey::End:
                 case SpecKey::Home:
                 case SpecKey::ShiftTab:
@@ -225,33 +219,13 @@ struct Input {
                     input = Input(static_cast<SpecKey>(special));
                     break;
                 default:
-                    // ignore_byte = _getch(3);
+                    // ignore_byte = get_char();
                     break;
                 }
                 break;
             }
-            case 79: {
-                // get function key character
-                char f_key = get_char();
-                switch (f_key) {
-                case SpecKey::F1:
-                case SpecKey::F2:
-                case SpecKey::F3:
-                case SpecKey::F4:
-                    input = Input(static_cast<SpecKey>(f_key));
-                    break;
-                default:
-                    break;
-                }
-                break;
-            }
-            default:
-                input = Input(SpecKey::Esc);
-            }
-            set_non_blocking(false); // Temporarily make stdin non-blocking
-#else
-            input = Input(SpecKey::Esc);
 #endif
+            input = Input(SpecKey::Esc);
         }
         default:
             break;
@@ -266,21 +240,17 @@ struct Input {
         char tmp = _getch();
         return tmp;
     }
-    static Input read() {
-        // read raw input
-        return Input::read_helper(Input::read_ch);
-    }
 #else // not windows
     static char read_ch() {
         char tmp = 0;
         ::read(STDIN_FILENO, &tmp, 1);
         return tmp;
     }
+#endif
     static Input read() {
         // read raw input
         return Input::read_helper(Input::read_ch);
     }
-#endif
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Input& inp) {
