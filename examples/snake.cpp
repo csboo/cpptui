@@ -9,8 +9,12 @@
 #include <thread>
 #include <vector>
 
+using namespace tui::input;
+
 // this is how the apple/food will be displayed
 const tui::string APPLE_TEXT = tui::string('@').red().bold();
+// where the score count will be printed
+const Coord SCORE_COUNT = Coord{2, 4};
 // this is the default duration a frame lives for in ms, it's 23.8 fps
 const std::chrono::milliseconds SLEEP_MS = std::chrono::milliseconds(42);
 const std::chrono::milliseconds ADD_MS = std::chrono::milliseconds(1);
@@ -41,8 +45,8 @@ Dir opposite(const Dir& dir) {
     }
     return Dir::None;
 }
-Dir from_char(const char& ch, const Dir& dir = Dir::Right) {
-    switch (ch) {
+Dir from_input(const Input& input, const Dir& dir = Dir::Right) {
+    switch (input.ch) {
     case 'k':
     case 'w':
         return Dir::Up;
@@ -56,31 +60,23 @@ Dir from_char(const char& ch, const Dir& dir = Dir::Right) {
     case 'a':
         return Dir::Left;
     default:
-        // TODO: make arrows usable again
-        if (ch < 0) {
-            std::cin.ignore();
-        } else if (ch == 27 && std::cin.peek() == 91) {
-            std::cin.ignore();
-            auto sus = std::cin.get();
-            switch (sus) {
-            case 65:
-                return Dir::Up;
-            case 66:
-                return Dir::Down;
-            case 67:
-                return Dir::Right;
-            case 68:
-                return Dir::Left;
-            default:
-                std::cin.ignore(3);
-                break;
-            }
-        }
-
-        return dir;
+        break;
     }
-    return Dir::None;
+    switch (input.arrow) {
+    case Arrow::Up:
+        return Dir::Up;
+    case Arrow::Down:
+        return Dir::Down;
+    case Arrow::Right:
+        return Dir::Right;
+    case Arrow::Left:
+        return Dir::Left;
+    default:
+        break;
+    }
+    return dir;
 }
+
 std::string to_string(const Dir& dir) {
     switch (dir) {
     case Dir::Up:
@@ -121,28 +117,6 @@ Dir meets_at(const Coord& lhs, const Coord& rhs, const Coord& screen_size) {
 
 using Snake = std::vector<Coord>;
 
-std::pair<Dir, Dir> neighbours(const Snake& snake, const unsigned& idx, const Coord& screen_size) {
-    // std::ofstream fout("babkelme.log", std::ios::app);
-    auto coord = snake[idx];
-
-    Coord prev{};
-    if (snake.size() > 1) {
-        prev = snake.at(idx - 1);
-        if (prev == coord && snake.size() > 2) {
-            prev = snake.at(idx - 2);
-        }
-    }
-    Coord next{};
-    if (idx < snake.size() - 1) {
-        next = snake.at(idx + 1);
-    }
-
-    Dir first = meets_at(coord, prev, screen_size);
-    Dir second = meets_at(coord, next, screen_size);
-
-    return {first, second};
-}
-
 std::string draw(const std::pair<Dir, Dir>& nb) {
     // rounded:  {"╭", "╮", "╰", "╯", "│", "─"}
 
@@ -172,163 +146,205 @@ std::string draw(const std::pair<Dir, Dir>& nb) {
     return "X";
 }
 
-void handle_movement(const Dir& dir, Coord& coord, const Coord& ss) {
-    switch (dir) {
-    case Dir::Up:
-        // move to the `Down` side of the screen if would go too far `Up`
-        if (coord.row - 1 == 0) {
-            coord.row = ss.row;
-            break;
+struct App {
+    Coord screen_size = Coord::screen_size();
+    Snake snake = App::default_snake();
+    Coord apple = Coord::random(this->screen_size);
+    Dir dir = Dir::Right;
+    Input input;
+    bool quit = false;
+
+    static Snake default_snake() {
+        auto mid = Coord::screen_size() / 2;
+        Snake snake;
+        for (auto i = 0; i < INIT_LEN; ++i) {
+            snake.push_back(mid.with_col(mid.col - i));
         }
-        coord.row--;
-        break;
-    case Dir::Down:
-        // move to the `Up`per side the screen if would go too far `Down`
-        if (coord.row + 1 > ss.row) {
-            coord.row = 1;
-            break;
-        }
-        coord.row++;
-        break;
-    case Dir::Left:
-        // move to the `Right` side the screen if would go too far `Left`
-        if (coord.col - 1 == 0) {
-            coord.col = ss.col;
-            break;
-        }
-        coord.col--;
-        break;
-    case Dir::Right:
-        // move to the `Left` side the screen if would go too far `Right`
-        if (coord.col + 1 > ss.col) {
-            coord.col = 1;
-            break;
-        }
-        coord.col++;
-        break;
-    case Dir::None:
-        break;
-    }
-}
-void move(Snake& snake, const Dir& dir, const Coord& ss) {
-    // delete the last one off the screen by overwriting it with a space
-    snake.back().print(' ');
-    auto old_snake = snake;
-    for (auto i = 1; i < snake.size(); ++i) {
-        snake.at(i) = old_snake.at(i - 1);
+        return snake;
     }
 
-    handle_movement(dir, snake.front(), ss);
-}
+    bool snake_contains(const Coord& coord, const unsigned& skip = 0) {
+        return std::any_of(this->snake.begin() + skip, this->snake.end(),
+                           [&](const Coord& item) { return item == coord; });
+    }
 
-bool snake_contains(const Snake& snake, const Coord& coord, const unsigned& skip = 0) {
-    return std::find_if(std::begin(snake) + skip, snake.end(), [&](const Coord& item) { return item == coord; }) !=
-           snake.end();
-}
+    void eat_apple() {
+        std::vector<Coord> non_snake;
+        for (unsigned i = 1; i < this->screen_size.row; ++i) {
+            for (unsigned j = 1; j < this->screen_size.col; ++j) {
+                if (!this->snake_contains(Coord{i, j})) {
+                    non_snake.emplace_back(i, j);
+                }
+            }
+        }
+        if (non_snake.empty()) {
+            this->quit = true;
+            return;
+        }
+        std::mt19937 mt{std::random_device{}()};
+        std::uniform_int_distribution<unsigned> gen_idx(0, non_snake.size() - 1);
+        unsigned idx = gen_idx(mt);
 
-Dir dir = Dir::Right;
-char ch = 'l';
-void read_character() {
-    while (ch != 'q' && ch != 'Q' && ch != 3 /* C-c */ && ch != 4 /* C-d */ && ch != 26 /* C-z */ && dir != Dir::None) {
-        std::cin.get(ch);
-        // get which direction the snake shall move to, if character is invalid, don't change: use `dir`
-        auto prev_dir = dir;
+        this->apple = non_snake.at(idx);
+        // duplicate the last element of the `snake`, next round it'll be smoothed out.
+        // assert(snake.size() + 1 == snake.previous_size())
+        this->snake.push_back(this->snake.back());
+        SCORE_COUNT.print(tui::string(tui::concat("score: ", this->snake.size() - INIT_LEN)).green().italic());
+        this->apple.print(APPLE_TEXT);
+    }
 
-        dir = from_char(ch, dir);
-        // don't try to break your neck if you may!
-        if (prev_dir == opposite(dir)) {
-            dir = prev_dir;
+    std::pair<Dir, Dir> neighbours(const unsigned& idx) const {
+        // std::ofstream fout("babkelme.log", std::ios::app);
+        auto coord = this->snake[idx];
+
+        Coord prev{};
+        if (this->snake.size() > 1) {
+            prev = this->snake.at(idx - 1);
+            if (prev == coord && this->snake.size() > 2) {
+                prev = this->snake.at(idx - 2);
+            }
+        }
+        Coord next{};
+        if (idx < this->snake.size() - 1) {
+            next = this->snake.at(idx + 1);
+        }
+
+        Dir first = meets_at(coord, prev, this->screen_size);
+        Dir second = meets_at(coord, next, this->screen_size);
+
+        return {first, second};
+    }
+
+    void handle_movement() {
+        auto& head = this->snake.front();
+        switch (this->dir) {
+        case Dir::Up:
+            // move to the `Down` side of the screen if would go too far `Up`
+            if (head.row - 1 == 0) {
+                head.row = this->screen_size.row;
+                break;
+            }
+            head.row--;
+            break;
+        case Dir::Down:
+            // move to the `Up`per side the screen if would go too far `Down`
+            if (head.row + 1 > this->screen_size.row) {
+                head.row = 1;
+                break;
+            }
+            head.row++;
+            break;
+        case Dir::Left:
+            // move to the `Right` side the screen if would go too far `Left`
+            if (head.col - 1 == 0) {
+                head.col = this->screen_size.col;
+                break;
+            }
+            head.col--;
+            break;
+        case Dir::Right:
+            // move to the `Left` side the screen if would go too far `Right`
+            if (head.col + 1 > this->screen_size.col) {
+                head.col = 1;
+                break;
+            }
+            head.col++;
+            break;
+        case Dir::None:
+            break;
         }
     }
-    dir = Dir::None;
+
+    void move_snake() {
+        // delete the last one off the screen by overwriting it with a space
+        this->snake.back().print(' ');
+        auto old_snake = this->snake;
+        for (auto i = 1; i < this->snake.size(); ++i) {
+            this->snake.at(i) = old_snake.at(i - 1);
+        }
+
+        this->handle_movement();
+    }
+
+} app;
+
+void handle_read() {
+    while (!app.quit && app.input != 'q' && app.input != 'Q' && app.input != SpecKey::CtrlC &&
+           app.input != SpecKey::CtrlD && app.input != SpecKey::CtrlZ) {
+        app.input = Input::read();
+        std::this_thread::sleep_for(std::chrono::milliseconds(8));
+    }
+    app.quit = true;
+    std::cout << "reader thread done\n";
 }
 
-unsigned run(const Coord& screen_size) {
-    auto apple = Coord::random(screen_size);
-    apple.print(APPLE_TEXT);
+void run() {
+    app.apple.print(APPLE_TEXT);
+    do {
+        // get direction
+        auto prev_dir = app.dir;
+        app.dir = from_input(app.input, prev_dir);
+        if (prev_dir == opposite(app.dir)) {
+            app.dir = prev_dir;
+        }
 
-    auto mid = screen_size / 2;
-    Snake snake;
-    for (auto i = 0; i < INIT_LEN; ++i) {
-        snake.push_back(mid.with_col(mid.col - i));
-    }
-    auto score = Coord{2, 4};
-    score.print(tui::string(tui::concat("score: ", snake.size() - INIT_LEN)).green().italic());
-
-    while (dir != Dir::None) {
-        // and move it correspondly
-        move(snake, dir, screen_size);
+        // and move snake correspondly
+        app.move_snake();
 
         // die if wanna eat itself
-        if (snake_contains(snake, snake.front(), 1)) {
-            dir = Dir::None;
-            return snake.size();
+        if (app.snake_contains(app.snake.front(), 1)) {
+            app.quit = true;
+            return;
         }
 
         // snake ate apple, we need a new one!
-        if (snake.front() == apple) {
-            std::vector<Coord> non_snake;
-            for (unsigned i = 1; i < screen_size.row; ++i) {
-                for (unsigned j = 1; j < screen_size.col; ++j) {
-                    if (!snake_contains(snake, Coord{i, j})) {
-                        non_snake.emplace_back(i, j);
-                    }
-                }
-            }
-            if (non_snake.empty()) {
-                dir = Dir::None;
-                return snake.size();
-            }
-            std::mt19937 mt{std::random_device{}()};
-            std::uniform_int_distribution<unsigned> gen_idx(0, non_snake.size() - 1);
-            unsigned idx = gen_idx(mt);
-
-            apple = non_snake.at(idx);
-            // duplicate the last element of the `snake`, next round it'll be smoothed out.
-            // assert(snake.size() + 1 == snake.previous_size())
-            snake.push_back(snake.back());
-            score.print(tui::string(tui::concat("score: ", snake.size() - INIT_LEN)).green().italic());
-            apple.print(APPLE_TEXT);
+        if (app.snake.front() == app.apple) {
+            app.eat_apple();
         }
 
+        std::cout << tui::text::color::blue_fg();
         // print non-head parts of snake, but only first 2
-        for (auto i = 1; i < ((snake.size() == 1) ? 1 : 2); ++i) {
-            auto nb = neighbours(snake, i, screen_size);
-            snake[i].print(tui::string(draw(nb)).blue());
+        for (auto i = 1; i < ((app.snake.size() == 1) ? 1 : 2); ++i) {
+            auto nb = app.neighbours(i);
+            app.snake[i].print(draw(nb));
         }
         // print head
-        snake.front().print(tui::string(to_string(dir)).blue());
+        app.snake.front().print(to_string(app.dir));
+        std::cout << tui::text::style::reset_style();
 
         std::cout.flush();
-        auto sleep_mul = (dir == Dir::Left || dir == Dir::Right) ? 1. : 1.5;
-        auto sleep_dur = SLEEP_MS + (10 > snake.size() ? -(ADD_MS * 10) + ADD_MS * static_cast<unsigned>(snake.size())
-                                                       : ADD_MS * static_cast<unsigned>(snake.size()));
+        auto sleep_mul = (app.dir == Dir::Left || app.dir == Dir::Right) ? 1 : 2;
+        auto sleep_dur = SLEEP_MS + (-(ADD_MS * 10) + ADD_MS * static_cast<unsigned>(app.snake.size()));
         // sleep, if moving vertically: more
         std::this_thread::sleep_for(sleep_dur * sleep_mul);
-    }
-    return snake.size() - INIT_LEN;
+    } while (!app.quit);
 }
 
 int main() {
     try {
-        tui::init(false);
-        // we get screen size here, not to mess up cin, cout
-        auto screen_size = Coord::screen_size();
-        std::thread reader_thread(read_character);
-        reader_thread.detach();
+        tui::init();
 
-        auto len = run(screen_size);
+        std::thread reader(handle_read);
+
+        run();
+
+        auto len = app.snake.size() - INIT_LEN;
 
         tui::reset();
-        if (len == screen_size.row * screen_size.col) {
+        if (static_cast<unsigned>(len) == app.screen_size.row * app.screen_size.col) {
             std::cout << "Congrats, you won!\n";
         } else {
-            std::cout << "You died/quit at " << len << "\nPress enter to quit if needed.\n";
+            std::cout << "You died/quit at " << len << "\n";
         }
+        reader.join();
+
     } catch (...) {
         tui::reset();
         std::cerr << "unknown error occured\n";
+        return 1;
     }
+
+    tui::reset();
 
     return 0;
 }
