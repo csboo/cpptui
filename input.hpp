@@ -126,6 +126,14 @@ struct Input {
     friend std::ostream& operator<<(std::ostream& os, const Input& inp);
 
   private:
+    // Function to set stdin non-blocking on Unix-like systems
+#ifndef _WIN32
+    static void set_non_blocking(bool enable) {
+        int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
+        fcntl(STDIN_FILENO, F_SETFL, enable ? flags | O_NONBLOCK : flags & ~O_NONBLOCK);
+    }
+#endif
+
     using reader_fn = char (*)();
     static Input read_helper(reader_fn get_char) {
         char byte = get_char();
@@ -185,6 +193,7 @@ struct Input {
             break;
         case SpecKey::Esc: {
 #ifndef _WIN32
+            set_non_blocking(true);
             char next_byte = get_char();
 
             if (next_byte == 79 || next_byte == 91) {
@@ -216,8 +225,11 @@ struct Input {
                     // ignore_byte = get_char();
                     break;
                 }
-                break;
+            } else {
+                input = Input(SpecKey::Esc);
             }
+            set_non_blocking(false);
+            break;
 #endif
             input = Input(SpecKey::Esc);
         }
