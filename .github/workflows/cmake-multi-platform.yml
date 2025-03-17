@@ -26,24 +26,6 @@ jobs:
         os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, windows-latest]
         build_type: [Release]
         cpp_compiler: [g++, clang++, cl]
-        # include:
-        #   # windows
-        #   - os: windows-latest
-        #     cpp_compiler: cl
-        #   # ubuntu
-        #   - os: ubuntu-latest
-        #     cpp_compiler: g++
-        #   - os: ubuntu-latest
-        #     cpp_compiler: clang++
-        #   - os: ubuntu-24.04-arm
-        #     cpp_compiler: g++
-        #   - os: ubuntu-24.04-arm
-        #     cpp_compiler: clang++
-        #   # macos
-        #   - os: macos-latest
-        #     cpp_compiler: g++
-        #   - os: macos-latest
-        #     cpp_compiler: clang++
         exclude:
           # windows
           - os: windows-latest
