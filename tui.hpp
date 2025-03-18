@@ -360,7 +360,7 @@ namespace tui {
 
             // r, g, b values have to be valid:  [0;255]
             inline std::string rgb(unsigned r, unsigned g, unsigned b, bool fg) {
-                assert(r >= 0 && r <= 255 && g >= 0 && g <= 255 && b >= 0 && b <= 255);
+                assert(r <= 255 && g <= 255 && b <= 255);
                 return concat(CSI, (fg ? '3' : '4'), "8;2;", r, ';', g, ';', b, 'm');
             }
             inline std::string rgb(unsigned r, unsigned g, unsigned b, bool fg, const std::string& text) {
