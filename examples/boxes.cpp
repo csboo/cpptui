@@ -163,8 +163,8 @@ static void handle_keys(std::vector<Box>& boxes, unsigned& cnt_box_ix) {
 static void run() {
     const auto msg = tui::string("Szia Csongi!");
     auto msg_coord = [msg](bool left) {
-        return Coord{state.size.row / 2 + 1,
-                     static_cast<unsigned int>((state.size.col / 2) + (left ? -msg.size() : +msg.size()) / 2)};
+        return Coord{(state.size.row / 2) + 1,
+                     static_cast<unsigned int>((state.size.col / 2) + ((left ? -msg.size() : +msg.size()) / 2))};
     };
 
     std::vector<Box> boxes = {
