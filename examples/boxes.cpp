@@ -11,7 +11,7 @@ using namespace tui::input;
 
 using Box = std::pair<Coord, Coord>;
 
-struct AppState {
+static struct AppState {
     Input input;
     bool quit = false;
     bool new_input = true;
@@ -20,8 +20,9 @@ struct AppState {
 
 // make `x` be good for `counter_box`
 [[nodiscard]]
-std::string count(const uint64_t& x) {
     unsigned r = 0;
+
+static std::string count(const uint64_t& x) {
     std::string print;
     if (x % 100 == 0) {
         print = std::to_string(x / 100);
@@ -36,7 +37,7 @@ std::string count(const uint64_t& x) {
     return print;
 }
 
-void counter_box(Coord start, Coord end) {
+static void counter_box(Coord start, Coord end) {
     assert(start.row <= end.row && start.col <= end.col);
 
     // do rows
@@ -82,7 +83,7 @@ const std::vector<std::vector<std::string>> KINDS = {{{" ", " ", " ", " ", " ", 
 // |                              |
 // |                              |
 // end.row ---------------- end.col
-void draw_box(Box box, Kind with) {
+static void draw_box(Box box, Kind with) {
     auto start = box.first;
     auto end = box.second;
     assert(start.row <= end.row && start.col <= end.col);
@@ -114,7 +115,7 @@ void draw_box(Box box, Kind with) {
     std::cout << draw[3];
 }
 
-void handle_keys(std::vector<Box>& boxes, unsigned& cnt_box_ix) {
+static void handle_keys(std::vector<Box>& boxes, unsigned& cnt_box_ix) {
     auto* cnt_box = &boxes[cnt_box_ix];
     if (state.input == 'n' || state.input == SpecKey::Tab) {
         if (cnt_box_ix++ == boxes.size() - 1) {
@@ -159,7 +160,7 @@ void handle_keys(std::vector<Box>& boxes, unsigned& cnt_box_ix) {
         boxes.erase(boxes.begin() + cnt_box_ix);
     }
 }
-void run() {
+static void run() {
     const auto msg = tui::string("Szia Csongi!");
     auto msg_coord = [msg](bool left) {
         return Coord{state.size.row / 2 + 1,
@@ -218,7 +219,7 @@ void run() {
     } while (!state.quit);
 }
 
-void handle_read() {
+static void handle_read() {
     while (state.input != 'q' && state.input != SpecKey::CtrlC) {
         state.input = Input::read();
         state.new_input = true;
