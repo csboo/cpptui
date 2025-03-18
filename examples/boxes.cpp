@@ -19,7 +19,6 @@ static struct AppState {
 } state;
 
 // make `x` be good for `counter_box`
-[[nodiscard]]
 
 static std::string count(const uint64_t& x) {
     // unsigned r = 0;
