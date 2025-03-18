@@ -1,6 +1,8 @@
 // tui.hpp
 #pragma once
 
+#include <cstdint>
+#include <sys/types.h>
 #ifdef _WIN32 // windows
 
 #include <wchar.h>
@@ -249,7 +251,7 @@ namespace tui {
 
     namespace text {
         namespace style {
-            enum Style {
+            enum class Style : std::uint8_t {
                 reset = 0,
                 bold = 1,
                 dim = 2,
@@ -265,11 +267,13 @@ namespace tui {
 
 // generate for cout << STYLE_style(); eg.: cout << bold_style();
 #define stylize(STYLE)                                                                                                 \
-    inline std::string STYLE##_style() { return style(STYLE); }
+    inline std::string STYLE##_style() { return style(Style::STYLE); }
 // generate for cout << STYLE_style(text); eg.: cout << bold_style(text);
 #define stylize_text(STYLE)                                                                                            \
-    inline std::string STYLE##_style(const std::string& text) { return concat(style(STYLE), text, reset_style()); }    \
-    inline std::string STYLE##_style(const char* text) { return concat(style(STYLE), text, reset_style()); }
+    inline std::string STYLE##_style(const std::string& text) {                                                        \
+        return concat(style(Style::STYLE), text, reset_style());                                                       \
+    }                                                                                                                  \
+    inline std::string STYLE##_style(const char* text) { return concat(style(Style::STYLE), text, reset_style()); }
 // generate all
 #define make_stylizer(STYLE) stylize(STYLE) stylize_text(STYLE)
 
@@ -302,7 +306,7 @@ namespace tui {
         } // namespace style
 
         namespace color {
-            enum Color {
+            enum class Color : std::uint8_t {
                 black = 0,
                 red,
                 green,
@@ -321,22 +325,22 @@ namespace tui {
 
 // generate for cout << COLOR_{fg, bg}();
 #define colorize(COLOR)                                                                                                \
-    inline std::string COLOR##_fg() { return colorizer(COLOR, true); }                                                 \
-    inline std::string COLOR##_bg() { return colorizer(COLOR, false); }
+    inline std::string COLOR##_fg() { return colorizer(Color::COLOR, true); }                                                 \
+    inline std::string COLOR##_bg() { return colorizer(Color::COLOR, false); }
 
 // generate for cout << COLOR_{fg, bg}(text);
 #define colorize_text(COLOR)                                                                                           \
     inline std::string COLOR##_fg(const std::string& text) {                                                           \
-        return concat(colorizer(COLOR, true), text, style::reset_style());                                             \
+        return concat(colorizer(Color::COLOR, true), text, style::reset_style());                                             \
     }                                                                                                                  \
     inline std::string COLOR##_fg(const char* text) {                                                                  \
-        return concat(colorizer(COLOR, true), text, style::reset_style());                                             \
+        return concat(colorizer(Color::COLOR, true), text, style::reset_style());                                             \
     }                                                                                                                  \
     inline std::string COLOR##_bg(const std::string& text) {                                                           \
-        return concat(colorizer(COLOR, false), text, style::reset_style());                                            \
+        return concat(colorizer(Color::COLOR, false), text, style::reset_style());                                            \
     }                                                                                                                  \
     inline std::string COLOR##_bg(const char* text) {                                                                  \
-        return concat(colorizer(COLOR, false), text, style::reset_style());                                            \
+        return concat(colorizer(Color::COLOR, false), text, style::reset_style());                                            \
     }
 
 // generate all
