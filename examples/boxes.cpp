@@ -20,9 +20,9 @@ static struct AppState {
 
 // make `x` be good for `counter_box`
 [[nodiscard]]
-    unsigned r = 0;
 
 static std::string count(const uint64_t& x) {
+    // unsigned r = 0;
     std::string print;
     if (x % 100 == 0) {
         print = std::to_string(x / 100);
