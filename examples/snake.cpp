@@ -102,16 +102,16 @@ static Dir meets_at(const Coord& lhs, const Coord& rhs, const Coord& screen_size
     // we set both row and col to x-1 as it's needed :D
     auto teleport = Coord{screen_size.row - 1, screen_size.col - 1};
 
-    if (row_diff == 1 || teleport.row == -row_diff) {
+    if (row_diff == 1 || static_cast<int>(teleport.row) == -row_diff) {
         return Dir::Up;
     }
-    if (row_diff == -1 || teleport.row == row_diff) {
+    if (row_diff == -1 || static_cast<int>(teleport.row) == row_diff) {
         return Dir::Down;
     }
-    if (col_diff == 1 || teleport.col == -col_diff) {
+    if (col_diff == 1 || static_cast<int>(teleport.col) == -col_diff) {
         return Dir::Left;
     }
-    if (col_diff == -1 || teleport.col == col_diff) {
+    if (col_diff == -1 || static_cast<int>(teleport.col) == col_diff) {
         return Dir::Right;
     }
     return Dir::None;
@@ -159,7 +159,7 @@ static struct App {
     static Snake default_snake() {
         auto mid = Coord::screen_size() / 2;
         Snake snake;
-        for (auto i = 0; i < INIT_LEN; ++i) {
+        for (auto i = 0; i < static_cast<int>(INIT_LEN); ++i) {
             snake.push_back(mid.with_col(mid.col - i));
         }
         return snake;
