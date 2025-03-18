@@ -25,7 +25,7 @@ const std::chrono::milliseconds ADD_MS = std::chrono::milliseconds(1);
 const unsigned INIT_LEN = 5;
 
 // direction
-enum Dir {
+enum class Dir : std::uint8_t {
     Up = 0,
     Down,
     Left,
@@ -261,7 +261,7 @@ static struct App {
         // delete the last one off the screen by overwriting it with a space
         this->snake.back().print(' ');
         auto old_snake = this->snake;
-        for (auto i = 1; i < this->snake.size(); ++i) {
+        for (size_t i = 1; i < this->snake.size(); ++i) {
             this->snake.at(i) = old_snake.at(i - 1);
         }
 
