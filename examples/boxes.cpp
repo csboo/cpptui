@@ -62,11 +62,11 @@ static void counter_box(Coord start, Coord end) {
     }
 }
 
-enum Kind {
-    Empty,
-    Basic,
-    Bold,
-    Rounded,
+enum class Kind : std::uint8_t{
+    Empty = 0,
+    Basic = 1,
+    Bold = 2,
+    Rounded = 3,
 };
 
 const std::vector<std::vector<std::string>> KINDS = {{{" ", " ", " ", " ", " ", " "}},
