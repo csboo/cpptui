@@ -227,7 +227,7 @@ namespace tui {
 
             return {rows, columns};
 #else
-            struct winsize ws {};
+            struct winsize ws{};
             int fd = 0;
 
             // open the controlling terminal.
@@ -425,7 +425,7 @@ namespace tui {
         // TODO: make it work, or at least try to
 #else
         // register the signal handler for SIGWINCH
-        struct sigaction sa {};
+        struct sigaction sa{};
         sa.sa_handler = handle_resize;
         sa.sa_flags = SA_RESTART; // restart functions if interrupted by handler
         sigaction(SIGWINCH, &sa, nullptr);
