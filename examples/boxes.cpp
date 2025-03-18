@@ -88,7 +88,7 @@ static void draw_box(Box box, Kind with) {
     auto end = box.second;
     assert(start.row <= end.row && start.col <= end.col);
 
-    auto draw = KINDS[with];
+    const auto& draw = KINDS.at(static_cast<size_t>(with));
 
     // do rows
     for (auto row = start.row + 1; row < end.row; ++row) {
