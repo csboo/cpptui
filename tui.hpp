@@ -44,7 +44,7 @@ namespace tui {
 #define csi_fn(name, ...)                                                                                              \
     inline void name() { csi(__VA_ARGS__) }
 
-// ANSII Escape Sequnce
+// ANSII Escape Sequence
 #define esc(...) std::cout << concat("\x1B", __VA_ARGS__);
 // function using ANSII Escape Sequence
 #define esc_fn(name, ...)                                                                                              \

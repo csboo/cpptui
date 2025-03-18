@@ -342,7 +342,7 @@ int main() {
 
     } catch (...) {
         tui::reset();
-        std::cerr << "unknown error occured\n";
+        std::cerr << "unknown error occurred\n";
         return 1;
     }
 
