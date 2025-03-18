@@ -47,8 +47,8 @@ static void run() {
         auto mod_mid_ver = screen_size.row % 2;
         auto even_mid_ver = mod_mid_ver == 0;
 
-        auto mid_hor = screen_size.col / 2 + mod_mid_hor;
-        auto mid_ver = screen_size.row / 2 + mod_mid_ver;
+        auto mid_hor = (screen_size.col / 2) + mod_mid_hor;
+        auto mid_ver = (screen_size.row / 2) + mod_mid_ver;
         auto mid_mid = Coord(mid_ver, mid_hor);
 
         TOP_LEFT.print(CH.on_black());
