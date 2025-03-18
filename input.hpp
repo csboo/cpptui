@@ -139,7 +139,6 @@ struct Input {
     static Input read_helper(reader_fn get_char) {
         char byte = get_char();
 
-        char ignore_byte = 0;
         auto input = Input(SpecKey::None);
 #ifdef _WIN32
         if (byte == 0 || byte == 224 || byte == -32) {
@@ -179,7 +178,7 @@ struct Input {
         }
 #else
         if (byte < 0) {
-            ignore_byte = get_char();
+            get_char(); // ignore
         }
 #endif
         if (byte >= 32 && byte <= 126) { // <char>
@@ -215,11 +214,11 @@ struct Input {
                 case 90:
                     input = Input(static_cast<SpecKey>(special));
                     break;
-                    ignore_byte = get_char(); // ~
                 case 50:
                 case 51:
                 case 53:
                 case 54:
+                    get_char(); // ignore
                     input = Input(static_cast<SpecKey>(special));
                     break;
                 default:
