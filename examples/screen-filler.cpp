@@ -4,7 +4,7 @@
 
 using namespace tui::input;
 
-struct State {
+static struct State {
     Input input;
     bool quit = false;
 } state;
@@ -12,7 +12,7 @@ struct State {
 const Coord TOP_LEFT = Coord::origin();
 const tui::string CH = tui::string(" ");
 
-void read_char() {
+static void read_char() {
     while (state.input != 'q' && state.input != SpecKey::CtrlC) {
         state.input = Input::read();
         std::this_thread::sleep_for(std::chrono::milliseconds(8));
@@ -20,7 +20,7 @@ void read_char() {
     state.quit = true;
 }
 
-void run() {
+static void run() {
     auto screen_size = Coord();
     auto prev_screen_size = screen_size;
 
