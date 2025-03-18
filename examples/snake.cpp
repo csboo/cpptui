@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <chrono>
 #include <iostream>
-#include <limits>
+// #include <limits> // needed if MAX_MS is used
 #include <random>
 #include <string>
 #include <thread>
@@ -18,7 +18,7 @@ const Coord SCORE_COUNT = Coord{2, 4};
 // this is the default duration a frame lives for in ms, it's 23.8 fps
 const std::chrono::milliseconds SLEEP_MS = std::chrono::milliseconds(42);
 const std::chrono::milliseconds ADD_MS = std::chrono::milliseconds(1);
-const std::chrono::milliseconds MAX_MS = std::chrono::milliseconds(std::numeric_limits<unsigned>::infinity());
+// const std::chrono::milliseconds MAX_MS = std::chrono::milliseconds(std::numeric_limits<unsigned>::infinity());
 // initial size/lenght of the snake: at the game start
 const unsigned INIT_LEN = 5;
 
