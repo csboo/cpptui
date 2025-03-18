@@ -218,7 +218,6 @@ struct Input {
                 case 51:
                 case 53:
                 case 54:
-                    get_char(); // ignore
                     input = Input(static_cast<SpecKey>(special));
                     break;
                 default:
