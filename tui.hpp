@@ -267,13 +267,15 @@ namespace tui {
 
 // generate for cout << STYLE_style(); eg.: cout << bold_style();
 #define stylize(STYLE)                                                                                                 \
-    inline std::string STYLE##_style() { return style(Style::STYLE); }
+    static inline std::string STYLE##_style() { return style(Style::STYLE); }
 // generate for cout << STYLE_style(text); eg.: cout << bold_style(text);
 #define stylize_text(STYLE)                                                                                            \
-    inline std::string STYLE##_style(const std::string& text) {                                                        \
+    static inline std::string STYLE##_style(const std::string& text) {                                                 \
         return concat(style(Style::STYLE), text, reset_style());                                                       \
     }                                                                                                                  \
-    inline std::string STYLE##_style(const char* text) { return concat(style(Style::STYLE), text, reset_style()); }
+    static inline std::string STYLE##_style(const char* text) {                                                        \
+        return concat(style(Style::STYLE), text, reset_style());                                                       \
+    }
 // generate all
 #define make_stylizer(STYLE) stylize(STYLE) stylize_text(STYLE)
 
@@ -325,22 +327,22 @@ namespace tui {
 
 // generate for cout << COLOR_{fg, bg}();
 #define colorize(COLOR)                                                                                                \
-    inline std::string COLOR##_fg() { return colorizer(Color::COLOR, true); }                                                 \
-    inline std::string COLOR##_bg() { return colorizer(Color::COLOR, false); }
+    static inline std::string COLOR##_fg() { return colorizer(Color::COLOR, true); }                                   \
+    static inline std::string COLOR##_bg() { return colorizer(Color::COLOR, false); }
 
 // generate for cout << COLOR_{fg, bg}(text);
 #define colorize_text(COLOR)                                                                                           \
-    inline std::string COLOR##_fg(const std::string& text) {                                                           \
-        return concat(colorizer(Color::COLOR, true), text, style::reset_style());                                             \
+    static inline std::string COLOR##_fg(const std::string& text) {                                                    \
+        return concat(colorizer(Color::COLOR, true), text, style::reset_style());                                      \
     }                                                                                                                  \
-    inline std::string COLOR##_fg(const char* text) {                                                                  \
-        return concat(colorizer(Color::COLOR, true), text, style::reset_style());                                             \
+    static inline std::string COLOR##_fg(const char* text) {                                                           \
+        return concat(colorizer(Color::COLOR, true), text, style::reset_style());                                      \
     }                                                                                                                  \
-    inline std::string COLOR##_bg(const std::string& text) {                                                           \
-        return concat(colorizer(Color::COLOR, false), text, style::reset_style());                                            \
+    static inline std::string COLOR##_bg(const std::string& text) {                                                    \
+        return concat(colorizer(Color::COLOR, false), text, style::reset_style());                                     \
     }                                                                                                                  \
-    inline std::string COLOR##_bg(const char* text) {                                                                  \
-        return concat(colorizer(Color::COLOR, false), text, style::reset_style());                                            \
+    static inline std::string COLOR##_bg(const char* text) {                                                           \
+        return concat(colorizer(Color::COLOR, false), text, style::reset_style());                                     \
     }
 
 // generate all
@@ -408,11 +410,9 @@ namespace tui {
         make_color(basic);
 #undef make_color
 
-        inline string link(const char* link) { return text::style::link(link, *this); }
-        inline string rgb(unsigned r, unsigned g, unsigned b) const { return text::color::rgb(r, g, b, true, *this); }
-        inline string on_rgb(unsigned r, unsigned g, unsigned b) const {
-            return text::color::rgb(r, g, b, false, *this);
-        }
+        string link(const char* link) { return text::style::link(link, *this); }
+        string rgb(unsigned r, unsigned g, unsigned b) const { return text::color::rgb(r, g, b, true, *this); }
+        string on_rgb(unsigned r, unsigned g, unsigned b) const { return text::color::rgb(r, g, b, false, *this); }
     };
 
     // void handle_resize(int /*sig*/) { screen::clear(); }
