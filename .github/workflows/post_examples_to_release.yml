@@ -1,10 +1,7 @@
-# This starter workflow is for a CMake project running on multiple platforms. There is a different starter workflow if you just want a single platform.
-# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
-name: CMake on multiple platforms
+name: Post examples to releases
 
 on:
-  push:
-    branches: ["main"]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -73,3 +70,25 @@ jobs:
             !${{ steps.strings.outputs.build-output-dir }}/*.*
             !${{ steps.strings.outputs.build-output-dir }}/*Makefile
             ${{ steps.strings.outputs.build-output-dir }}/Release/*
+
+    - name: Download examples
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+
+    - name: Print files
+      run: |
+        ls -AR artifacts/
+
+    - name: Create GitHub Release
+      id: create_release
+
+      uses: softprops/action-gh-release@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+      with:
+        files: |
+          artifacts/*
+          artifacts/cpptui*/*
+
