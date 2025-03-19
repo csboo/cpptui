@@ -447,7 +447,4 @@ namespace tui {
         tui::cursor::visible(true);
         tui::disable_raw_mode();
     }
-    namespace input {
-#include "input.hpp"
-    } // namespace input
 } // namespace tui

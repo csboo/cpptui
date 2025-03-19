@@ -1,8 +1,7 @@
 #include "../coords.hpp"
+#include "../input.hpp"
 #include "../tui.hpp"
 #include <thread>
-
-using namespace tui::input;
 
 static struct State {
     Input input;

@@ -1,4 +1,5 @@
 #include "../coords.hpp"
+#include "../input.hpp"
 #include "../tui.hpp"
 #include <algorithm>
 #include <chrono>
@@ -10,8 +11,6 @@
 #include <string>
 #include <thread>
 #include <vector>
-
-using namespace tui::input;
 
 // this is how the apple/food will be displayed
 const tui::string APPLE_TEXT = tui::string('@').red().bold();

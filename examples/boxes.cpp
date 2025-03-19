@@ -1,4 +1,5 @@
 #include "../coords.hpp"
+#include "../input.hpp"
 #include "../tui.hpp"
 #include <algorithm>
 #include <cassert>
@@ -6,8 +7,6 @@
 #include <cstdint>
 #include <thread>
 #include <vector>
-
-using namespace tui::input;
 
 using Box = std::pair<Coord, Coord>;
 
@@ -60,7 +59,7 @@ static void counter_box(Coord start, Coord end) {
     }
 }
 
-enum class Kind : std::uint8_t{
+enum class Kind : std::uint8_t {
     Empty = 0,
     Basic = 1,
     Bold = 2,
