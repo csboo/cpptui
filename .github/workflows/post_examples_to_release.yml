@@ -70,7 +70,10 @@ jobs:
             !${{ steps.strings.outputs.build-output-dir }}/*.*
             !${{ steps.strings.outputs.build-output-dir }}/*Makefile
             ${{ steps.strings.outputs.build-output-dir }}/Release/*
-
+  post:
+    runs-on: ubuntu-latest
+    needs: ["build"]
+    steps:
     - name: Download examples
       uses: actions/download-artifact@v4
       with:
@@ -81,6 +84,18 @@ jobs:
       run: |
         ls -AR artifacts/
 
+    - name: Zip platform artifacts
+      run: |
+        cd artifacts
+        for dir in */; do
+          if [ -d "$dir" ]; then
+            platform_name=$(basename "$dir")
+            zip_name="${platform_name%.*}.zip"
+            zip -r "$zip_name" "$dir"
+            echo "Created $zip_name"
+          fi
+        done
+
     - name: Create GitHub Release
       id: create_release
 
@@ -90,5 +105,4 @@ jobs:
       with:
         files: |
           artifacts/*
-          artifacts/cpptui*/*
 
