@@ -1,15 +1,16 @@
 #include "../coords.hpp"
+#include "../input.hpp"
 #include "../tui.hpp"
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <iostream>
-#include <limits>
+// #include <limits> // needed if MAX_MS is used
 #include <random>
 #include <string>
 #include <thread>
 #include <vector>
-
-using namespace tui::input;
 
 // this is how the apple/food will be displayed
 const tui::string APPLE_TEXT = tui::string('@').red().bold();
@@ -18,19 +19,19 @@ const Coord SCORE_COUNT = Coord{2, 4};
 // this is the default duration a frame lives for in ms, it's 23.8 fps
 const std::chrono::milliseconds SLEEP_MS = std::chrono::milliseconds(42);
 const std::chrono::milliseconds ADD_MS = std::chrono::milliseconds(1);
-const std::chrono::milliseconds MAX_MS = std::chrono::milliseconds(std::numeric_limits<unsigned>::infinity());
+// const std::chrono::milliseconds MAX_MS = std::chrono::milliseconds(std::numeric_limits<unsigned>::infinity());
 // initial size/lenght of the snake: at the game start
 const unsigned INIT_LEN = 5;
 
 // direction
-enum Dir {
+enum class Dir : std::uint8_t {
     Up = 0,
     Down,
     Left,
     Right,
     None,
 };
-Dir opposite(const Dir& dir) {
+static Dir opposite(const Dir& dir) {
     switch (dir) {
     case Dir::Up:
         return Dir::Down;
@@ -45,7 +46,7 @@ Dir opposite(const Dir& dir) {
     }
     return Dir::None;
 }
-Dir from_input(const Input& input, const Dir& dir = Dir::Right) {
+static Dir from_input(const Input& input, const Dir& dir = Dir::Right) {
     switch (input.ch) {
     case 'k':
     case 'w':
@@ -77,7 +78,7 @@ Dir from_input(const Input& input, const Dir& dir = Dir::Right) {
     return dir;
 }
 
-std::string to_string(const Dir& dir) {
+static std::string to_string(const Dir& dir) {
     switch (dir) {
     case Dir::Up:
         return "↑"; // alt: ^
@@ -93,23 +94,23 @@ std::string to_string(const Dir& dir) {
     return "X";
 }
 
-Dir meets_at(const Coord& lhs, const Coord& rhs, const Coord& screen_size) {
+static Dir meets_at(const Coord& lhs, const Coord& rhs, const Coord& screen_size) {
     int row_diff = static_cast<int>(lhs.row) - static_cast<int>(rhs.row);
     int col_diff = static_cast<int>(lhs.col) - static_cast<int>(rhs.col);
 
     // we set both row and col to x-1 as it's needed :D
     auto teleport = Coord{screen_size.row - 1, screen_size.col - 1};
 
-    if (row_diff == 1 || teleport.row == -row_diff) {
+    if (row_diff == 1 || static_cast<int>(teleport.row) == -row_diff) {
         return Dir::Up;
     }
-    if (row_diff == -1 || teleport.row == row_diff) {
+    if (row_diff == -1 || static_cast<int>(teleport.row) == row_diff) {
         return Dir::Down;
     }
-    if (col_diff == 1 || teleport.col == -col_diff) {
+    if (col_diff == 1 || static_cast<int>(teleport.col) == -col_diff) {
         return Dir::Left;
     }
-    if (col_diff == -1 || teleport.col == col_diff) {
+    if (col_diff == -1 || static_cast<int>(teleport.col) == col_diff) {
         return Dir::Right;
     }
     return Dir::None;
@@ -117,7 +118,7 @@ Dir meets_at(const Coord& lhs, const Coord& rhs, const Coord& screen_size) {
 
 using Snake = std::vector<Coord>;
 
-std::string draw(const std::pair<Dir, Dir>& nb) {
+static std::string draw(const std::pair<Dir, Dir>& nb) {
     // rounded:  {"╭", "╮", "╰", "╯", "│", "─"}
 
     // this is where in Rust we'd use `match` and be happy
@@ -146,7 +147,7 @@ std::string draw(const std::pair<Dir, Dir>& nb) {
     return "X";
 }
 
-struct App {
+static struct App {
     Coord screen_size = Coord::screen_size();
     Snake snake = App::default_snake();
     Coord apple = Coord::random(this->screen_size);
@@ -157,7 +158,7 @@ struct App {
     static Snake default_snake() {
         auto mid = Coord::screen_size() / 2;
         Snake snake;
-        for (auto i = 0; i < INIT_LEN; ++i) {
+        for (auto i = 0; i < static_cast<int>(INIT_LEN); ++i) {
             snake.push_back(mid.with_col(mid.col - i));
         }
         return snake;
@@ -259,7 +260,7 @@ struct App {
         // delete the last one off the screen by overwriting it with a space
         this->snake.back().print(' ');
         auto old_snake = this->snake;
-        for (auto i = 1; i < this->snake.size(); ++i) {
+        for (size_t i = 1; i < this->snake.size(); ++i) {
             this->snake.at(i) = old_snake.at(i - 1);
         }
 
@@ -268,7 +269,7 @@ struct App {
 
 } app;
 
-void handle_read() {
+static void handle_read() {
     while (!app.quit && app.input != 'q' && app.input != 'Q' && app.input != SpecKey::CtrlC &&
            app.input != SpecKey::CtrlD && app.input != SpecKey::CtrlZ) {
         app.input = Input::read();
@@ -278,7 +279,7 @@ void handle_read() {
     std::cout << "reader thread done\n";
 }
 
-void run() {
+static void run() {
     app.apple.print(APPLE_TEXT);
     do {
         // get direction

@@ -1,9 +1,8 @@
 #include "../tui.hpp"
-
-using namespace tui::input;
+#include "../input.hpp"
 
 // get's called on terminall resize
-void clear(int /*sig*/) {
+static void clear(int /*sig*/) {
     tui::screen::clear(); // clears screen
     tui::cursor::home();  // sets the cursor to the top left corner of the screen
     // no need to flush `cout`, as `'\n'` does it (well, yeah. don't ask me why though)

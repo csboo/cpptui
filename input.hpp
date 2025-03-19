@@ -1,6 +1,7 @@
 #pragma once
 
 #include "tui.hpp"
+#include <cstdint>
 #include <iostream>
 
 // Platform-specific includes
@@ -23,7 +24,7 @@
 #define DEM(X1, X2, X3, X4) _DCEM(X1), _DCEM(X2), _DCEM(X3), _DCEM(X4)
 
 // TODO: maybe add keys: F(5-12) NOTE: shall need an own `struct F {num: u8}`, ...
-enum SpecKey {
+enum class SpecKey : std::uint8_t {
     CtrlA = 1,
     DEM(B, C, D, E),
     DEM(F, G, H, I),
@@ -52,7 +53,7 @@ enum SpecKey {
 #undef DCEM
 #undef DEM
 
-enum Arrow {
+enum class Arrow : std::uint8_t {
     Up = 65,
     Down = 66,
     Right = 67,
@@ -71,13 +72,13 @@ inline std::string ctrl_to_str(const unsigned& key) { return tui::concat("Ctrl",
 
 inline std::ostream& operator<<(std::ostream& os, const SpecKey& special) {
     switch (special) {
-        CRSS(Esc, Tab, Backspace, Enter);
-        CRSS(F1, F2, F3, F4);
-        CRSS(Home, End, PageUp, PageDown);
-        CRSS(ShiftTab, Insert, Delete, None);
+        CRSS(SpecKey::Esc, SpecKey::Tab, SpecKey::Backspace, SpecKey::Enter);
+        CRSS(SpecKey::F1, SpecKey::F2, SpecKey::F3, SpecKey::F4);
+        CRSS(SpecKey::Home, SpecKey::End, SpecKey::PageUp, SpecKey::PageDown);
+        CRSS(SpecKey::ShiftTab, SpecKey::Insert, SpecKey::Delete, SpecKey::None);
     default:
-        if (special >= 1 && special <= 26) {
-            return os << ctrl_to_str(special);
+        if (static_cast<unsigned>(special) >= 1 && static_cast<unsigned>(special) <= 26) {
+            return os << ctrl_to_str(static_cast<unsigned>(special));
         }
         os << "Unknown";
     }
@@ -86,7 +87,7 @@ inline std::ostream& operator<<(std::ostream& os, const SpecKey& special) {
 
 inline std::ostream& operator<<(std::ostream& os, const Arrow& arrow) {
     switch (arrow) {
-        CRSS(Up, Down, Right, Left);
+        CRSS(Arrow::Up, Arrow::Down, Arrow::Right, Arrow::Left);
     default:
         os << "Unknown";
     }
@@ -105,9 +106,9 @@ struct Input {
     SpecKey special = SpecKey::None;
 
     Input() = default;
-    Input(const Arrow& arrow) : arrow(arrow), is_arrow(true) {}
-    Input(const char& ch) : ch(ch), is_ch(true) {}
-    Input(const SpecKey& special) : special(special), is_special(true) {}
+    Input(const Arrow& arrow) : is_arrow(true), arrow(arrow) {}
+    Input(const char& ch) : is_ch(true), ch(ch) {}
+    Input(const SpecKey& special) : is_special(true), special(special) {}
 
     bool operator==(const Input& other) const {
         return (this->ch == other.ch && this->is_ch == other.is_ch && this->arrow == other.arrow &&
@@ -138,7 +139,6 @@ struct Input {
     static Input read_helper(reader_fn get_char) {
         char byte = get_char();
 
-        char ignore_byte = 0;
         auto input = Input(SpecKey::None);
 #ifdef _WIN32
         if (byte == 0 || byte == 224 || byte == -32) {
@@ -178,7 +178,7 @@ struct Input {
         }
 #else
         if (byte < 0) {
-            ignore_byte = get_char();
+            get_char(); // ignore
         }
 #endif
         if (byte >= 32 && byte <= 126) { // <char>
@@ -188,10 +188,10 @@ struct Input {
         }
 
         switch (byte) {
-        case SpecKey::Backspace:
+        case 127:
             input = Input(static_cast<SpecKey>(byte));
             break;
-        case SpecKey::Esc: {
+        case 27: {
 #ifndef _WIN32
             set_non_blocking(true);
             char next_byte = get_char();
@@ -199,26 +199,26 @@ struct Input {
             if (next_byte == 79 || next_byte == 91) {
                 char special = get_char();
                 switch (special) {
-                case Arrow::Up:
-                case Arrow::Down:
-                case Arrow::Right:
-                case Arrow::Left:
+                case 65:
+                case 66:
+                case 67:
+                case 68:
                     input = Input(static_cast<Arrow>(special));
                     break;
-                case SpecKey::F1:
-                case SpecKey::F2:
-                case SpecKey::F3:
-                case SpecKey::F4:
-                case SpecKey::End:
-                case SpecKey::Home:
-                case SpecKey::ShiftTab:
+                case 80:
+                case 81:
+                case 82:
+                case 83:
+                case 72:
+                case 70:
+                case 90:
                     input = Input(static_cast<SpecKey>(special));
                     break;
-                case SpecKey::Insert:
-                case SpecKey::Delete:
-                case SpecKey::PageUp:
-                case SpecKey::PageDown:
-                    ignore_byte = get_char(); // ~
+                case 50:
+                case 51:
+                case 53:
+                case 54:
+                    get_char(); // ignore
                     input = Input(static_cast<SpecKey>(special));
                     break;
                 default:
