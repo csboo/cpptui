@@ -2,26 +2,31 @@
 #include "../tui.hpp"
 #include <utility> // for std::pair
 
-int main() {
-    tui::init(false);                       // alternate buffer, raw mode, no cursor
-    auto screen_size = tui::screen::size(); // initially set
-
+void draw_ui() {
     const tui::string msg = "Hello Bello, TUI!"; // stylable extension of `std::string`
     const tui::string note = "press q or Ctrl+C to quit";
+    const auto screen_size = tui::screen::size(); // initially set
+
+    // `msg` will be in the middle of the screen
+    // NOTE: use `.size()` before styling, as it'd be completely crazy after applying styles
+    tui::cursor::set_position((screen_size.first / 2) - 1, (screen_size.second / 2) - (msg.size() / 2));
+    std::cout << msg.blue().link("https://github.com/csboo/cpptui").bold().underline();
+
+    // `note` will be in the middle of the screen
+    tui::cursor::set_position((screen_size.first / 2) + 1, (screen_size.second / 2) - (note.size() / 2));
+    std::cout << note.on_rgb(106, 150, 137).rgb(148, 105, 117).italic().dim();
+
+    std::cout.flush();
+}
+
+int main() {
+    tui::init(); // alternate buffer, raw mode, no cursor
+
+    draw_ui(); // basic ui, drawn once, not adaptive
 
     Input input;                                      // this will handle special stuff like arrows, ctrl+c, ...
     while (input != SpecKey::CtrlC && input != 'q') { // main loop
-        // NOTE: use `.size()` before styling, as it'd be completely crazy after applying styles
-        // `msg` will be in the middle of the screen
-        tui::cursor::set_position((screen_size.first / 2) - 1, (screen_size.second / 2) - (msg.size() / 2));
-        std::cout << msg.blue().link("https://github.com/csboo/cpptui").bold().underline();
-
-        // `msg` will be in the middle of the screen
-        tui::cursor::set_position((screen_size.first / 2) + 1, (screen_size.second / 2) - (note.size() / 2));
-        std::cout << note.on_rgb(106, 150, 137).rgb(148, 105, 117).italic().dim();
-
-        std::cout.flush();
-        input = Input::read(); // read into an `Input`
+        input = Input::read();                        // read into an `Input`
     }
 
     tui::reset(); // restore to where we came from
