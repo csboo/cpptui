@@ -124,6 +124,27 @@ namespace tui {
 
 #undef win_setup
 
+#ifdef _WIN32
+    inline CONSOLE_SCREEN_BUFFER_INFO get_console_buf_info() {
+        HANDLE console = nullptr;
+        CONSOLE_SCREEN_BUFFER_INFO info;
+        // create a handle to the console screen
+        console = CreateFileW(L"CONOUT$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                              OPEN_EXISTING, 0, nullptr);
+        if (console == INVALID_HANDLE_VALUE) {
+            std::cerr << "couldn't get console handle\n";
+            exit(1);
+        }
+        // calculate the size of the console window
+        if (GetConsoleScreenBufferInfo(console, &info) == 0) {
+            std::cerr << "couldn't get console screen buffer info\n";
+            exit(1);
+        }
+        CloseHandle(console);
+        return info;
+    }
+#endif
+
     namespace cursor {
 // template for moving cursor
 // moves cursor `n` times to `dir`
@@ -162,7 +183,7 @@ namespace tui {
         csi_fn(query_position, "6n");
 
         // returns: (rows;cols)
-        // WARN: can be quite slow, don't use on eg. every screen update!
+        // NOTE: can take a while (eg 16ms) on (relatively) slow terminals
         inline std::pair<unsigned, unsigned> get_position() {
             query_position();
             std::flush(std::cout);
@@ -204,20 +225,8 @@ namespace tui {
         // returns: (rows;cols)/(y;x)
         inline std::pair<unsigned, unsigned> size() {
 #ifdef _WIN32
-            HANDLE console;
-            CONSOLE_SCREEN_BUFFER_INFO info;
-            short rows;
-            short columns;
-            // create a handle to the console screen
-            console = CreateFileW(L"CONOUT$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
-                                  OPEN_EXISTING, 0, NULL);
-            if (console == INVALID_HANDLE_VALUE)
-                return {0, 0};
-
-            // calculate the size of the console window
-            if (GetConsoleScreenBufferInfo(console, &info) == 0)
-                return {0, 0};
-            CloseHandle(console);
+            auto info = get_console_buf_info();
+            short rows, columns;
             columns = info.srWindow.Right - info.srWindow.Left + 1;
             rows = info.srWindow.Bottom - info.srWindow.Top + 1;
 
