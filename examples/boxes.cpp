@@ -10,7 +10,7 @@
 
 using Box = std::pair<Coord, Coord>;
 
-static struct AppState {
+struct AppState {
     Input input;
     bool quit = false;
     bool new_input = true;
@@ -18,7 +18,7 @@ static struct AppState {
 } state;
 
 // make `x` be good for `counter_box`
-static std::string count(const uint64_t& x) {
+std::string count(const uint64_t& x) {
     // unsigned r = 0;
     std::string print;
     if (x % 100 == 0) {
@@ -34,7 +34,7 @@ static std::string count(const uint64_t& x) {
     return print;
 }
 
-static void counter_box(Coord start, Coord end) {
+void counter_box(Coord start, Coord end) {
     assert(start.row <= end.row && start.col <= end.col);
 
     // do rows
@@ -80,7 +80,7 @@ const std::vector<std::vector<std::string>> KINDS = {{{" ", " ", " ", " ", " ", 
 // |                              |
 // |                              |
 // end.row ---------------- end.col
-static void draw_box(Box box, Kind with) {
+void draw_box(Box box, Kind with) {
     auto start = box.first;
     auto end = box.second;
     assert(start.row <= end.row && start.col <= end.col);
@@ -112,7 +112,7 @@ static void draw_box(Box box, Kind with) {
     std::cout << draw[3];
 }
 
-static void handle_keys(std::vector<Box>& boxes, unsigned& cnt_box_ix) {
+void handle_keys(std::vector<Box>& boxes, unsigned& cnt_box_ix) {
     auto* cnt_box = &boxes[cnt_box_ix];
     if (state.input == 'n' || state.input == SpecKey::Tab) {
         if (cnt_box_ix++ == boxes.size() - 1) {
@@ -157,7 +157,7 @@ static void handle_keys(std::vector<Box>& boxes, unsigned& cnt_box_ix) {
         boxes.erase(boxes.begin() + cnt_box_ix);
     }
 }
-static void run() {
+void run() {
     const auto msg = tui::string("Szia Csongi!");
     auto msg_coord = [msg](bool left) {
         return Coord{(state.size.row / 2) + 1,
@@ -216,7 +216,7 @@ static void run() {
     } while (!state.quit);
 }
 
-static void handle_read() {
+void handle_read() {
     while (state.input != 'q' && state.input != SpecKey::CtrlC) {
         state.input = Input::read();
         state.new_input = true;

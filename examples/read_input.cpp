@@ -2,7 +2,7 @@
 #include "../input.hpp"
 
 // get's called on terminall resize
-static void clear(int /*sig*/) {
+void clear(int /*sig*/) {
     tui::screen::clear(); // clears screen
     tui::cursor::home();  // sets the cursor to the top left corner of the screen
     // no need to flush `cout`, as `'\n'` does it (well, yeah. don't ask me why though)

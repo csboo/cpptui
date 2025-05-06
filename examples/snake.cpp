@@ -31,7 +31,7 @@ enum class Dir : std::uint8_t {
     Right,
     None,
 };
-static Dir opposite(const Dir& dir) {
+Dir opposite(const Dir& dir) {
     switch (dir) {
     case Dir::Up:
         return Dir::Down;
@@ -46,7 +46,7 @@ static Dir opposite(const Dir& dir) {
     }
     return Dir::None;
 }
-static Dir from_input(const Input& input, const Dir& dir = Dir::Right) {
+Dir from_input(const Input& input, const Dir& dir = Dir::Right) {
     switch (input.ch) {
     case 'k':
     case 'w':
@@ -78,7 +78,7 @@ static Dir from_input(const Input& input, const Dir& dir = Dir::Right) {
     return dir;
 }
 
-static std::string to_string(const Dir& dir) {
+std::string to_string(const Dir& dir) {
     switch (dir) {
     case Dir::Up:
         return "↑"; // alt: ^
@@ -94,7 +94,7 @@ static std::string to_string(const Dir& dir) {
     return "X";
 }
 
-static Dir meets_at(const Coord& lhs, const Coord& rhs, const Coord& screen_size) {
+Dir meets_at(const Coord& lhs, const Coord& rhs, const Coord& screen_size) {
     int row_diff = static_cast<int>(lhs.row) - static_cast<int>(rhs.row);
     int col_diff = static_cast<int>(lhs.col) - static_cast<int>(rhs.col);
 
@@ -118,7 +118,7 @@ static Dir meets_at(const Coord& lhs, const Coord& rhs, const Coord& screen_size
 
 using Snake = std::vector<Coord>;
 
-static std::string draw(const std::pair<Dir, Dir>& nb) {
+std::string draw(const std::pair<Dir, Dir>& nb) {
     // rounded:  {"╭", "╮", "╰", "╯", "│", "─"}
 
     // this is where in Rust we'd use `match` and be happy
@@ -147,7 +147,7 @@ static std::string draw(const std::pair<Dir, Dir>& nb) {
     return "X";
 }
 
-static struct App {
+struct App {
     Coord screen_size = Coord::screen_size();
     Snake snake = App::default_snake();
     Coord apple = Coord::random(this->screen_size);
@@ -269,7 +269,7 @@ static struct App {
 
 } app;
 
-static void handle_read() {
+void handle_read() {
     while (!app.quit && app.input != 'q' && app.input != 'Q' && app.input != SpecKey::CtrlC &&
            app.input != SpecKey::CtrlD && app.input != SpecKey::CtrlZ) {
         app.input = Input::read();
@@ -279,7 +279,7 @@ static void handle_read() {
     std::cout << "reader thread done\n";
 }
 
-static void run() {
+void run() {
     app.apple.print(APPLE_TEXT);
     do {
         // get direction

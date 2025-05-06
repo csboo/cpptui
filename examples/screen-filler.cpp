@@ -3,7 +3,7 @@
 #include "../tui.hpp"
 #include <thread>
 
-static struct State {
+struct State {
     Input input;
     bool quit = false;
 } state;
@@ -11,7 +11,7 @@ static struct State {
 const Coord TOP_LEFT = Coord::origin();
 const tui::string CH = tui::string(" ");
 
-static void read_char() {
+void read_char() {
     while (state.input != 'q' && state.input != SpecKey::CtrlC) {
         state.input = Input::read();
         std::this_thread::sleep_for(std::chrono::milliseconds(8));
@@ -19,7 +19,7 @@ static void read_char() {
     state.quit = true;
 }
 
-static void run() {
+void run() {
     auto screen_size = Coord();
     auto prev_screen_size = screen_size;
 

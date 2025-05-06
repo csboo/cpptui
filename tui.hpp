@@ -267,15 +267,13 @@ namespace tui {
 
 // generate for cout << STYLE_style(); eg.: cout << bold_style();
 #define stylize(STYLE)                                                                                                 \
-    static inline std::string STYLE##_style() { return style(Style::STYLE); }
+    inline std::string STYLE##_style() { return style(Style::STYLE); }
 // generate for cout << STYLE_style(text); eg.: cout << bold_style(text);
 #define stylize_text(STYLE)                                                                                            \
-    static inline std::string STYLE##_style(const std::string& text) {                                                 \
+    inline std::string STYLE##_style(const std::string& text) {                                                        \
         return concat(style(Style::STYLE), text, reset_style());                                                       \
     }                                                                                                                  \
-    static inline std::string STYLE##_style(const char* text) {                                                        \
-        return concat(style(Style::STYLE), text, reset_style());                                                       \
-    }
+    inline std::string STYLE##_style(const char* text) { return concat(style(Style::STYLE), text, reset_style()); }
 // generate all
 #define make_stylizer(STYLE) stylize(STYLE) stylize_text(STYLE)
 
@@ -327,21 +325,21 @@ namespace tui {
 
 // generate for cout << COLOR_{fg, bg}();
 #define colorize(COLOR)                                                                                                \
-    static inline std::string COLOR##_fg() { return colorizer(Color::COLOR, true); }                                   \
-    static inline std::string COLOR##_bg() { return colorizer(Color::COLOR, false); }
+    inline std::string COLOR##_fg() { return colorizer(Color::COLOR, true); }                                          \
+    inline std::string COLOR##_bg() { return colorizer(Color::COLOR, false); }
 
 // generate for cout << COLOR_{fg, bg}(text);
 #define colorize_text(COLOR)                                                                                           \
-    static inline std::string COLOR##_fg(const std::string& text) {                                                    \
+    inline std::string COLOR##_fg(const std::string& text) {                                                           \
         return concat(colorizer(Color::COLOR, true), text, style::reset_style());                                      \
     }                                                                                                                  \
-    static inline std::string COLOR##_fg(const char* text) {                                                           \
+    inline std::string COLOR##_fg(const char* text) {                                                                  \
         return concat(colorizer(Color::COLOR, true), text, style::reset_style());                                      \
     }                                                                                                                  \
-    static inline std::string COLOR##_bg(const std::string& text) {                                                    \
+    inline std::string COLOR##_bg(const std::string& text) {                                                           \
         return concat(colorizer(Color::COLOR, false), text, style::reset_style());                                     \
     }                                                                                                                  \
-    static inline std::string COLOR##_bg(const char* text) {                                                           \
+    inline std::string COLOR##_bg(const char* text) {                                                                  \
         return concat(colorizer(Color::COLOR, false), text, style::reset_style());                                     \
     }
 

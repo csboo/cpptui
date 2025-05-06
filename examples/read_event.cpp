@@ -11,9 +11,9 @@ static std::condition_variable cv;
 static Input shared_input;
 static bool input_available = false;
 
-static bool should_quit(const Input& input) { return input == SpecKey::CtrlC || input == 'q'; }
+bool should_quit(const Input& input) { return input == SpecKey::CtrlC || input == 'q'; }
 
-static void read_input() {
+void read_input() {
     while (!should_quit(shared_input)) {
         shared_input = Input::read();
         std::lock_guard<std::mutex> lock(mtx);
@@ -23,7 +23,7 @@ static void read_input() {
     }
 }
 
-static void main_task() {
+void main_task() {
     int i = 0;
     while (true) {
         std::this_thread::sleep_for(std::chrono::milliseconds(40));
