@@ -48,6 +48,7 @@ Checks:
   -altera-struct-pack-align,
   -misc-non-private-member-variables-in-classes,
   -misc-use-anonymous-namespace,
+  -misc-use-internal-linkage,
   -concurrency-mt-unsafe,
   -cert-env33-c,
   -cert-err58-cpp,
