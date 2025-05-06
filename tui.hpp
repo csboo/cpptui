@@ -182,6 +182,15 @@ namespace tui {
         // tell the terminal to check where the cursor is
         csi_fn(query_position, "6n");
 
+#ifdef _WIN32
+        // returns: (rows;cols)
+        inline std::pair<unsigned, unsigned> get_position() {
+            auto info = get_console_buf_info();
+            auto rows = info.dwCursorPosition.X + 1;
+            auto cols = info.dwCursorPosition.Y + 1;
+            return {rows, cols};
+        }
+#else
         // returns: (rows;cols)
         // NOTE: can take a while (eg 16ms) on (relatively) slow terminals
         inline std::pair<unsigned, unsigned> get_position() {
@@ -200,6 +209,8 @@ namespace tui {
 
             return {rows, cols};
         }
+#endif
+
     } // namespace cursor
 
     namespace screen {
