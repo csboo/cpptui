@@ -3,7 +3,6 @@
 
 #ifdef _WIN32 // windows
 
-#include <wchar.h>
 #include <windows.h>
 
 #else // not windows
@@ -20,7 +19,6 @@
 #include <cassert>
 #include <cstdint>
 #include <iostream>
-#include <ostream>
 #include <sstream>
 #include <string>
 #include <utility> // for std::pair
@@ -60,7 +58,7 @@ namespace tui {
         exit(1);                                                                                                       \
     }                                                                                                                  \
     DWORD mode;                                                                                                        \
-    if (!GetConsoleMode(hStdin, &mode)) {                                                                              \
+    if (GetConsoleMode(hStdin, &mode) == 0) {                                                                          \
         std::cerr << "error getting the console mode\n";                                                               \
         exit(1);                                                                                                       \
     }
@@ -73,7 +71,7 @@ namespace tui {
         DWORD newMode = mode;
         newMode &= ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
 
-        if (!SetConsoleMode(hStdin, newMode)) {
+        if (SetConsoleMode(hStdin, newMode) == 0) {
             std::cerr << "error setting the console to raw mode\n";
             exit(1);
         }
@@ -102,7 +100,7 @@ namespace tui {
 
         // Restore original mode
         mode |= (ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
-        if (!SetConsoleMode(hStdin, mode)) {
+        if (SetConsoleMode(hStdin, mode) == 0) {
             std::cerr << "error restoring the console mode\n";
             exit(1);
         }
@@ -237,9 +235,8 @@ namespace tui {
         inline std::pair<unsigned, unsigned> size() {
 #ifdef _WIN32
             auto info = get_console_buf_info();
-            short rows, columns;
-            columns = info.srWindow.Right - info.srWindow.Left + 1;
-            rows = info.srWindow.Bottom - info.srWindow.Top + 1;
+            int columns = info.srWindow.Right - info.srWindow.Left + 1;
+            int rows = info.srWindow.Bottom - info.srWindow.Top + 1;
 
             return {rows, columns};
 #else
