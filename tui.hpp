@@ -12,15 +12,18 @@
 #include <err.h>       // err
 #include <fcntl.h>     // open
 #include <sys/ioctl.h> // ioctl, TIOCGWINSZ
-#include <unistd.h>    // close
+#include <termios.h>
+#include <unistd.h> // close
 
 #endif
 
 #include <cassert>
+#include <cstdint>
 #include <iostream>
 #include <ostream>
 #include <sstream>
 #include <string>
+#include <utility> // for std::pair
 
 namespace tui {
     // only the Esc character
@@ -53,12 +56,12 @@ namespace tui {
 #define win_setup()                                                                                                    \
     HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);                                                                    \
     if (hStdin == INVALID_HANDLE_VALUE) {                                                                              \
-        std::cerr << "Error getting the standard input handle." << std::endl;                                          \
+        std::cerr << "error getting the standard input handle\n";                                                      \
         exit(1);                                                                                                       \
     }                                                                                                                  \
     DWORD mode;                                                                                                        \
     if (!GetConsoleMode(hStdin, &mode)) {                                                                              \
-        std::cerr << "Error getting the console mode." << std::endl;                                                   \
+        std::cerr << "error getting the console mode\n";                                                               \
         exit(1);                                                                                                       \
     }
 #endif
@@ -71,25 +74,24 @@ namespace tui {
         newMode &= ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
 
         if (!SetConsoleMode(hStdin, newMode)) {
-            std::cerr << "Error setting the console to raw mode." << std::endl;
+            std::cerr << "error setting the console to raw mode\n";
             exit(1);
         }
 #else // not windows
-        system("stty raw");
-        system("stty -echo");
-
-        // struct termios term {};
+        if (system("stty raw") != 0) {
+            err(1, "couldn't set stty raw");
+        }
+        if (system("stty -echo") != 0) {
+            err(1, "couldn't set stty -echo");
+        }
+        // struct termios term{};
         // if (tcgetattr(STDIN_FILENO, &term) == -1) {
-        //     std::cerr << "Error getting terminal attributes." << std::endl;
-        //     exit(1);
+        //     err(1, "error getting terminal attributes");
         // }
-
         // struct termios raw = term;
         // raw.c_lflag &= ~(ICANON | ECHO);
-
         // if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) {
-        //     std::cerr << "Error setting terminal to raw mode." << std::endl;
-        //     exit(1);
+        //     err(1, "error setting terminal to raw mode");
         // }
 #endif
     }
@@ -101,25 +103,21 @@ namespace tui {
         // Restore original mode
         mode |= (ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
         if (!SetConsoleMode(hStdin, mode)) {
-            std::cerr << "Error restoring the console mode." << std::endl;
+            std::cerr << "error restoring the console mode\n";
             exit(1);
         }
 #else // not windows
-        system("stty -raw");
-        system("stty echo");
-
-        // struct termios term {};
+        if (system("stty cooked") != 0) {
+            err(1, "couldn't set stty cooked");
+        }
+        // struct termios term{};
         // if (tcgetattr(STDIN_FILENO, &term) == -1) {
-        //     std::cerr << "Error getting terminal attributes." << std::endl;
-        //     exit(1);
+        //     err(1, "error getting terminal attributes");
         // }
-
         // // Restore original attributes
         // term.c_lflag |= (ICANON | ECHO);
-
         // if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &term) == -1) {
-        //     std::cerr << "Error restoring terminal mode." << std::endl;
-        //     exit(1);
+        //     err(1, "error restoring terminal mode");
         // }
 #endif
     }
@@ -225,7 +223,7 @@ namespace tui {
 
             return {rows, columns};
 #else
-            struct winsize ws {};
+            struct winsize ws{};
             int fd = 0;
 
             // open the controlling terminal.
@@ -249,7 +247,7 @@ namespace tui {
 
     namespace text {
         namespace style {
-            enum Style {
+            enum class Style : std::uint8_t {
                 reset = 0,
                 bold = 1,
                 dim = 2,
@@ -265,11 +263,13 @@ namespace tui {
 
 // generate for cout << STYLE_style(); eg.: cout << bold_style();
 #define stylize(STYLE)                                                                                                 \
-    inline std::string STYLE##_style() { return style(STYLE); }
+    inline std::string STYLE##_style() { return style(Style::STYLE); }
 // generate for cout << STYLE_style(text); eg.: cout << bold_style(text);
 #define stylize_text(STYLE)                                                                                            \
-    inline std::string STYLE##_style(const std::string& text) { return concat(style(STYLE), text, reset_style()); }    \
-    inline std::string STYLE##_style(const char* text) { return concat(style(STYLE), text, reset_style()); }
+    inline std::string STYLE##_style(const std::string& text) {                                                        \
+        return concat(style(Style::STYLE), text, reset_style());                                                       \
+    }                                                                                                                  \
+    inline std::string STYLE##_style(const char* text) { return concat(style(Style::STYLE), text, reset_style()); }
 // generate all
 #define make_stylizer(STYLE) stylize(STYLE) stylize_text(STYLE)
 
@@ -302,7 +302,7 @@ namespace tui {
         } // namespace style
 
         namespace color {
-            enum Color {
+            enum class Color : std::uint8_t {
                 black = 0,
                 red,
                 green,
@@ -321,22 +321,22 @@ namespace tui {
 
 // generate for cout << COLOR_{fg, bg}();
 #define colorize(COLOR)                                                                                                \
-    inline std::string COLOR##_fg() { return colorizer(COLOR, true); }                                                 \
-    inline std::string COLOR##_bg() { return colorizer(COLOR, false); }
+    inline std::string COLOR##_fg() { return colorizer(Color::COLOR, true); }                                          \
+    inline std::string COLOR##_bg() { return colorizer(Color::COLOR, false); }
 
 // generate for cout << COLOR_{fg, bg}(text);
 #define colorize_text(COLOR)                                                                                           \
     inline std::string COLOR##_fg(const std::string& text) {                                                           \
-        return concat(colorizer(COLOR, true), text, style::reset_style());                                             \
+        return concat(colorizer(Color::COLOR, true), text, style::reset_style());                                      \
     }                                                                                                                  \
     inline std::string COLOR##_fg(const char* text) {                                                                  \
-        return concat(colorizer(COLOR, true), text, style::reset_style());                                             \
+        return concat(colorizer(Color::COLOR, true), text, style::reset_style());                                      \
     }                                                                                                                  \
     inline std::string COLOR##_bg(const std::string& text) {                                                           \
-        return concat(colorizer(COLOR, false), text, style::reset_style());                                            \
+        return concat(colorizer(Color::COLOR, false), text, style::reset_style());                                     \
     }                                                                                                                  \
     inline std::string COLOR##_bg(const char* text) {                                                                  \
-        return concat(colorizer(COLOR, false), text, style::reset_style());                                            \
+        return concat(colorizer(Color::COLOR, false), text, style::reset_style());                                     \
     }
 
 // generate all
@@ -356,7 +356,7 @@ namespace tui {
 
             // r, g, b values have to be valid:  [0;255]
             inline std::string rgb(unsigned r, unsigned g, unsigned b, bool fg) {
-                assert(r >= 0 && r <= 255 && g >= 0 && g <= 255 && b >= 0 && b <= 255);
+                assert(r <= 255 && g <= 255 && b <= 255);
                 return concat(CSI, (fg ? '3' : '4'), "8;2;", r, ';', g, ';', b, 'm');
             }
             inline std::string rgb(unsigned r, unsigned g, unsigned b, bool fg, const std::string& text) {
@@ -404,11 +404,9 @@ namespace tui {
         make_color(basic);
 #undef make_color
 
-        inline string link(const char* link) { return text::style::link(link, *this); }
-        inline string rgb(unsigned r, unsigned g, unsigned b) const { return text::color::rgb(r, g, b, true, *this); }
-        inline string on_rgb(unsigned r, unsigned g, unsigned b) const {
-            return text::color::rgb(r, g, b, false, *this);
-        }
+        string link(const char* link) { return text::style::link(link, *this); }
+        string rgb(unsigned r, unsigned g, unsigned b) const { return text::color::rgb(r, g, b, true, *this); }
+        string on_rgb(unsigned r, unsigned g, unsigned b) const { return text::color::rgb(r, g, b, false, *this); }
     };
 
     // void handle_resize(int /*sig*/) { screen::clear(); }
@@ -421,7 +419,7 @@ namespace tui {
         // TODO: make it work, or at least try to
 #else
         // register the signal handler for SIGWINCH
-        struct sigaction sa {};
+        struct sigaction sa{};
         sa.sa_handler = handle_resize;
         sa.sa_flags = SA_RESTART; // restart functions if interrupted by handler
         sigaction(SIGWINCH, &sa, nullptr);
@@ -443,7 +441,4 @@ namespace tui {
         tui::cursor::visible(true);
         tui::disable_raw_mode();
     }
-    namespace input {
-#include "input.hpp"
-    } // namespace input
 } // namespace tui

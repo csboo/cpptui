@@ -1,3 +1,4 @@
+#include "../input.hpp"
 #include "../tui.hpp"
 #include <chrono>
 #include <condition_variable>
@@ -5,13 +6,10 @@
 #include <mutex>
 #include <thread>
 
-using tui::input::Input;
-using tui::input::SpecKey;
-
-std::mutex mtx;
-std::condition_variable cv;
-Input shared_input;
-bool input_available = false;
+static std::mutex mtx;
+static std::condition_variable cv;
+static Input shared_input;
+static bool input_available = false;
 
 bool should_quit(const Input& input) { return input == SpecKey::CtrlC || input == 'q'; }
 

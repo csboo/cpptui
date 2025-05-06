@@ -1,4 +1,5 @@
 #include "../coords.hpp"
+#include "../input.hpp"
 #include "../tui.hpp"
 #include <algorithm>
 #include <cassert>
@@ -6,8 +7,6 @@
 #include <cstdint>
 #include <thread>
 #include <vector>
-
-using namespace tui::input;
 
 using Box = std::pair<Coord, Coord>;
 
@@ -19,9 +18,8 @@ struct AppState {
 } state;
 
 // make `x` be good for `counter_box`
-[[nodiscard]]
 std::string count(const uint64_t& x) {
-    unsigned r = 0;
+    // unsigned r = 0;
     std::string print;
     if (x % 100 == 0) {
         print = std::to_string(x / 100);
@@ -61,11 +59,11 @@ void counter_box(Coord start, Coord end) {
     }
 }
 
-enum Kind {
-    Empty,
-    Basic,
-    Bold,
-    Rounded,
+enum class Kind : std::uint8_t {
+    Empty = 0,
+    Basic = 1,
+    Bold = 2,
+    Rounded = 3,
 };
 
 const std::vector<std::vector<std::string>> KINDS = {{{" ", " ", " ", " ", " ", " "}},
@@ -87,7 +85,7 @@ void draw_box(Box box, Kind with) {
     auto end = box.second;
     assert(start.row <= end.row && start.col <= end.col);
 
-    auto draw = KINDS[with];
+    const auto& draw = KINDS.at(static_cast<size_t>(with));
 
     // do rows
     for (auto row = start.row + 1; row < end.row; ++row) {
@@ -162,8 +160,8 @@ void handle_keys(std::vector<Box>& boxes, unsigned& cnt_box_ix) {
 void run() {
     const auto msg = tui::string("Szia Csongi!");
     auto msg_coord = [msg](bool left) {
-        return Coord{state.size.row / 2 + 1,
-                     static_cast<unsigned int>((state.size.col / 2) + (left ? -msg.size() : +msg.size()) / 2)};
+        return Coord{(state.size.row / 2) + 1,
+                     static_cast<unsigned int>((state.size.col / 2) + ((left ? -msg.size() : +msg.size()) / 2))};
     };
 
     std::vector<Box> boxes = {

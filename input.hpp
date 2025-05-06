@@ -105,9 +105,9 @@ struct Input {
     SpecKey special = SpecKey::None;
 
     Input() = default;
-    Input(const Arrow& arrow) : arrow(arrow), is_arrow(true) {}
-    Input(const char& ch) : ch(ch), is_ch(true) {}
-    Input(const SpecKey& special) : special(special), is_special(true) {}
+    Input(const Arrow& arrow) : is_arrow(true), arrow(arrow) {}
+    Input(const char& ch) : is_ch(true), ch(ch) {}
+    Input(const SpecKey& special) : is_special(true), special(special) {}
 
     bool operator==(const Input& other) const {
         return (this->ch == other.ch && this->is_ch == other.is_ch && this->arrow == other.arrow &&
@@ -138,7 +138,6 @@ struct Input {
     static Input read_helper(reader_fn get_char) {
         char byte = get_char();
 
-        char ignore_byte = 0;
         auto input = Input(SpecKey::None);
 #ifdef _WIN32
         if (byte == 0 || byte == 224 || byte == -32) {
@@ -178,7 +177,7 @@ struct Input {
         }
 #else
         if (byte < 0) {
-            ignore_byte = get_char();
+            get_char(); // ignore
         }
 #endif
         if (byte >= 32 && byte <= 126) { // <char>
@@ -218,7 +217,7 @@ struct Input {
                 case SpecKey::Delete:
                 case SpecKey::PageUp:
                 case SpecKey::PageDown:
-                    ignore_byte = get_char(); // ~
+                    get_char(); // ignore '~'
                     input = Input(static_cast<SpecKey>(special));
                     break;
                 default:
