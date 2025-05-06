@@ -3,7 +3,6 @@
 
 #ifdef _WIN32 // windows
 
-#include <wchar.h>
 #include <windows.h>
 
 #else // not windows
@@ -20,7 +19,6 @@
 #include <cassert>
 #include <cstdint>
 #include <iostream>
-#include <ostream>
 #include <sstream>
 #include <string>
 #include <utility> // for std::pair
@@ -60,7 +58,7 @@ namespace tui {
         exit(1);                                                                                                       \
     }                                                                                                                  \
     DWORD mode;                                                                                                        \
-    if (!GetConsoleMode(hStdin, &mode)) {                                                                              \
+    if (GetConsoleMode(hStdin, &mode) == 0) {                                                                          \
         std::cerr << "error getting the console mode\n";                                                               \
         exit(1);                                                                                                       \
     }
@@ -73,7 +71,7 @@ namespace tui {
         DWORD newMode = mode;
         newMode &= ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
 
-        if (!SetConsoleMode(hStdin, newMode)) {
+        if (SetConsoleMode(hStdin, newMode) == 0) {
             std::cerr << "error setting the console to raw mode\n";
             exit(1);
         }
@@ -102,7 +100,7 @@ namespace tui {
 
         // Restore original mode
         mode |= (ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
-        if (!SetConsoleMode(hStdin, mode)) {
+        if (SetConsoleMode(hStdin, mode) == 0) {
             std::cerr << "error restoring the console mode\n";
             exit(1);
         }
@@ -123,6 +121,27 @@ namespace tui {
     }
 
 #undef win_setup
+
+#ifdef _WIN32
+    inline CONSOLE_SCREEN_BUFFER_INFO get_console_buf_info() {
+        HANDLE console = nullptr;
+        CONSOLE_SCREEN_BUFFER_INFO info;
+        // create a handle to the console screen
+        console = CreateFileW(L"CONOUT$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                              OPEN_EXISTING, 0, nullptr);
+        if (console == INVALID_HANDLE_VALUE) {
+            std::cerr << "couldn't get console handle\n";
+            exit(1);
+        }
+        // calculate the size of the console window
+        if (GetConsoleScreenBufferInfo(console, &info) == 0) {
+            std::cerr << "couldn't get console screen buffer info\n";
+            exit(1);
+        }
+        CloseHandle(console);
+        return info;
+    }
+#endif
 
     namespace cursor {
 // template for moving cursor
@@ -161,8 +180,17 @@ namespace tui {
         // tell the terminal to check where the cursor is
         csi_fn(query_position, "6n");
 
+#ifdef _WIN32
         // returns: (rows;cols)
-        // WARN: can be quite slow, don't use on eg. every screen update!
+        inline std::pair<unsigned, unsigned> get_position() {
+            auto info = get_console_buf_info();
+            auto rows = info.dwCursorPosition.X + 1;
+            auto cols = info.dwCursorPosition.Y + 1;
+            return {rows, cols};
+        }
+#else
+        // returns: (rows;cols)
+        // NOTE: can take a while (eg 16ms) on (relatively) slow terminals
         inline std::pair<unsigned, unsigned> get_position() {
             query_position();
             std::flush(std::cout);
@@ -179,6 +207,8 @@ namespace tui {
 
             return {rows, cols};
         }
+#endif
+
     } // namespace cursor
 
     namespace screen {
@@ -204,22 +234,9 @@ namespace tui {
         // returns: (rows;cols)/(y;x)
         inline std::pair<unsigned, unsigned> size() {
 #ifdef _WIN32
-            HANDLE console;
-            CONSOLE_SCREEN_BUFFER_INFO info;
-            short rows;
-            short columns;
-            // create a handle to the console screen
-            console = CreateFileW(L"CONOUT$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
-                                  OPEN_EXISTING, 0, NULL);
-            if (console == INVALID_HANDLE_VALUE)
-                return {0, 0};
-
-            // calculate the size of the console window
-            if (GetConsoleScreenBufferInfo(console, &info) == 0)
-                return {0, 0};
-            CloseHandle(console);
-            columns = info.srWindow.Right - info.srWindow.Left + 1;
-            rows = info.srWindow.Bottom - info.srWindow.Top + 1;
+            auto info = get_console_buf_info();
+            int columns = info.srWindow.Right - info.srWindow.Left + 1;
+            int rows = info.srWindow.Bottom - info.srWindow.Top + 1;
 
             return {rows, columns};
 #else
