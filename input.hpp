@@ -71,10 +71,10 @@ inline std::string ctrl_to_str(const unsigned& key) { return tui::concat("Ctrl",
 
 inline std::ostream& operator<<(std::ostream& os, const SpecKey& special) {
     switch (special) {
-        CRSS(SpecKey::Esc, SpecKey::Tab, SpecKey::Backspace, SpecKey::Enter);
-        CRSS(SpecKey::F1, SpecKey::F2, SpecKey::F3, SpecKey::F4);
-        CRSS(SpecKey::Home, SpecKey::End, SpecKey::PageUp, SpecKey::PageDown);
-        CRSS(SpecKey::ShiftTab, SpecKey::Insert, SpecKey::Delete, SpecKey::None);
+        CRSS(Esc, Tab, Backspace, Enter);
+        CRSS(F1, F2, F3, F4);
+        CRSS(Home, End, PageUp, PageDown);
+        CRSS(ShiftTab, Insert, Delete, None);
     default:
         if (static_cast<unsigned>(special) >= 1 && static_cast<unsigned>(special) <= 26) {
             return os << ctrl_to_str(static_cast<unsigned>(special));
@@ -86,7 +86,7 @@ inline std::ostream& operator<<(std::ostream& os, const SpecKey& special) {
 
 inline std::ostream& operator<<(std::ostream& os, const Arrow& arrow) {
     switch (arrow) {
-        CRSS(Arrow::Up, Arrow::Down, Arrow::Right, Arrow::Left);
+        CRSS(Up, Down, Right, Left);
     default:
         os << "Unknown";
     }
