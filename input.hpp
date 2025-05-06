@@ -217,7 +217,7 @@ struct Input {
                 case SpecKey::Delete:
                 case SpecKey::PageUp:
                 case SpecKey::PageDown:
-                    get_char(); // ignore
+                    get_char(); // ignore '~'
                     input = Input(static_cast<SpecKey>(special));
                     break;
                 default:
