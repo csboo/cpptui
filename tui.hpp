@@ -108,6 +108,9 @@ namespace tui {
         if (system("stty cooked") != 0) {
             err(1, "couldn't set stty cooked");
         }
+        if (system("stty echo") != 0) {
+            err(1, "couldn't set stty echo");
+        }
         // struct termios term{};
         // if (tcgetattr(STDIN_FILENO, &term) == -1) {
         //     err(1, "error getting terminal attributes");
