@@ -1,8 +1,6 @@
 // tui.hpp
 #pragma once
 
-#include <cstdint>
-#include <sys/types.h>
 #ifdef _WIN32 // windows
 
 #include <wchar.h>
@@ -14,15 +12,18 @@
 #include <err.h>       // err
 #include <fcntl.h>     // open
 #include <sys/ioctl.h> // ioctl, TIOCGWINSZ
-#include <unistd.h>    // close
+#include <termios.h>
+#include <unistd.h> // close
 
 #endif
 
 #include <cassert>
+#include <cstdint>
 #include <iostream>
 #include <ostream>
 #include <sstream>
 #include <string>
+#include <utility> // for std::pair
 
 namespace tui {
     // only the Esc character
@@ -55,12 +56,12 @@ namespace tui {
 #define win_setup()                                                                                                    \
     HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);                                                                    \
     if (hStdin == INVALID_HANDLE_VALUE) {                                                                              \
-        std::cerr << "Error getting the standard input handle." << std::endl;                                          \
+        std::cerr << "error getting the standard input handle\n";                                                      \
         exit(1);                                                                                                       \
     }                                                                                                                  \
     DWORD mode;                                                                                                        \
     if (!GetConsoleMode(hStdin, &mode)) {                                                                              \
-        std::cerr << "Error getting the console mode." << std::endl;                                                   \
+        std::cerr << "error getting the console mode\n";                                                               \
         exit(1);                                                                                                       \
     }
 #endif
@@ -73,26 +74,21 @@ namespace tui {
         newMode &= ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
 
         if (!SetConsoleMode(hStdin, newMode)) {
-            std::cerr << "Error setting the console to raw mode." << std::endl;
+            std::cerr << "error setting the console to raw mode\n";
             exit(1);
         }
 #else // not windows
-        system("stty raw");
-        system("stty -echo");
+        struct termios term{};
+        if (tcgetattr(STDIN_FILENO, &term) == -1) {
+            err(1, "error getting terminal attributes");
+        }
 
-        // struct termios term {};
-        // if (tcgetattr(STDIN_FILENO, &term) == -1) {
-        //     std::cerr << "Error getting terminal attributes." << std::endl;
-        //     exit(1);
-        // }
+        struct termios raw = term;
+        raw.c_lflag &= ~(ICANON | ECHO);
 
-        // struct termios raw = term;
-        // raw.c_lflag &= ~(ICANON | ECHO);
-
-        // if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) {
-        //     std::cerr << "Error setting terminal to raw mode." << std::endl;
-        //     exit(1);
-        // }
+        if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) {
+            err(1, "error setting terminal to raw mode");
+        }
 #endif
     }
 
@@ -103,26 +99,19 @@ namespace tui {
         // Restore original mode
         mode |= (ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
         if (!SetConsoleMode(hStdin, mode)) {
-            std::cerr << "Error restoring the console mode." << std::endl;
+            std::cerr << "error restoring the console mode\n";
             exit(1);
         }
 #else // not windows
-        system("stty -raw");
-        system("stty echo");
-
-        // struct termios term {};
-        // if (tcgetattr(STDIN_FILENO, &term) == -1) {
-        //     std::cerr << "Error getting terminal attributes." << std::endl;
-        //     exit(1);
-        // }
-
-        // // Restore original attributes
-        // term.c_lflag |= (ICANON | ECHO);
-
-        // if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &term) == -1) {
-        //     std::cerr << "Error restoring terminal mode." << std::endl;
-        //     exit(1);
-        // }
+        struct termios term{};
+        if (tcgetattr(STDIN_FILENO, &term) == -1) {
+            err(1, "error getting terminal attributes");
+        }
+        // Restore original attributes
+        term.c_lflag |= (ICANON | ECHO);
+        if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &term) == -1) {
+            err(1, "error restoring terminal mode");
+        }
 #endif
     }
 
