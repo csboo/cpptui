@@ -76,8 +76,8 @@ inline std::ostream& operator<<(std::ostream& os, const SpecKey& special) {
         CRSS(Home, End, PageUp, PageDown);
         CRSS(ShiftTab, Insert, Delete, None);
     default:
-        if (static_cast<unsigned>(special) >= 1 && static_cast<unsigned>(special) <= 26) {
-            return os << ctrl_to_str(static_cast<unsigned>(special));
+        if (special >= 1 && special <= 26) {
+            return os << ctrl_to_str(special);
         }
         os << "Unknown";
     }
