@@ -1,7 +1,6 @@
 #pragma once
 
 #include "tui.hpp"
-#include <cstdint>
 #include <iostream>
 
 // Platform-specific includes
@@ -24,7 +23,7 @@
 #define DEM(X1, X2, X3, X4) _DCEM(X1), _DCEM(X2), _DCEM(X3), _DCEM(X4)
 
 // TODO: maybe add keys: F(5-12) NOTE: shall need an own `struct F {num: u8}`, ...
-enum class SpecKey : std::uint8_t {
+enum SpecKey {
     CtrlA = 1,
     DEM(B, C, D, E),
     DEM(F, G, H, I),
@@ -53,7 +52,7 @@ enum class SpecKey : std::uint8_t {
 #undef DCEM
 #undef DEM
 
-enum class Arrow : std::uint8_t {
+enum Arrow {
     Up = 65,
     Down = 66,
     Right = 67,
@@ -188,10 +187,10 @@ struct Input {
         }
 
         switch (byte) {
-        case 127:
+        case SpecKey::Backspace:
             input = Input(static_cast<SpecKey>(byte));
             break;
-        case 27: {
+        case SpecKey::Esc: {
 #ifndef _WIN32
             set_non_blocking(true);
             char next_byte = get_char();
@@ -199,25 +198,25 @@ struct Input {
             if (next_byte == 79 || next_byte == 91) {
                 char special = get_char();
                 switch (special) {
-                case 65:
-                case 66:
-                case 67:
-                case 68:
+                case Arrow::Up:
+                case Arrow::Down:
+                case Arrow::Right:
+                case Arrow::Left:
                     input = Input(static_cast<Arrow>(special));
                     break;
-                case 80:
-                case 81:
-                case 82:
-                case 83:
-                case 72:
-                case 70:
-                case 90:
+                case SpecKey::F1:
+                case SpecKey::F2:
+                case SpecKey::F3:
+                case SpecKey::F4:
+                case SpecKey::End:
+                case SpecKey::Home:
+                case SpecKey::ShiftTab:
                     input = Input(static_cast<SpecKey>(special));
                     break;
-                case 50:
-                case 51:
-                case 53:
-                case 54:
+                case SpecKey::Insert:
+                case SpecKey::Delete:
+                case SpecKey::PageUp:
+                case SpecKey::PageDown:
                     get_char(); // ignore
                     input = Input(static_cast<SpecKey>(special));
                     break;
