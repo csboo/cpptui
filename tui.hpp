@@ -78,17 +78,21 @@ namespace tui {
             exit(1);
         }
 #else // not windows
-        struct termios term{};
-        if (tcgetattr(STDIN_FILENO, &term) == -1) {
-            err(1, "error getting terminal attributes");
+        if (system("stty raw") != 0) {
+            err(1, "couldn't set stty raw");
         }
-
-        struct termios raw = term;
-        raw.c_lflag &= ~(ICANON | ECHO);
-
-        if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) {
-            err(1, "error setting terminal to raw mode");
+        if (system("stty -echo") != 0) {
+            err(1, "couldn't set stty -echo");
         }
+        // struct termios term{};
+        // if (tcgetattr(STDIN_FILENO, &term) == -1) {
+        //     err(1, "error getting terminal attributes");
+        // }
+        // struct termios raw = term;
+        // raw.c_lflag &= ~(ICANON | ECHO);
+        // if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) {
+        //     err(1, "error setting terminal to raw mode");
+        // }
 #endif
     }
 
@@ -103,15 +107,18 @@ namespace tui {
             exit(1);
         }
 #else // not windows
-        struct termios term{};
-        if (tcgetattr(STDIN_FILENO, &term) == -1) {
-            err(1, "error getting terminal attributes");
+        if (system("stty cooked") != 0) {
+            err(1, "couldn't set stty cooked");
         }
-        // Restore original attributes
-        term.c_lflag |= (ICANON | ECHO);
-        if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &term) == -1) {
-            err(1, "error restoring terminal mode");
-        }
+        // struct termios term{};
+        // if (tcgetattr(STDIN_FILENO, &term) == -1) {
+        //     err(1, "error getting terminal attributes");
+        // }
+        // // Restore original attributes
+        // term.c_lflag |= (ICANON | ECHO);
+        // if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &term) == -1) {
+        //     err(1, "error restoring terminal mode");
+        // }
 #endif
     }
 
